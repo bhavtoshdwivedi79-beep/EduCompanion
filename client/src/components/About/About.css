@@ -2,10 +2,33 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 80px 8%;
+  padding:100px 8%;
   background: #0f172a;
   color: white;
   gap: 60px;
+}
+
+@media (max-width:768px){
+
+.about{
+    flex-direction:column;
+    text-align:center;
+    padding:60px 5%;
+}
+
+.about-left,
+.about-right{
+    width:100%;
+}
+
+.about-right{
+    margin-top:40px;
+}
+
+.about-card{
+    text-align:left;
+}
+
 }
 
 .about-left,
