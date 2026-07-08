@@ -1,22 +1,30 @@
 import "./Navbar.css";
 
 function Navbar() {
-  return (
-    <nav className="navbar">
-      <h2 className="logo">EduCompanion</h2>
+    return (
+        <nav className="navbar">
 
-      <ul className="nav-links">
-        <li>Home</li>
-        <li>Features</li>
-        <li>About</li>
-        <li>Contact</li>
-      </ul>
+            <div className="logo">
+                EduCompanion
+            </div>
 
-      <button className="login-btn">
-        Login
-      </button>
-    </nav>
-  );
+            <div className="nav-right">
+
+                <ul className="nav-links">
+                    <li>Home</li>
+                    <li>About</li>
+                    <li>Features</li>
+                    <li>Contact</li>
+                </ul>
+
+                <button className="login-btn">
+                    Login
+                </button>
+
+            </div>
+
+        </nav>
+    );
 }
 
 export default Navbar;

@@ -1,0 +1,56 @@
+.about {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 80px 8%;
+  background: #0f172a;
+  color: white;
+  gap: 60px;
+}
+
+.about-left,
+.about-right {
+  flex: 1;
+}
+
+.about-left h2 {
+  font-size: 42px;
+  margin-bottom: 20px;
+}
+
+.about-left p {
+  color: #cbd5e1;
+  line-height: 1.8;
+  margin-bottom: 30px;
+}
+
+.about-left button {
+  padding: 14px 28px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.about-left button:hover {
+  background: #1d4ed8;
+}
+
+.about-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.about-card {
+  background: #1e293b;
+  padding: 25px;
+  border-radius: 15px;
+  transition: 0.3s;
+}
+
+.about-card:hover {
+  transform: translateX(10px);
+}
