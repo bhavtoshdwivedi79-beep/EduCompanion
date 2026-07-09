@@ -3,39 +3,43 @@ import "./HowItWorks.css";
 function HowItWorks() {
   const steps = [
     {
-      number: "01",
-      title: "Upload Your Topic",
-      desc: "Enter your subject or upload notes to get started.",
+      icon: "📄",
+      title: "Upload Topic",
+      desc: "Enter any subject or upload your study material to get started.",
     },
     {
-      number: "02",
-      title: "AI Processes",
-      desc: "EduCompanion generates notes, quizzes and study plans instantly.",
+      icon: "🤖",
+      title: "AI Creates Content",
+      desc: "EduCompanion instantly generates notes, quizzes and study plans.",
     },
     {
-      number: "03",
-      title: "Learn & Improve",
-      desc: "Study smarter, practice quizzes and track your progress.",
+      icon: "🚀",
+      title: "Learn Faster",
+      desc: "Practice, revise and track your progress with AI assistance.",
     },
   ];
 
   return (
-    <section className="how">
+    <section className="how-it-works">
 
-      <h2>How It Works</h2>
+      <h2>How EduCompanion Works</h2>
 
-      <p>
-        Learn in just three simple steps.
+      <p className="section-subtitle">
+        Learn smarter in just three simple steps.
       </p>
 
-      <div className="how-grid">
+      <div className="steps">
 
         {steps.map((step, index) => (
 
           <div className="step-card" key={index}>
 
             <div className="step-number">
-              {step.number}
+              {index + 1}
+            </div>
+
+            <div className="step-icon">
+              {step.icon}
             </div>
 
             <h3>{step.title}</h3>

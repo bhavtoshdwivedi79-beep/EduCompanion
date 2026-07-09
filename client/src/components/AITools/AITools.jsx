@@ -1,46 +1,61 @@
 import "./AITools.css";
 
 function AITools() {
+
   const tools = [
+
     {
       icon: "📝",
       title: "AI Notes",
-      desc: "Generate clean and structured notes within seconds.",
+      desc: "Generate clean, well-structured notes in seconds.",
+      button: "Try Now →"
     },
-    {
-      icon: "🤖",
-      title: "AI Chat",
-      desc: "Ask doubts anytime and get instant AI assistance.",
-    },
+
     {
       icon: "🧠",
-      title: "Quiz Generator",
-      desc: "Practice unlimited quizzes from any topic.",
+      title: "AI Quiz",
+      desc: "Practice unlimited AI-generated quizzes.",
+      button: "Try Now →"
     },
+
+    {
+      icon: "💬",
+      title: "Doubt Solver",
+      desc: "Ask questions and receive instant AI explanations.",
+      button: "Try Now →"
+    },
+
     {
       icon: "📅",
       title: "Study Planner",
-      desc: "Organize your daily study routine effectively.",
+      desc: "Create personalized daily study schedules.",
+      button: "Try Now →"
     },
+
+    {
+      icon: "📚",
+      title: "Flashcards",
+      desc: "Revise concepts quickly using AI flashcards.",
+      button: "Try Now →"
+    },
+
     {
       icon: "📈",
       title: "Progress Tracker",
-      desc: "Track your learning journey with detailed insights.",
-    },
-    {
-      icon: "📂",
-      title: "Resource Hub",
-      desc: "Store and access notes, PDFs and study material.",
-    },
+      desc: "Track your learning journey and stay motivated.",
+      button: "Try Now →"
+    }
+
   ];
 
   return (
+
     <section className="ai-tools">
 
-      <h2>AI Powered Tools</h2>
+      <h2>Powerful AI Tools</h2>
 
-      <p>
-        Everything you need to learn smarter, faster and better.
+      <p className="ai-subtitle">
+        Everything you need to learn faster with Artificial Intelligence.
       </p>
 
       <div className="tools-grid">
@@ -57,6 +72,10 @@ function AITools() {
 
             <p>{tool.desc}</p>
 
+            <button className="tool-btn">
+              {tool.button}
+            </button>
+
           </div>
 
         ))}
@@ -64,6 +83,7 @@ function AITools() {
       </div>
 
     </section>
+
   );
 }
 
