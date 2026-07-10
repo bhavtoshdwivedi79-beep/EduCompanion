@@ -72,8 +72,10 @@
   padding: 25px;
   border-radius: 15px;
   transition: 0.3s;
+  transition:all .35s ease;
 }
 
 .about-card:hover {
   transform: translateX(10px);
+  box-shadow:0 12px 30px rgba(37,99,235,.25);
 }

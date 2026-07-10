@@ -8,11 +8,28 @@
     display: flex;
     align-items: center;
     padding: 18px 8%;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    background: rgba(17, 24, 39, 0.85);
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    transition: .3s;
 }
 
 .logo {
-    font-size: 32px;
-    font-weight: bold;
+    font-size:32px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.logo:hover{
+    color:#3b82f6;
+    transform:scale(1.05);
 }
 
 .nav-right {
@@ -20,10 +37,12 @@
     display: flex;
     align-items: center;
     gap: 40px;
+    position: relative;
 }
 
 .nav-links {
     display: flex;
+    align-items: center;
     list-style: none;
     gap: 35px;
     margin: 0;
@@ -33,6 +52,7 @@
 .nav-links li {
     cursor: pointer;
     transition: 0.3s;
+    align-items: center;
 }
 
 .nav-links li:hover {
@@ -58,5 +78,131 @@
 .login-btn:hover {
 
     background: #1d4ed8;
+
+}
+
+.nav-links a {
+    text-decoration: none;
+    position:relative;
+    color: white;
+    transition: 0.3s;
+}
+
+.nav-links a.active {
+    color: #3b82f6;
+    font-weight: 600;
+}
+
+.nav-links a::after{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+
+    bottom:-6px;
+
+    width:0;
+
+    height:2px;
+
+    background:#3b82f6;
+
+    transition:.3s;
+
+}
+
+.nav-links a:hover::after,
+.nav-links a.active::after{
+
+    width:100%;
+
+}
+
+.nav-links a:hover {
+    color: #3b82f6;
+}
+
+.hamburger {
+
+    display: none;
+    font-size: 32px;
+    cursor: pointer;
+
+}
+
+@media (max-width:768px) {
+
+    .navbar {
+        padding: 18px 5%;
+    }
+
+    .logo {
+        font-size: 26px;
+    }
+
+    .hamburger {
+        display: block;
+        font-size: 32px;
+        color: white;
+        cursor: pointer;
+        z-index: 1001;
+    }
+
+    .nav-links {
+
+        position: absolute;
+        top: 60px;
+        right: 0;
+        left: auto;
+
+        width: 220px;
+
+        background: #1e293b;
+
+        border-radius: 12px;
+
+        padding: 20px;
+
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+
+        gap: 20px;
+
+        transform: scaleY(0);
+        transform-origin: top;
+
+        opacity: 0;
+
+        visibility: hidden;
+
+        transition: .3s;
+
+    }
+
+    .nav-links.active {
+
+        transform: scaleY(1);
+
+        opacity: 1;
+
+        visibility: visible;
+
+    }
+
+    .login-btn {
+
+        width: 100%;
+
+    }
+
+}
+
+@media(min-width:769px) {
+    .hamburger {
+        display: none;
+    }
 
 }

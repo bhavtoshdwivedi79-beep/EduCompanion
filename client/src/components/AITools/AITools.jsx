@@ -50,7 +50,7 @@ function AITools() {
 
   return (
 
-    <section className="ai-tools">
+    <section className="ai-tools" data-aos="fade-up">
 
       <h2>Powerful AI Tools</h2>
 

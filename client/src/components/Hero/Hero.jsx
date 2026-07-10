@@ -3,7 +3,7 @@ import heroImage from "../../assets/hero.svg";
 
 function Hero() {
     return (
-        <section className="hero">
+        <section className="hero" id="home" data-aos="fade-up">
             <div className="hero-left">
                 <h1>
                     Learn Smarter with

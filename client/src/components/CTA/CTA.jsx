@@ -2,7 +2,7 @@ import "./CTA.css";
 
 function CTA() {
   return (
-    <section className="cta">
+    <section className="cta" data-aos="zoom-in">
 
       <h2>Ready to Study Smarter?</h2>
 

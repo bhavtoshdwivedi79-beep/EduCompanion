@@ -60,3 +60,33 @@ gap:20px;
 }
 
 }
+
+.social-icons{
+
+    display:flex;
+
+    justify-content:center;
+
+    gap:20px;
+
+    margin-top:25px;
+
+}
+
+.social-icons a{
+
+    color:white;
+
+    font-size:28px;
+
+    transition:.3s;
+
+}
+
+.social-icons a:hover{
+
+    color:#3b82f6;
+
+    transform:translateY(-5px);
+
+}

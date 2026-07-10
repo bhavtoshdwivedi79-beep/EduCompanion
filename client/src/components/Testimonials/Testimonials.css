@@ -35,13 +35,13 @@
 
 .testimonial-card:hover {
 
-    transform: translateY(-10px);
-    box-shadow: 0 15px 35px rgba(37, 99, 235, .35);
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(37, 99, 235, .25);
 
 }
 
-.testimonial-card:hover .avatar{
-    transform:rotate(360deg);
+.testimonial-card:hover .avatar {
+    transform: rotate(360deg);
 }
 
 .stars {
@@ -78,7 +78,7 @@
     align-items: center;
     font-size: 22px;
     font-weight: bold;
-    transition:.3s;
+    transition: .3s;
 
 }
 
@@ -111,10 +111,10 @@
 
 }
 
-.profile h3{
-    transition:.3s;
+.profile h3 {
+    transition: .3s;
 }
 
-.testimonial-card:hover .profile h3{
-    color:#60a5fa;
+.testimonial-card:hover .profile h3 {
+    color: #60a5fa;
 }

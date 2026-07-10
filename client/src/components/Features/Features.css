@@ -29,10 +29,12 @@
     border-radius: 20px;
     background: #1f2937;
     transition: .3s;
+    transition:all .35s ease;
 }
 
 .feature-card:hover {
     transform: translateY(-10px);
+    box-shadow:0 15px 35px rgba(37,99,235,.25);
 }
 
 .icon {

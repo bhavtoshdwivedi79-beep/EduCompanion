@@ -61,3 +61,12 @@ font-size:34px;
 }
 
 }
+
+.try-btn{
+    transition:.3s;
+}
+
+.try-btn:hover{
+    transform:translateY(-4px);
+    box-shadow:0 10px 25px rgba(37,99,235,.35);
+}

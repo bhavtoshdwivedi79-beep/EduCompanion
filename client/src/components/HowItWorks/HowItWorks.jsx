@@ -20,7 +20,7 @@ function HowItWorks() {
   ];
 
   return (
-    <section className="how-it-works">
+    <section className="how-it-works" data-aos="zoom-in">
 
       <h2>How EduCompanion Works</h2>
 

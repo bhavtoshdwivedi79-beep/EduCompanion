@@ -85,10 +85,12 @@
 .primary-btn {
     background: #2563eb;
     color: white;
+    transition: .3s;
 }
 
 .primary-btn:hover {
     background: #1d4ed8;
+    transform: translateY(-4px);
 }
 
 .secondary-btn {
@@ -100,6 +102,7 @@
 .secondary-btn:hover {
     background: white;
     color: black;
+    transform: translateY(-4px);
 }
 
 .hero-stats {
@@ -127,4 +130,25 @@
 .hero-right img {
     width: 80%;
     max-width: 500px;
+    animation: float 4s ease-in-out infinite;
+}
+
+.hero-right img:hover{
+    transform: scale(1.05);
+}
+
+@keyframes float {
+
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-15px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+
 }

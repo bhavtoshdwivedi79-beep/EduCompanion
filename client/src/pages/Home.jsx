@@ -8,6 +8,7 @@ import Testimonials from "../components/Testimonials/Testimonials";
 import FAQ from "../components/FAQ/FAQ";
 import CTA from "../components/CTA/CTA";
 import Footer from "../components/Footer/Footer";
+import BackToTop from "../components/BackToTop/BackToTop";
 
 function Home() {
     return (
@@ -22,6 +23,7 @@ function Home() {
             <FAQ />
             <CTA />
             <Footer />
+            <BackToTop />
         </>
     );
 }

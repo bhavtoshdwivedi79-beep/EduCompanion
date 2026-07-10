@@ -20,7 +20,7 @@ function Features() {
   ];
 
   return (
-    <section className="features">
+    <section className="features" id="features" data-aos="fade-up">
 
       <h2>Why Choose EduCompanion?</h2>
 
