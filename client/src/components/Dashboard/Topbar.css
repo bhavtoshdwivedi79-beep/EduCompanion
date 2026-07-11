@@ -1,0 +1,43 @@
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1e293b;
+    padding: 18px 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+}
+
+.topbar input {
+    width: 320px;
+    max-width: 100%;
+    padding: 12px 18px;
+    border: none;
+    outline: none;
+    border-radius: 10px;
+    background: #334155;
+    color: white;
+    font-size: 15px;
+}
+
+.topbar input::placeholder {
+    color: #94a3b8;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.topbar-right span {
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.topbar-right img {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    cursor: pointer;
+}

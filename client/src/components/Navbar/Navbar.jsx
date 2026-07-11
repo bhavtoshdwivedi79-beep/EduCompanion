@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import "./Navbar.css";
 
 function Navbar() {
@@ -56,14 +57,15 @@ function Navbar() {
                     <li><a href="#contact" className={activeSection === "contact" ? "active" : ""} onClick={() => setMenuOpen(false)}>Contact</a></li>
 
                     <li>
-                        <button
-                            className="login-btn"
-                            onClick={() => setMenuOpen(false)}
-                        >
-                            Login
-                        </button>
+                        <Link to="/login">
+                            <button
+                                className="login-btn"
+                                onClick={() => setMenuOpen(false)}
+                            >
+                                Login
+                            </button>
+                        </Link>
                     </li>
-
                 </ul>
 
             </div>
