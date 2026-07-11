@@ -3,15 +3,24 @@ import "./Dashboard.css";
 import Sidebar from "../components/Dashboard/Sidebar";
 import Topbar from "../components/Dashboard/Topbar";
 
+import { useState } from "react";
+
 function Dashboard() {
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     return (
         <div className="dashboard">
 
-            <Sidebar />
+            <Sidebar
+                sidebarOpen={sidebarOpen}
+                setSidebarOpen={setSidebarOpen}
+            />
 
             <div className="dashboard-main">
 
-                <Topbar />
+                <Topbar
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                />
                 <section className="welcome-section">
 
                     <div className="welcome-text">
@@ -171,6 +180,89 @@ function Dashboard() {
                         </div>
 
                         <p>75% Completed</p>
+
+                    </div>
+
+                </section>
+
+                <section className="bottom-grid">
+
+                    <div className="calendar-card">
+
+                        <h2>📅 Calendar</h2>
+
+                        <div className="calendar">
+
+                            <span>Sun</span>
+                            <span>Mon</span>
+                            <span>Tue</span>
+                            <span>Wed</span>
+                            <span>Thu</span>
+                            <span>Fri</span>
+                            <span>Sat</span>
+
+                            <span>1</span>
+                            <span>2</span>
+                            <span>3</span>
+                            <span>4</span>
+                            <span>5</span>
+                            <span className="today">6</span>
+                            <span>7</span>
+
+                            <span>8</span>
+                            <span>9</span>
+                            <span>10</span>
+                            <span>11</span>
+                            <span>12</span>
+                            <span>13</span>
+                            <span>14</span>
+
+                        </div>
+
+                    </div>
+
+                    <div className="chart-card">
+
+                        <h2>📈 Weekly Study Progress</h2>
+
+                        <div className="bars">
+
+                            <div className="bar">
+                                <div style={{ height: "60%" }}></div>
+                                <p>Mon</p>
+                            </div>
+
+                            <div className="bar">
+                                <div style={{ height: "80%" }}></div>
+                                <p>Tue</p>
+                            </div>
+
+                            <div className="bar">
+                                <div style={{ height: "50%" }}></div>
+                                <p>Wed</p>
+                            </div>
+
+                            <div className="bar">
+                                <div style={{ height: "95%" }}></div>
+                                <p>Thu</p>
+                            </div>
+
+                            <div className="bar">
+                                <div style={{ height: "70%" }}></div>
+                                <p>Fri</p>
+                            </div>
+
+                            <div className="bar">
+                                <div style={{ height: "90%" }}></div>
+                                <p>Sat</p>
+                            </div>
+
+                            <div className="bar">
+                                <div style={{ height: "40%" }}></div>
+                                <p>Sun</p>
+                            </div>
+
+                        </div>
 
                     </div>
 

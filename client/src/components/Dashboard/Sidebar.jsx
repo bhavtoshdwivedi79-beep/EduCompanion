@@ -1,28 +1,69 @@
 import "./Sidebar.css";
+import { Link } from "react-router-dom";
 
-function Sidebar() {
-  return (
-    <aside className="sidebar">
+function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
-      <h2 className="sidebar-logo">
-        EduCompanion
-      </h2>
+    return (
 
-      <ul>
+        <aside className={sidebarOpen ? "sidebar active" : "sidebar"}>
 
-        <li>🏠 Dashboard</li>
-        <li>🤖 AI Chat</li>
-        <li>📝 Smart Notes</li>
-        <li>❓ AI Quiz</li>
-        <li>📅 Study Planner</li>
-        <li>👤 Profile</li>
-        <li>⚙ Settings</li>
-        <li>🚪 Logout</li>
+            <h2 className="sidebar-logo">
+                EduCompanion
+            </h2>
 
-      </ul>
+            <ul>
 
-    </aside>
-  );
+                <Link to="/dashboard">
+
+                    <li onClick={() => setSidebarOpen(false)}>
+                        🏠 Dashboard
+                    </li>
+
+                </Link>
+
+                <Link to="/chat">
+
+                    <li onClick={() => setSidebarOpen(false)}>
+                        🤖 AI Chat
+                    </li>
+
+                </Link>
+
+                <Link to="/notes">
+
+                    <li onClick={() => setSidebarOpen(false)}>
+                        📝 Smart Notes
+                    </li>
+
+                </Link>
+
+                <Link to="/quiz">
+
+                    <li onClick={() => setSidebarOpen(false)}>
+                        ❓ AI Quiz
+                    </li>
+
+                </Link>
+
+                <Link to="/planner">
+
+                    <li onClick={() => setSidebarOpen(false)}>
+                        📅 Study Planner
+                    </li>
+
+                </Link>
+
+                <li onClick={() => setSidebarOpen(false)}>👤 Profile</li>
+
+                <li onClick={() => setSidebarOpen(false)}>⚙ Settings</li>
+
+                <li onClick={() => setSidebarOpen(false)}>🚪 Logout</li>
+
+            </ul>
+
+        </aside>
+
+    );
 }
 
 export default Sidebar;

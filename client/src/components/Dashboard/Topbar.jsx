@@ -1,27 +1,67 @@
 import "./Topbar.css";
+import { useState } from "react";
 
-function Topbar() {
-  return (
-    <header className="topbar">
+function Topbar({ sidebarOpen, setSidebarOpen }) {
 
-      <input
-        type="text"
-        placeholder="Search..."
-      />
+    const [showNotifications, setShowNotifications] = useState(false);
 
-      <div className="topbar-right">
+    return (
 
-        <span>🔔</span>
+        <header className="topbar">
 
-        <img
-          src="https://i.pravatar.cc/40"
-          alt="User"
-        />
+            <button
+                className="menu-btn"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+            >
+                ☰
+            </button>
 
-      </div>
+            <input
+                type="text"
+                placeholder="Search..."
+            />
 
-    </header>
-  );
+            <div className="topbar-right">
+
+                <button className="theme-btn">
+                    🌙
+                </button>
+
+                <div className="notification">
+
+                    <button
+                        className="bell-btn"
+                        onClick={() => setShowNotifications(!showNotifications)}
+                    >
+                        🔔
+                    </button>
+
+                    {showNotifications && (
+
+                        <div className="notification-box">
+
+                            <p>🎉 Welcome to EduCompanion!</p>
+
+                            <p>📝 2 New Notes Generated</p>
+
+                            <p>🔥 Keep your 15-day streak alive!</p>
+
+                        </div>
+
+                    )}
+
+                </div>
+
+                <img
+                    src="https://i.pravatar.cc/40"
+                    alt="User"
+                />
+
+            </div>
+
+        </header>
+
+    );
 }
 
 export default Topbar;

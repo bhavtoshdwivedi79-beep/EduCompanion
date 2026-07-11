@@ -31,3 +31,37 @@
     background: #2563eb;
     transform: translateX(6px);
 }
+
+@media(max-width:900px) {
+
+    .sidebar {
+
+        position: fixed;
+
+        left: -280px;
+
+        top: 0;
+
+        transition: .35s;
+
+        z-index: 999;
+
+    }
+
+    .sidebar a {
+
+        text-decoration: none;
+
+        color: inherit;
+
+        display: block;
+
+    }
+
+    .sidebar.active {
+
+        left: 0;
+
+    }
+
+}

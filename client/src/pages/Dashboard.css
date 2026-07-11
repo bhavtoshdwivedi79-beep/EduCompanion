@@ -395,6 +395,103 @@
 
 }
 
+.bottom-grid{
+
+    display:grid;
+
+    grid-template-columns:1fr 2fr;
+
+    gap:25px;
+
+    margin-bottom:40px;
+
+}
+
+.calendar-card,
+.chart-card{
+
+    background:#1e293b;
+
+    padding:30px;
+
+    border-radius:18px;
+
+    color:white;
+
+}
+
+.calendar{
+
+    margin-top:20px;
+
+    display:grid;
+
+    grid-template-columns:repeat(7,1fr);
+
+    gap:10px;
+
+    text-align:center;
+
+}
+
+.calendar span{
+
+    padding:10px;
+
+    border-radius:8px;
+
+}
+
+.today{
+
+    background:#2563eb;
+
+}
+
+.bars{
+
+    margin-top:30px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-end;
+
+    height:220px;
+
+}
+
+.bar{
+
+    text-align:center;
+
+}
+
+.bar div{
+
+    width:35px;
+
+    background:#3b82f6;
+
+    border-radius:10px 10px 0 0;
+
+    transition:.3s;
+
+}
+
+.bar div:hover{
+
+    background:#60a5fa;
+
+}
+
+.bar p{
+
+    margin-top:10px;
+
+}
+
 .activity{
 
     margin-bottom:40px;
