@@ -1,5 +1,11 @@
-import { useState } from "react";
+import { sendMessage } from "../services/chatService";
+import { useState, useEffect, useRef } from "react";
 import "../components/AIChat/AIChat.css";
+
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 function AIChat() {
     const [messages, setMessages] = useState([
@@ -11,9 +17,21 @@ function AIChat() {
 
     const [input, setInput] = useState("");
 
-    const handleSend = () => {
+    const [loading, setLoading] = useState(false);
 
-        if (input.trim() === "") return;
+    const chatEndRef = useRef(null);
+
+    useEffect(() => {
+
+        chatEndRef.current?.scrollIntoView({
+            behavior: "smooth",
+        });
+
+    }, [messages, loading]);
+
+    const handleSend = async () => {
+
+        if (loading || input.trim() === "") return;
 
         const userMessage = {
             sender: "user",
@@ -22,18 +40,37 @@ function AIChat() {
 
         setMessages((prev) => [...prev, userMessage]);
 
+        const question = input;
+
         setInput("");
 
-        setTimeout(() => {
+        setLoading(true);
+
+        try {
+
+            const res = await sendMessage(question, messages);
 
             const botReply = {
                 sender: "bot",
-                text: "🤖 Gemini AI integration is coming soon. This is a demo reply.",
+                text: res.data.reply,
             };
 
             setMessages((prev) => [...prev, botReply]);
 
-        }, 1000);
+        } catch (error) {
+
+            console.error(error);
+
+            const botReply = {
+                sender: "bot",
+                text: "❌ Failed to connect with AI Assistant.",
+            };
+
+            setMessages((prev) => [...prev, botReply]);
+
+        }
+
+        setLoading(false);
 
     };
 
@@ -56,11 +93,51 @@ function AIChat() {
                         className={msg.sender === "bot" ? "bot-msg" : "user-msg"}
                     >
 
-                        {msg.text}
+                        {msg.sender === "bot" ? (
+                            <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                    code({ className, children, ...props }) {
+                                        const match = /language-(\w+)/.exec(className || "");
+
+                                        return match ? (
+                                            <SyntaxHighlighter
+                                                style={oneDark}
+                                                language={match[1]}
+                                                PreTag="div"
+                                                {...props}
+                                            >
+                                                {String(children).replace(/\n$/, "")}
+                                            </SyntaxHighlighter>
+                                        ) : (
+                                            <code className={className} {...props}>
+                                                {children}
+                                            </code>
+                                        );
+                                    },
+                                }}
+                            >
+                                {msg.text}
+                            </ReactMarkdown>
+                        ) : (
+                            msg.text
+                        )}
 
                     </div>
 
                 ))}
+
+                {loading && (
+
+                    <div className="bot-msg">
+
+                        🤖 Thinking...
+
+                    </div>
+
+                )}
+
+                <div ref={chatEndRef}></div>
 
             </div>
 
