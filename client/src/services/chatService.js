@@ -4,8 +4,31 @@ const API = axios.create({
     baseURL: "http://localhost:5000/api/ai",
 });
 
-export const sendMessage = (message, history) =>
-    API.post("/chat", {
-        message,
-        history,
+export const sendMessage = (message) => {
+
+    const token = localStorage.getItem("token");
+
+    return API.post(
+        "/chat",
+        {
+            message,
+        },
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+};
+
+export const getHistory = () => {
+
+    const token = localStorage.getItem("token");
+
+    return API.get("/history", {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
     });
+
+};

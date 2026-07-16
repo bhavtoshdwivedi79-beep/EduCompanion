@@ -7,7 +7,7 @@ const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY,
 });
 
-export async function askAI(prompt, history = []) {
+export async function askAI(history) {
 
     const messages = [
         {
@@ -22,21 +22,11 @@ Rules:
 - Keep answers clear and student-friendly.
 - Give examples whenever possible.
 - End with a short summary if the answer is long.
-- If the user asks a follow-up question, use the previous conversation as context.
+- Remember previous conversation and answer accordingly.
 - Be friendly and conversational.`,
         },
 
-        // Previous Conversation
-        ...history.map((msg) => ({
-            role: msg.sender === "user" ? "user" : "assistant",
-            content: msg.text,
-        })),
-
-        // Current Question
-        {
-            role: "user",
-            content: prompt,
-        },
+        ...history,
     ];
 
     const completion = await groq.chat.completions.create({

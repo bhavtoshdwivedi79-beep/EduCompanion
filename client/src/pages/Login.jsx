@@ -1,48 +1,126 @@
 import "./Login.css";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { loginUser } from "../services/authService";
 
 function Login() {
-  return (
-    <section className="login-page">
 
-      <div className="login-card">
+    const navigate = useNavigate();
 
-        <h1>Welcome Back 👋</h1>
+    const [formData, setFormData] = useState({
+        email: "",
+        password: "",
+    });
 
-        <p>Login to continue your learning journey.</p>
+    const [loading, setLoading] = useState(false);
 
-        <form>
+    const handleChange = (e) => {
 
-          <input
-            type="email"
-            placeholder="Email Address"
-          />
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value,
+        });
 
-          <input
-            type="password"
-            placeholder="Password"
-          />
+    };
 
-          <button type="submit">
-            Login
-          </button>
+    const handleSubmit = async (e) => {
 
-        </form>
+        e.preventDefault();
 
-        <div className="login-extra">
+        try {
 
-          <a href="#">Forgot Password?</a>
+            setLoading(true);
 
-          <p>
-            Don't have an account?
-            <a href="/signup"> Sign Up</a>
-          </p>
+            const res = await loginUser(formData);
 
-        </div>
+            localStorage.setItem("token", res.data.token);
 
-      </div>
+            alert("🎉 Login Successful");
 
-    </section>
-  );
+            navigate("/chat");
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                error.response?.data?.message ||
+                "Login Failed"
+            );
+
+        } finally {
+
+            setLoading(false);
+
+        }
+
+    };
+
+    return (
+
+        <section className="login-page">
+
+            <div className="login-card">
+
+                <h1>Welcome Back 👋</h1>
+
+                <p>Login to continue your learning journey.</p>
+
+                <form onSubmit={handleSubmit}>
+
+                    <input
+                        type="email"
+                        name="email"
+                        placeholder="Email Address"
+                        value={formData.email}
+                        onChange={handleChange}
+                    />
+
+                    <input
+                        type="password"
+                        name="password"
+                        placeholder="Password"
+                        value={formData.password}
+                        onChange={handleChange}
+                    />
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                    >
+                        {
+                            loading
+                                ? "Logging in..."
+                                : "Login"
+                        }
+                    </button>
+
+                </form>
+
+                <div className="login-extra">
+
+                    <a href="#">
+                        Forgot Password?
+                    </a>
+
+                    <p>
+
+                        Don't have an account?
+
+                        <Link to="/signup">
+                            {" "}Sign Up
+                        </Link>
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    );
+
 }
 
 export default Login;

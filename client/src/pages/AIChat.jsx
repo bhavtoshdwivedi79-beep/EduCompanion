@@ -1,19 +1,18 @@
-import { sendMessage } from "../services/chatService";
-import { useState, useEffect, useRef } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { sendMessage, getHistory } from "../services/chatService";
 import "../components/AIChat/AIChat.css";
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 function AIChat() {
-    const [messages, setMessages] = useState([
-        {
-            sender: "bot",
-            text: "Hello 👋 Ask me anything about your studies."
-        }
-    ]);
+
+    const [messages, setMessages] = useState([]);
 
     const [input, setInput] = useState("");
 
@@ -21,26 +20,78 @@ function AIChat() {
 
     const chatEndRef = useRef(null);
 
-    useEffect(() => {
+    const navigate = useNavigate();
 
+    useEffect(() => {
+        loadHistory();
+    }, []);
+
+    useEffect(() => {
         chatEndRef.current?.scrollIntoView({
             behavior: "smooth",
         });
-
     }, [messages, loading]);
+
+    const loadHistory = async () => {
+
+        try {
+
+            const token = localStorage.getItem("token");
+
+            const res = await getHistory(token);
+
+            if (res.data.success) {
+
+                const chats = [];
+
+                res.data.chats.forEach(chat => {
+
+                    chats.push({
+                        sender: "user",
+                        text: chat.question,
+                    });
+
+                    chats.push({
+                        sender: "bot",
+                        text: chat.answer,
+                    });
+
+                });
+
+                if (chats.length === 0) {
+
+                    chats.push({
+                        sender: "bot",
+                        text: "Hello 👋 Ask me anything about your studies.",
+                    });
+
+                }
+
+                setMessages(chats);
+
+            }
+
+        } catch (err) {
+
+            console.log(err);
+
+        }
+
+    };
 
     const handleSend = async () => {
 
         if (loading || input.trim() === "") return;
 
-        const userMessage = {
-            sender: "user",
-            text: input,
-        };
-
-        setMessages((prev) => [...prev, userMessage]);
-
         const question = input;
+
+        setMessages(prev => [
+            ...prev,
+            {
+                sender: "user",
+                text: question,
+            },
+        ]);
 
         setInput("");
 
@@ -48,25 +99,27 @@ function AIChat() {
 
         try {
 
-            const res = await sendMessage(question, messages);
+            const token = localStorage.getItem("token");
 
-            const botReply = {
-                sender: "bot",
-                text: res.data.reply,
-            };
+            const res = await sendMessage(question, token);
 
-            setMessages((prev) => [...prev, botReply]);
+            setMessages(prev => [
+                ...prev,
+                {
+                    sender: "bot",
+                    text: res.data.reply,
+                },
+            ]);
 
-        } catch (error) {
+        } catch (err) {
 
-            console.error(error);
-
-            const botReply = {
-                sender: "bot",
-                text: "❌ Failed to connect with AI Assistant.",
-            };
-
-            setMessages((prev) => [...prev, botReply]);
+            setMessages(prev => [
+                ...prev,
+                {
+                    sender: "bot",
+                    text: "❌ Failed to connect.",
+                },
+            ]);
 
         }
 
@@ -76,88 +129,171 @@ function AIChat() {
 
     return (
 
-        <div className="chat-page">
+        <div className="chat-layout">
+            <Toaster position="top-right" />
 
-            <div className="chat-header">
+            <aside className="sidebar">
 
-                🤖 AI Study Assistant
+                <h2>EduCompanion</h2>
 
-            </div>
-
-            <div className="chat-box">
-
-                {messages.map((msg, index) => (
-
-                    <div
-                        key={index}
-                        className={msg.sender === "bot" ? "bot-msg" : "user-msg"}
-                    >
-
-                        {msg.sender === "bot" ? (
-                            <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                components={{
-                                    code({ className, children, ...props }) {
-                                        const match = /language-(\w+)/.exec(className || "");
-
-                                        return match ? (
-                                            <SyntaxHighlighter
-                                                style={oneDark}
-                                                language={match[1]}
-                                                PreTag="div"
-                                                {...props}
-                                            >
-                                                {String(children).replace(/\n$/, "")}
-                                            </SyntaxHighlighter>
-                                        ) : (
-                                            <code className={className} {...props}>
-                                                {children}
-                                            </code>
-                                        );
-                                    },
-                                }}
-                            >
-                                {msg.text}
-                            </ReactMarkdown>
-                        ) : (
-                            msg.text
-                        )}
-
-                    </div>
-
-                ))}
-
-                {loading && (
-
-                    <div className="bot-msg">
-
-                        🤖 Thinking...
-
-                    </div>
-
-                )}
-
-                <div ref={chatEndRef}></div>
-
-            </div>
-
-            <div className="chat-input">
-
-                <input
-                    type="text"
-                    placeholder="Ask your question..."
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            handleSend();
-                        }
-                    }}
-                />
-
-                <button onClick={handleSend}>
-                    Send
+                <button
+                    className="new-chat-btn"
+                    onClick={() => window.location.reload()}
+                >
+                    + New Chat
                 </button>
+
+                <div className="history-list">
+
+                    <p>Previous Chats</p>
+
+                    {messages
+                        .filter(msg => msg.sender === "user")
+                        .map((msg, index) => (
+
+                            <div
+                                key={index}
+                                className="history-item"
+                            >
+                                {msg.text.slice(0, 30)}...
+                            </div>
+
+                        ))}
+
+                </div>
+
+                <button
+                    className="logout-btn"
+                    onClick={() => {
+
+                        localStorage.removeItem("token");
+
+                        navigate("/login");
+
+                    }}
+                >
+                    Logout
+                </button>
+
+            </aside>
+
+            <div className="chat-page">
+
+                <div className="chat-header">
+                    🤖 EduCompanion AI
+                </div>
+
+                <div className="chat-box">
+
+                    {messages.map((msg, index) => (
+
+                        <div
+                            key={index}
+                            className={msg.sender === "bot" ? "bot-msg" : "user-msg"}
+                        >
+
+                            {msg.sender === "bot" ? (
+
+                                <>
+
+                                    <button
+                                        className="copy-btn"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(msg.text);
+                                            toast.success("Copied!");
+                                        }}
+                                    >
+                                        📋
+                                    </button>
+
+                                    <ReactMarkdown
+                                        remarkPlugins={[remarkGfm]}
+                                        components={{
+                                            code({ children, className }) {
+
+                                                const match = /language-(\w+)/.exec(className || "");
+
+                                                return match ? (
+
+                                                    <SyntaxHighlighter
+                                                        language={match[1]}
+                                                        style={oneDark}
+                                                    >
+                                                        {String(children).replace(/\n$/, "")}
+                                                    </SyntaxHighlighter>
+
+                                                ) : (
+
+                                                    <code className={className}>
+                                                        {children}
+                                                    </code>
+
+                                                );
+
+                                            },
+                                        }}
+                                    >
+                                        {msg.text}
+                                    </ReactMarkdown>
+
+                                </>
+
+                            ) : (
+
+                                msg.text
+
+                            )}
+
+                        </div>
+
+                    ))}
+
+                    {loading && (
+
+                        <div className="bot-msg loading">
+
+                            <span></span>
+                            <span></span>
+                            <span></span>
+
+                        </div>
+
+                    )}
+
+                    <div ref={chatEndRef}></div>
+
+                </div>
+
+                <div className="chat-input">
+
+                    <textarea
+                        value={input}
+                        rows={1}
+                        placeholder="Ask anything..."
+                        onChange={(e) => {
+                            setInput(e.target.value);
+
+                            e.target.style.height = "auto";
+                            e.target.style.height = e.target.scrollHeight + "px";
+                        }}
+                        onKeyDown={(e) => {
+
+                            if (e.key === "Enter" && !e.shiftKey) {
+
+                                e.preventDefault();
+
+                                sendMessage();
+
+                            }
+
+                        }}
+                    />
+
+                    <button onClick={handleSend}>
+                        Send
+                    </button>
+
+                </div>
 
             </div>
 
