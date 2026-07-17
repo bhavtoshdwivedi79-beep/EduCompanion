@@ -5,12 +5,20 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import AIChat from "./pages/AIChat";
+import Notes from "./pages/Notes";
+import Quiz from "./pages/Quiz";
+
+import MainLayout from "./layouts/MainLayout";
 
 function App() {
+
   return (
+
     <BrowserRouter>
 
       <Routes>
+
+        {/* Public Routes */}
 
         <Route path="/" element={<Home />} />
 
@@ -18,14 +26,26 @@ function App() {
 
         <Route path="/signup" element={<Signup />} />
 
-        <Route path="/dashboard" element={<Dashboard />} />
+        {/* Protected Layout */}
 
-        <Route path="/chat" element={<AIChat />} />
+        <Route element={<MainLayout />}>
+
+          <Route path="/dashboard" element={<Dashboard />} />
+
+          <Route path="/chat" element={<AIChat />} />
+
+          <Route path="/notes" element={<Notes />} />
+
+          <Route path="/quiz" element={<Quiz />} />
+
+        </Route>
 
       </Routes>
 
     </BrowserRouter>
+
   );
+
 }
 
 export default App;

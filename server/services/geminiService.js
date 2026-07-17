@@ -38,3 +38,121 @@ Rules:
 
     return completion.choices[0].message.content;
 }
+
+export async function generateNotes(topic) {
+
+    const completion = await groq.chat.completions.create({
+
+        model: "llama-3.3-70b-versatile",
+
+        messages: [
+
+            {
+                role: "system",
+                content: `You are EduCompanion AI.
+
+Create beautiful study notes in Markdown.
+
+The notes must contain:
+
+# Title
+
+## Introduction
+
+## Definition
+
+## Key Points
+
+## Detailed Explanation
+
+## Examples
+
+## Advantages
+
+## Disadvantages
+
+## Interview Questions
+
+## Important Exam Questions
+
+## Summary
+
+Keep the language simple and student friendly.
+Use bullet points wherever possible.
+Never return plain text.
+Always use Markdown formatting.`,
+            },
+
+            {
+                role: "user",
+                content: `Generate complete study notes on "${topic}".`,
+            },
+
+        ],
+
+        temperature: 0.6,
+        max_tokens: 1800,
+
+    });
+
+    return completion.choices[0].message.content;
+
+}
+
+export async function generateQuizAI(topic)  {
+
+    const messages = [
+
+        {
+            role: "system",
+            content: `
+You are an AI Quiz Generator.
+
+Generate exactly 10 multiple-choice questions.
+
+Return ONLY a valid JSON array.
+
+Each object must have this format:
+
+{
+  "question": "Question here",
+  "options": [
+    "Option A",
+    "Option B",
+    "Option C",
+    "Option D"
+  ],
+  "answer": "Correct Option"
+}
+
+Rules:
+- No markdown
+- No explanation
+- No headings
+- No extra text
+- Return only JSON
+`
+        },
+
+        {
+            role: "user",
+            content: `Generate a quiz on ${topic}`
+        }
+
+    ];
+
+    const completion = await groq.chat.completions.create({
+
+        model: "llama-3.3-70b-versatile",
+
+        messages,
+
+        temperature: 0.5,
+
+        max_tokens: 1500,
+
+    });
+
+    return JSON.parse(completion.choices[0].message.content);
+
+}

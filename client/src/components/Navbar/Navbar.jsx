@@ -1,10 +1,15 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Navbar.css";
 
 function Navbar() {
+
+    const navigate = useNavigate();
+    const location = useLocation();
+    const token = localStorage.getItem("token");
     const [menuOpen, setMenuOpen] = useState(false);
     const [activeSection, setActiveSection] = useState("home");
+
     useEffect(() => {
         const handleScroll = () => {
             const sections = ["home", "features", "about", "contact"];
@@ -57,14 +62,26 @@ function Navbar() {
                     <li><a href="#contact" className={activeSection === "contact" ? "active" : ""} onClick={() => setMenuOpen(false)}>Contact</a></li>
 
                     <li>
-                        <Link to="/login">
+                        {token ? (
                             <button
                                 className="login-btn"
-                                onClick={() => setMenuOpen(false)}
+                                onClick={() => {
+                                    navigate("/dashboard");
+                                    setMenuOpen(false);
+                                }}
                             >
-                                Login
+                                Dashboard
                             </button>
-                        </Link>
+                        ) : (
+                            <Link to="/login">
+                                <button
+                                    className="login-btn"
+                                    onClick={() => setMenuOpen(false)}
+                                >
+                                    Login
+                                </button>
+                            </Link>
+                        )}
                     </li>
                 </ul>
 

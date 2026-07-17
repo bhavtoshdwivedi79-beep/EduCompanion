@@ -1,5 +1,9 @@
 import Chat from "../models/Chat.js";
-import { askAI } from "../services/geminiService.js";
+import {
+    askAI,
+    generateNotes as generateNotesAI,
+    generateQuizAI,
+} from "../services/geminiService.js";
 
 export const chatWithAI = async (req, res) => {
 
@@ -94,4 +98,81 @@ export const getChatHistory = async (req, res) => {
 
     }
 
+};
+
+export const generateNotes = async (req, res) => {
+
+    try {
+
+        const { topic } = req.body;
+
+        if (!topic) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "Topic is required",
+
+            });
+
+        }
+        
+        const notes = await generateNotesAI(topic);
+
+        res.status(200).json({
+
+            success: true,
+
+            notes,
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Failed to generate notes",
+
+        });
+
+    }
+
+};
+
+export const generateQuiz = async (req, res) => {
+    try {
+
+        const { topic } = req.body;
+
+        if (!topic) {
+            return res.status(400).json({
+                success: false,
+                message: "Topic is required",
+            });
+        }
+
+        const quiz = await generateQuizAI(topic);
+
+        res.status(200).json({
+            success: true,
+            quiz,
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to generate quiz",
+        });
+
+    }
 };

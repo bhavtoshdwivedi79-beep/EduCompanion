@@ -32,3 +32,18 @@ export const getHistory = () => {
     });
 
 };
+
+export const generateNotes = (topic) => {
+
+    const token = localStorage.getItem("token");
+
+    return API.post(
+        "/notes",
+        { topic },
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+};
