@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import aiRoutes from "./routes/aiRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import savedNoteRoutes from "./routes/savedNoteRoutes.js";
 
 const app = express();
 
@@ -17,6 +18,8 @@ app.use(express.json());
 app.use("/api/ai", aiRoutes);
 
 app.use("/api/auth", authRoutes);
+
+app.use("/api/saved-notes", savedNoteRoutes);
 
 // Home
 app.get("/", (req, res) => {

@@ -47,3 +47,46 @@ export const generateNotes = (topic) => {
         }
     );
 };
+
+export const saveNote = (topic, notes) => {
+
+    const token = localStorage.getItem("token");
+
+    return API.post(
+        "/saved-notes",
+        {
+            topic,
+            notes,
+        },
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+
+};
+
+export const getSavedNotes = () => {
+
+    const token = localStorage.getItem("token");
+
+    return API.get("/saved-notes", {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+};
+
+export const deleteSavedNote = (id) => {
+
+    const token = localStorage.getItem("token");
+
+    return API.delete(`/saved-notes/${id}`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+};

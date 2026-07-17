@@ -2,7 +2,7 @@ import "./Notes.css";
 import html2canvas from "html2canvas";
 import { useState, useRef } from "react";
 import { jsPDF } from "jspdf";
-
+import { saveNote } from "../services/savedNoteService";
 import { generateNotes } from "../services/chatService";
 
 import ReactMarkdown from "react-markdown";
@@ -139,6 +139,26 @@ function Notes() {
 
     };
 
+    const handleSave = async () => {
+
+        if (!topic || !notes) return;
+
+        try {
+
+            await saveNote(topic, notes);
+
+            alert("✅ Notes saved successfully!");
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert("Failed to save notes.");
+
+        }
+        
+    };
+
     return (
 
         <div className="notes-page">
@@ -202,6 +222,13 @@ function Notes() {
                             onClick={handleCopy}
                         >
                             📋 Copy Notes
+                        </button>
+
+                        <button
+                            className="save-btn"
+                            onClick={handleSave}
+                        >
+                            ❤️ Save Notes
                         </button>
 
                     </div>

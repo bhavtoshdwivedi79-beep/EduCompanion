@@ -1,5 +1,5 @@
 import "./Dashboard.css";
-
+import { Link } from "react-router-dom";
 import Sidebar from "../components/Dashboard/Sidebar";
 import Topbar from "../components/Dashboard/Topbar";
 
@@ -114,8 +114,8 @@ function Dashboard() {
                         </div>
 
                         <div className="action-card">
-                            📅
-                            <h3>Study Planner</h3>
+                            💾
+                            <h3>Saved Notes</h3>
                         </div>
 
                     </div>

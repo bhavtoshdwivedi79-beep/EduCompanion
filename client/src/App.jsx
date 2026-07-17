@@ -7,7 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import AIChat from "./pages/AIChat";
 import Notes from "./pages/Notes";
 import Quiz from "./pages/Quiz";
-
+import SavedNotes from "./pages/SavedNotes";
 import MainLayout from "./layouts/MainLayout";
 
 function App() {
@@ -37,6 +37,8 @@ function App() {
           <Route path="/notes" element={<Notes />} />
 
           <Route path="/quiz" element={<Quiz />} />
+
+          <Route path="/saved-notes" element={<SavedNotes />} />
 
         </Route>
 
