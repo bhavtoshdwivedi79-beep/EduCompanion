@@ -99,7 +99,7 @@ Always use Markdown formatting.`,
 
 }
 
-export async function generateQuizAI(topic)  {
+export async function generateQuizAI(topic) {
 
     const messages = [
 

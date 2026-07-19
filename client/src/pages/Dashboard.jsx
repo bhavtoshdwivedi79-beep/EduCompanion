@@ -2,11 +2,58 @@ import "./Dashboard.css";
 import { Link } from "react-router-dom";
 import Sidebar from "../components/Dashboard/Sidebar";
 import Topbar from "../components/Dashboard/Topbar";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getDashboardData } from "../services/dashboardService";
 
 function Dashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [dashboard, setDashboard] = useState({
+        notes: 0,
+        chats: 0,
+        quizzes: 0,
+        accuracy: 0,
+        streak: 0,
+        activities: [],
+    });
+
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+
+        const fetchDashboard = async () => {
+
+            try {
+
+                const data = await getDashboardData();
+
+                setDashboard(data);
+
+            } catch (err) {
+
+                console.log(err);
+
+            } finally {
+
+                setLoading(false);
+
+            }
+
+        };
+
+        fetchDashboard();
+
+    }, []);
+
+    if (loading) {
+
+        return (
+            <div className="dashboard-loading">
+                Loading Dashboard...
+            </div>
+        );
+
+    }
+
     return (
         <div className="dashboard">
 
@@ -54,7 +101,7 @@ function Dashboard() {
 
                         <h2>📚</h2>
 
-                        <h3>24</h3>
+                        <h3>{dashboard.notes}</h3>
 
                         <p>Notes Created</p>
 
@@ -64,7 +111,7 @@ function Dashboard() {
 
                         <h2>🤖</h2>
 
-                        <h3>86</h3>
+                        <h3>{dashboard.chats}</h3>
 
                         <p>AI Chats</p>
 
@@ -74,7 +121,7 @@ function Dashboard() {
 
                         <h2>❓</h2>
 
-                        <h3>18</h3>
+                        <h3>{dashboard.quizzes}</h3>
 
                         <p>Quizzes Taken</p>
 
@@ -82,11 +129,11 @@ function Dashboard() {
 
                     <div className="stat-card">
 
-                        <h2>⏳</h2>
+                        <h2>🎯</h2>
 
-                        <h3>52</h3>
+                        <h3>{dashboard.accuracy}%</h3>
 
-                        <p>Study Hours</p>
+                        <p>Quiz Accuracy</p>
 
                     </div>
 
@@ -98,25 +145,25 @@ function Dashboard() {
 
                     <div className="action-grid">
 
-                        <div className="action-card">
+                        <Link to="/chat" className="action-card">
                             🤖
                             <h3>Ask AI</h3>
-                        </div>
+                        </Link>
 
-                        <div className="action-card">
+                        <Link to="/notes" className="action-card">
                             📝
                             <h3>Generate Notes</h3>
-                        </div>
+                        </Link>
 
-                        <div className="action-card">
+                        <Link to="/quiz" className="action-card">
                             ❓
                             <h3>Create Quiz</h3>
-                        </div>
+                        </Link>
 
-                        <div className="action-card">
+                        <Link to="/saved-notes" className="action-card">
                             💾
                             <h3>Saved Notes</h3>
-                        </div>
+                        </Link>
 
                     </div>
 
@@ -143,7 +190,7 @@ function Dashboard() {
 
                         <h2>🔥 Daily Streak</h2>
 
-                        <h1>15 Days</h1>
+                        <h1>{dashboard.streak} Days</h1>
 
                         <p>Keep learning every day!</p>
 
@@ -274,13 +321,21 @@ function Dashboard() {
 
                     <div className="activity-card">
 
-                        <p>✅ AI Quiz completed</p>
+                        {dashboard.activities?.length ? (
 
-                        <p>📝 Notes generated</p>
+                            dashboard.activities.map((item, index) => (
 
-                        <p>🤖 Asked AI about React Hooks</p>
+                                <p key={index}>
+                                    {item.text}
+                                </p>
 
-                        <p>📅 Study Planner updated</p>
+                            ))
+
+                        ) : (
+
+                            <p>No recent activity.</p>
+
+                        )}
 
                     </div>
 

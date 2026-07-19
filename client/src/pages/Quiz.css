@@ -1,0 +1,459 @@
+.quiz-page {
+    min-height: 100vh;
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px;
+    color: #fff;
+}
+
+.quiz-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.quiz-subtitle {
+    color: #94a3b8;
+    margin-bottom: 35px;
+    font-size: 18px;
+}
+
+.quiz-form {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 13px;
+    align-items: center;
+}
+
+.quiz-input {
+    flex: 1;
+    padding: 15px 18px;
+    border: none;
+    border-radius: 12px;
+    background: #1e293b;
+    color: white;
+    font-size: 17px;
+    outline: none;
+}
+
+.quiz-form input {
+    width: 100%;
+    padding: 18px;
+    font-size: 18px;
+    border-radius: 12px;
+    border: none;
+    outline: none;
+}
+
+.quiz-input::placeholder {
+    color: #94a3b8;
+}
+
+.quiz-btn {
+    padding: 15px 28px;
+    border: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: .3s;
+    width: 190px;
+}
+
+.quiz-btn:hover {
+    background: #1d4ed8;
+}
+
+.loading {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 20px;
+}
+
+.quiz-card {
+    background: #1e293b;
+    padding: 25px;
+    border-radius: 16px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .25);
+}
+
+.progress-box {
+    width: 100%;
+    height: 12px;
+    background: #1e293b;
+    border-radius: 50px;
+    overflow: hidden;
+    margin: 25px 0 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb, #60a5fa);
+    transition: .4s ease;
+}
+
+.progress-text {
+    text-align: right;
+    color: #94a3b8;
+    margin-bottom: 25px;
+}
+
+.question {
+    font-size: 22px;
+    margin-bottom: 20px;
+}
+
+.status{
+    margin-top:15px;
+    font-weight:bold;
+}
+
+.correct-status{
+    color:#22c55e;
+}
+
+.wrong-status{
+    color:#ef4444;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.option {
+    padding: 15px;
+    background: #334155;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: .3s;
+}
+
+.option-btn {
+    width: 100%;
+    text-align: left;
+    padding: 14px 18px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    background: #1e293b;
+    color: white;
+    transition: .25s;
+    font-size: 15px;
+}
+
+.option-btn:hover {
+    background: #334155;
+}
+
+.option-btn.selected {
+    background: #2563eb;
+}
+
+.option-btn.correct {
+    background: #16a34a;
+}
+
+.option-btn.wrong {
+    background: #dc2626;
+}
+
+.option-btn:disabled {
+    cursor: default;
+}
+
+.next-btn {
+    margin-top: 25px;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 10px;
+    background: #16a34a;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.next-btn:hover {
+    background: #15803d;
+}
+
+.result-card {
+    background: #1e293b;
+    padding: 40px;
+    border-radius: 16px;
+    text-align: center;
+}
+
+.score {
+    font-size: 38px;
+    color: #22c55e;
+    margin: 20px 0;
+}
+
+.performance {
+    font-size: 22px;
+    margin-top: 15px;
+    color: #facc15;
+}
+
+.restart-btn {
+    margin-top: 25px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.restart-btn:hover {
+    background: #1d4ed8;
+}
+
+@media(max-width:768px) {
+
+    .quiz-form {
+        flex-direction: column;
+    }
+
+    .quiz-btn {
+        width: 100%;
+    }
+
+}
+
+.submit-btn {
+    display: block;
+    margin: 45px auto 20px;
+    padding: 16px 40px;
+    border: none;
+    border-radius: 14px;
+
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition: all .3s ease;
+
+    box-shadow: 0 12px 25px rgba(37, 99, 235, .35);
+}
+
+.submit-btn:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 18px 35px rgba(37, 99, 235, .45);
+}
+
+.submit-btn:active {
+    transform: scale(.97);
+}
+
+.submit-btn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+.result-box {
+
+    margin: 50px auto;
+
+    max-width: 600px;
+
+    background: linear-gradient(145deg, #0f172a, #1e293b);
+
+    border-radius: 22px;
+
+    padding: 40px;
+
+    text-align: center;
+
+    box-shadow: 0 20px 50px rgba(37, 99, 235, .25);
+
+    animation: pop .5s ease;
+
+}
+
+.result-header {
+
+    font-size: 28px;
+
+    font-weight: 700;
+
+    color: #60a5fa;
+
+    margin-bottom: 30px;
+
+}
+
+.score-circle {
+
+    width: 180px;
+
+    height: 180px;
+
+    margin: auto;
+
+    border-radius: 50%;
+
+    border: 8px solid #2563eb;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    align-items: center;
+
+    background: #111827;
+
+}
+
+.score-circle h1 {
+
+    font-size: 50px;
+
+    color: white;
+
+    margin: 0;
+
+}
+
+.score-circle span {
+
+    color: #94a3b8;
+
+}
+
+.score-detail {
+
+    display: flex;
+
+    justify-content: space-around;
+
+    margin: 35px 0;
+
+}
+
+.score-detail div {
+
+    background: #111827;
+
+    padding: 18px;
+
+    width: 42%;
+
+    border-radius: 15px;
+
+    color: white;
+
+    font-size: 18px;
+
+}
+
+.score-detail strong {
+
+    display: block;
+
+    margin-top: 10px;
+
+    font-size: 32px;
+
+    color: #60a5fa;
+
+}
+
+.performance {
+
+    font-size: 28px;
+
+    margin-top: 20px;
+
+    color: #facc15;
+
+}
+
+.performance-msg {
+
+    margin-top: 15px;
+
+    color: #cbd5e1;
+
+    line-height: 1.7;
+
+}
+
+.result-buttons {
+
+    margin-top: 35px;
+
+    display: flex;
+
+    justify-content: center;
+
+    gap: 20px;
+
+    flex-wrap: wrap;
+
+}
+
+.new-btn {
+
+    background: #16a34a;
+
+    color: white;
+
+    margin-top: 25px;
+
+    justify-content: center;
+
+    border: none;
+
+    padding: 15px 28px;
+
+    border-radius: 12px;
+
+    cursor: pointer;
+
+    transition: .3s;
+
+    width: 160px;
+
+    font-size: 17px;
+
+}
+
+.new-btn:hover {
+
+    background: #15803d;
+
+}
+
+@keyframes pop {
+
+    from {
+
+        opacity: 0;
+
+        transform: scale(.8);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: scale(1);
+
+    }
+
+}

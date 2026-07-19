@@ -9,6 +9,24 @@
     padding: 30px;
 }
 
+.dashboard-loading{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    height:80vh;
+
+    color:white;
+
+    font-size:30px;
+
+    font-weight:bold;
+
+}
+
 /* Welcome Section */
 
 .welcome-section {

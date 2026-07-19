@@ -16,9 +16,7 @@ export const saveNote = async (req, res) => {
         const saved = await SavedNote.create({
 
             user: req.user._id,
-
             topic,
-
             notes,
 
         });
