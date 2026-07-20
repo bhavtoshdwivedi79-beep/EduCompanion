@@ -2,7 +2,10 @@ import "./Quiz.css";
 
 import { useState } from "react";
 import Confetti from "react-confetti";
-import { generateQuiz } from "../services/quizService";
+import {
+    generateQuiz,
+    saveQuizResult,
+} from "../services/quizService";
 
 function Quiz() {
 
@@ -55,7 +58,7 @@ function Quiz() {
 
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
 
         let marks = 0;
 
@@ -67,8 +70,30 @@ function Quiz() {
 
         });
 
+        const accuracy = Math.round((marks / quiz.length) * 100);
+
         setScore(marks);
         setSubmitted(true);
+
+        try {
+
+            await saveQuizResult({
+
+                topic,
+
+                score: marks,
+
+                totalQuestions: quiz.length,
+
+                accuracy,
+
+            });
+
+        } catch (error) {
+
+            console.log(error);
+
+        }
 
     };
 

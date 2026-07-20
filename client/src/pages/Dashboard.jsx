@@ -1,5 +1,6 @@
 import "./Dashboard.css";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Dashboard/Sidebar";
 import Topbar from "../components/Dashboard/Topbar";
 import { useEffect, useState } from "react";
@@ -7,13 +8,21 @@ import { getDashboardData } from "../services/dashboardService";
 
 function Dashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const navigate = useNavigate();
     const [dashboard, setDashboard] = useState({
+
+        user: {
+            name: "",
+            email: "",
+        },
+
         notes: 0,
         chats: 0,
         quizzes: 0,
         accuracy: 0,
         streak: 0,
         activities: [],
+
     });
 
     const [loading, setLoading] = useState(true);
@@ -72,10 +81,18 @@ function Dashboard() {
 
                     <div className="welcome-text">
 
-                        <h1>Welcome Back, Bhavtosh 👋</h1>
+                        <h1>
+
+                            Welcome Back,
+                            {" "}
+                            {dashboard.user.name || "Learner"} 👋
+
+                        </h1>
 
                         <p>
+
                             Continue your learning journey with AI-powered tools.
+
                         </p>
 
                         <button className="start-btn">
@@ -145,25 +162,37 @@ function Dashboard() {
 
                     <div className="action-grid">
 
-                        <Link to="/chat" className="action-card">
+                        <div
+                            className="action-card"
+                            onClick={() => navigate("/chat")}
+                        >
                             🤖
                             <h3>Ask AI</h3>
-                        </Link>
+                        </div>
 
-                        <Link to="/notes" className="action-card">
+                        <div
+                            className="action-card"
+                            onClick={() => navigate("/notes")}
+                        >
                             📝
                             <h3>Generate Notes</h3>
-                        </Link>
+                        </div>
 
-                        <Link to="/quiz" className="action-card">
+                        <div
+                            className="action-card"
+                            onClick={() => navigate("/quiz")}
+                        >
                             ❓
                             <h3>Create Quiz</h3>
-                        </Link>
+                        </div>
 
-                        <Link to="/saved-notes" className="action-card">
+                        <div
+                            className="action-card"
+                            onClick={() => navigate("/saved-notes")}
+                        >
                             💾
                             <h3>Saved Notes</h3>
-                        </Link>
+                        </div>
 
                     </div>
 
@@ -178,11 +207,23 @@ function Dashboard() {
                             alt="Profile"
                         />
 
-                        <h3>Bhavtosh Dwivedi</h3>
+                        <h3>
 
-                        <p>B.Tech CSE (Data Science)</p>
+                            {dashboard.user.name}
 
-                        <span>Level 4 Learner 🚀</span>
+                        </h3>
+
+                        <p>
+
+                            {dashboard.user.email}
+
+                        </p>
+
+                        <span>
+
+                            Level 4 Learner 🚀
+
+                        </span>
 
                     </div>
 
@@ -190,7 +231,12 @@ function Dashboard() {
 
                         <h2>🔥 Daily Streak</h2>
 
-                        <h1>{dashboard.streak} Days</h1>
+                        <h1>
+
+                            {dashboard.streak} Day
+                            {dashboard.streak !== 1 ? "s" : ""}
+
+                        </h1>
 
                         <p>Keep learning every day!</p>
 
@@ -202,13 +248,25 @@ function Dashboard() {
 
                         <ul>
 
-                            <li>✅ Complete React Dashboard</li>
+                            <li>
+                                ✅ Create one AI Note
+                            </li>
 
-                            <li>⬜ Study Node.js</li>
+                            <li>
+                                ✅ Complete one Quiz
+                            </li>
 
-                            <li>⬜ Solve 2 DSA Problems</li>
+                            <li>
+                                ✅ Ask AI one doubt
+                            </li>
 
                         </ul>
+
+                        <p className="goal-text">
+
+                            Small daily progress builds great skills 🚀
+
+                        </p>
 
                     </div>
 

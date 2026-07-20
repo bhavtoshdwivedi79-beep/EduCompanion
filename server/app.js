@@ -4,6 +4,7 @@ import aiRoutes from "./routes/aiRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import savedNoteRoutes from "./routes/savedNoteRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import quizRoutes from "./routes/quizRoutes.js";
 
 const app = express();
 
@@ -23,6 +24,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/saved-notes", savedNoteRoutes);
 
 app.use("/api/dashboard", dashboardRoutes);
+
+app.use("/api/quiz", quizRoutes);
 
 // Home
 app.get("/", (req, res) => {

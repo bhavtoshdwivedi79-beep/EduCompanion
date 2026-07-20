@@ -1,14 +1,18 @@
 import axios from "axios";
 
-const API = axios.create({
+const aiAPI = axios.create({
     baseURL: "http://localhost:5000/api/ai",
+});
+
+const quizAPI = axios.create({
+    baseURL: "http://localhost:5000/api/quiz",
 });
 
 export const generateQuiz = async (topic) => {
 
     const token = localStorage.getItem("token");
 
-    const res = await API.post(
+    const res = await aiAPI.post(
         "/quiz",
         { topic },
         {
@@ -19,4 +23,21 @@ export const generateQuiz = async (topic) => {
     );
 
     return res.data.quiz;
+};
+
+export const saveQuizResult = async (quizData) => {
+
+    const token = localStorage.getItem("token");
+
+    const res = await quizAPI.post(
+        "/save",
+        quizData,
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+
+    return res.data;
 };
