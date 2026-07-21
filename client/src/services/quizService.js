@@ -41,3 +41,27 @@ export const saveQuizResult = async (quizData) => {
 
     return res.data;
 };
+
+export const getQuizHistory = async () => {
+
+    const token = localStorage.getItem("token");
+
+    const res = await quizAPI.get(
+
+        "/history",
+
+        {
+
+            headers: {
+
+                Authorization: `Bearer ${token}`,
+
+            },
+
+        }
+
+    );
+
+    return res.data.quizzes;
+
+};

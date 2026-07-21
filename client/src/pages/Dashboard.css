@@ -9,21 +9,21 @@
     padding: 30px;
 }
 
-.dashboard-loading{
+.dashboard-loading {
 
-    display:flex;
+    display: flex;
 
-    justify-content:center;
+    justify-content: center;
 
-    align-items:center;
+    align-items: center;
 
-    height:80vh;
+    height: 80vh;
 
-    color:white;
+    color: white;
 
-    font-size:30px;
+    font-size: 30px;
 
-    font-weight:bold;
+    font-weight: bold;
 
 }
 
@@ -198,13 +198,9 @@
 }
 
 .action-grid {
-
     display: grid;
-
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 20px;
-
 }
 
 .action-card {
@@ -239,7 +235,7 @@
 
 .action-card:hover {
 
-    transform:translateY(-8px) scale(1.03);
+    transform: translateY(-8px) scale(1.03);
 
     background: #2563eb;
     text-decoration: none;
@@ -403,13 +399,13 @@
 
 /* Goals */
 
-.goal-text{
+.goal-text {
 
-    margin-top:20px;
+    margin-top: 20px;
 
-    color:#94a3b8;
+    color: #94a3b8;
 
-    font-size:14px;
+    font-size: 14px;
 
 }
 

@@ -48,3 +48,35 @@ export const saveQuizResult = async (req, res) => {
     }
 
 };
+
+export const getQuizHistory = async (req, res) => {
+
+    try {
+
+        const quizzes = await Quiz.find({
+            user: req.user._id,
+        }).sort({ createdAt: -1 });
+
+        res.status(200).json({
+
+            success: true,
+
+            quizzes,
+
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Failed to fetch quiz history.",
+
+        });
+
+    }
+
+};

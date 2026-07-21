@@ -188,6 +188,15 @@ function Dashboard() {
 
                         <div
                             className="action-card"
+                            onClick={() => navigate("/quiz-history")}
+                        >
+                            📜
+                            <h3>Quiz History</h3>
+                        </div>
+
+
+                        <div
+                            className="action-card"
                             onClick={() => navigate("/saved-notes")}
                         >
                             💾

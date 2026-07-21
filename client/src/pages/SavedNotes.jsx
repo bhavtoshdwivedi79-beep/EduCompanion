@@ -15,10 +15,15 @@ import {
 
 function SavedNotes() {
 
+    const [search, setSearch] = useState("");
     const [notes, setNotes] = useState([]);
+
     const [selectedNote, setSelectedNote] = useState(null);
     const [pdfNote, setPdfNote] = useState(null);
     const pdfRef = useRef(null);
+
+    const [deleteId, setDeleteId] = useState(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     const fetchNotes = async () => {
 
@@ -42,23 +47,10 @@ function SavedNotes() {
 
     }, []);
 
-    const handleDelete = async (id) => {
+    const handleDelete = (id) => {
 
-        const ok = window.confirm("Delete this note?");
-
-        if (!ok) return;
-
-        try {
-
-            await deleteSavedNote(id);
-
-            fetchNotes();
-
-        } catch (error) {
-
-            console.error(error);
-
-        }
+        setDeleteId(id);
+        setShowDeleteModal(true);
 
     };
 
@@ -79,7 +71,26 @@ function SavedNotes() {
         }, 300);
 
     }, [pdfNote]);
-    
+
+    const confirmDelete = async () => {
+
+        try {
+
+            await deleteSavedNote(deleteId);
+
+            fetchNotes();
+
+        } catch (error) {
+
+            console.error(error);
+
+        }
+
+        setDeleteId(null);
+        setShowDeleteModal(false);
+
+    };
+
     const generatePDF = async () => {
 
         if (!pdfRef.current) return;
@@ -146,6 +157,20 @@ function SavedNotes() {
 
     return (
         <>
+            <div className="search-box">
+
+                <input
+                    type="text"
+                    placeholder="🔍 Search notes..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+
+            </div>
+
+            <p className="notes-count">
+                {notes.length} Saved Notes
+            </p>
 
             <div className="saved-notes-page">
 
@@ -161,56 +186,64 @@ function SavedNotes() {
 
                 ) : (
 
-                    notes.map((note) => (
+                    notes
+                        .filter((note) =>
+                            note.topic.toLowerCase().includes(search.toLowerCase())
+                        )
+                        .map((note) => (
 
-                        <div
-                            key={note._id}
-                            id={`note-${note._id}`}
-                            className="saved-card"
-                        >
+                            <div
+                                key={note._id}
+                                id={`note-${note._id}`}
+                                className="saved-card"
+                            >
 
-                            <h2 className="saved-topic">
-                                📘 {note.topic}
-                            </h2>
+                                <h2 className="saved-topic">
+                                    📘 {note.topic}
+                                </h2>
 
-                            <p className="saved-date">
-                                🗓 {new Date(note.createdAt).toLocaleString()}
-                            </p>
+                                <p className="saved-date">
+                                    🗓 {new Date(note.createdAt).toLocaleString()}
+                                </p>
 
-                            <p className="saved-preview">
-                                {note.notes.substring(0, 180)}...
-                            </p>
+                                <p className="saved-preview">
+                                    {
+                                        note.notes.length > 180
+                                            ? note.notes.substring(0, 180) + "..."
+                                            : note.notes
+                                    }
+                                </p>
 
-                            <br />
+                                <br />
 
-                            <div className="saved-buttons">
+                                <div className="saved-buttons">
 
-                                <button
-                                    className="view-btn"
-                                    onClick={() => setSelectedNote(note)}
-                                >
-                                    👁 View
-                                </button>
+                                    <button
+                                        className="view-btn"
+                                        onClick={() => setSelectedNote(note)}
+                                    >
+                                        👁 View
+                                    </button>
 
-                                <button
-                                    className="download-btn"
-                                    onClick={() => handleDownload(note)}
-                                >
-                                    📄 Download
-                                </button>
+                                    <button
+                                        className="download-btn"
+                                        onClick={() => handleDownload(note)}
+                                    >
+                                        📄 Download
+                                    </button>
 
-                                <button
-                                    className="delete-btn"
-                                    onClick={() => handleDelete(note._id)}
-                                >
-                                    🗑 Delete
-                                </button>
+                                    <button
+                                        className="delete-btn"
+                                        onClick={() => handleDelete(note._id)}
+                                    >
+                                        🗑 Delete
+                                    </button>
+
+                                </div>
 
                             </div>
 
-                        </div>
-
-                    ))
+                        ))
 
                 )}
 
@@ -280,6 +313,48 @@ function SavedNotes() {
                 )}
 
             </div>
+
+            {showDeleteModal && (
+
+                <div
+                    className="delete-overlay"
+                    onClick={() => setShowDeleteModal(false)}
+                >
+
+                    <div
+                        className="delete-modal"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+
+                        <h2>🗑 Delete Note?</h2>
+
+                        <p>
+                            Are you sure you want to delete this note?
+                        </p>
+
+                        <div className="delete-actions">
+
+                            <button
+                                className="cancel-btn"
+                                onClick={() => setShowDeleteModal(false)}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                className="confirm-btn"
+                                onClick={confirmDelete}
+                            >
+                                Delete
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            )}
 
         </>
 
