@@ -4,6 +4,7 @@ import {
     getChatHistory,
     generateNotes,
     generateQuiz,
+    deleteChat,
 } from "../controllers/aiController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -17,5 +18,7 @@ router.get("/history", protect, getChatHistory);
 router.post("/notes", protect, generateNotes);
 
 router.post("/quiz", protect, generateQuiz);
+
+router.delete("/chat/:id", protect, deleteChat);
 
 export default router;

@@ -100,6 +100,50 @@ export const getChatHistory = async (req, res) => {
 
 };
 
+export const deleteChat = async (req, res) => {
+
+    try {
+
+        const chat = await Chat.findOneAndDelete({
+
+            _id: req.params.id,
+            user: req.user._id,
+
+        });
+
+        if (!chat) {
+
+            return res.status(404).json({
+
+                success: false,
+                message: "Chat not found",
+
+            });
+
+        }
+
+        res.json({
+
+            success: true,
+            message: "Chat deleted successfully",
+
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+
+            success: false,
+            message: "Server Error",
+
+        });
+
+    }
+
+};
+
 export const generateNotes = async (req, res) => {
 
     try {

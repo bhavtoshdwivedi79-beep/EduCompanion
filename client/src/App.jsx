@@ -10,6 +10,7 @@ import Quiz from "./pages/Quiz";
 import SavedNotes from "./pages/SavedNotes";
 import MainLayout from "./layouts/MainLayout";
 import QuizHistory from "./pages/QuizHistory";
+import ChatHistory from "./pages/ChatHistory";
 
 function App() {
 
@@ -42,6 +43,8 @@ function App() {
           <Route path="/saved-notes" element={<SavedNotes />} />
 
           <Route path="/quiz-history" element={<QuizHistory />} />
+
+          <Route path="/chat-history" element={<ChatHistory />} />
 
         </Route>
 

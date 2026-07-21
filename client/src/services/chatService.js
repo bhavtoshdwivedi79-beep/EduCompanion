@@ -90,3 +90,31 @@ export const deleteSavedNote = (id) => {
     });
 
 };
+
+export const getChatHistory = () => {
+
+    const token = localStorage.getItem("token");
+
+    return API.get("/history", {
+
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+
+    });
+
+};
+
+export const deleteChat = (id) => {
+
+    const token = localStorage.getItem("token");
+
+    return API.delete(`/chat/${id}`, {
+
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+
+    });
+
+};

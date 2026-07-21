@@ -5,6 +5,7 @@ import authRoutes from "./routes/authRoutes.js";
 import savedNoteRoutes from "./routes/savedNoteRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
 
 const app = express();
 
@@ -26,6 +27,8 @@ app.use("/api/saved-notes", savedNoteRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
 app.use("/api/quiz", quizRoutes);
+
+app.use("/api/chat", chatRoutes);
 
 // Home
 app.get("/", (req, res) => {
