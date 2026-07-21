@@ -43,6 +43,18 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     </li>
                 </Link>
 
+                <Link to="/chat-history">
+                    <li onClick={() => setSidebarOpen(false)}>
+                        💬 Chat History
+                    </li>
+                </Link>
+
+                <Link to="/quiz-history">
+                    <li onClick={() => setSidebarOpen(false)}>
+                        📜 Quiz History
+                    </li>
+                </Link>
+
                 <li onClick={() => setSidebarOpen(false)}>
                     👤 Profile
                 </li>

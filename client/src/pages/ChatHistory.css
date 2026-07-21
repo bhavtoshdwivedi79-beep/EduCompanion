@@ -1,6 +1,7 @@
 .chat-history-page {
     min-height: 100vh;
-    padding: 120px 80px 60px;
+    padding: 25px 40px 30px;
+    gap: 10px;
     background: #111827;
     color: white;
 }

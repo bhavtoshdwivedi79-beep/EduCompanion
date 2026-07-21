@@ -203,6 +203,14 @@ function Dashboard() {
                             <h3>Saved Notes</h3>
                         </div>
 
+                        <div
+                            className="action-card"
+                            onClick={() => navigate("/chat-history")}
+                        >
+                            💬
+                            <h3>Chat History</h3>
+                        </div>
+
                     </div>
 
                 </section>
