@@ -1,5 +1,8 @@
 import "./ChatHistory.css";
 
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
 import { useEffect, useState } from "react";
 import { getChatHistory, deleteChat } from "../services/chatService";
 
@@ -115,7 +118,13 @@ function ChatHistory() {
 
                         <div className="modal-header">
 
-                            <h2>🤖 AI Conversation</h2>
+                            <h2>
+                                💬 Conversation
+                            </h2>
+
+                            <p>
+                                Review your previous AI discussion
+                            </p>
 
                             <button
                                 className="close-btn"
@@ -126,25 +135,66 @@ function ChatHistory() {
 
                         </div>
 
-                        <div className="chat-question">
+                        <div className="conversation-status">
 
-                            <h3>❓ Question</h3>
-
-                            <p>{selectedChat.question}</p>
+                            <span>
+                                🤖 AI Assistant
+                            </span>
 
                         </div>
 
-                        <div className="chat-answer">
+                        <div className="conversation-container">
 
-                            <h3>💡 Answer</h3>
+                            <div className="message user-message">
 
-                            <div className="chat-answer-full">
-                                {selectedChat.answer}
+                                <div className="avatar user-avatar">
+                                    BD
+                                </div>
+
+                                <div className="message-content">
+
+                                    <h4>You</h4>
+
+                                    <p>
+                                        {selectedChat.question}
+                                    </p>
+
+                                </div>
+
                             </div>
+
+                            <div className="message ai-message">
+
+                                <div className="avatar ai-avatar">
+                                    EC
+                                </div>
+
+                                <div className="message-content">
+
+                                    <h4>EduCompanion AI</h4>
+
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                        {selectedChat.answer}
+                                    </ReactMarkdown>
+
+                                </div>
+
+                            </div>
+
+                            <button
+                                className="copy-btn"
+                                onClick={() =>
+                                    navigator.clipboard.writeText(selectedChat.answer)
+                                }
+                            >
+                                📋 Copy
+                            </button>
 
                         </div>
 
                         <p className="chat-date">
+                            Last Updated
+                            <br />
                             📅 {new Date(selectedChat.createdAt).toLocaleString()}
                         </p>
 
