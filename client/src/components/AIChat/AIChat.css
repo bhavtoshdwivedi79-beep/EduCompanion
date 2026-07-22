@@ -93,11 +93,10 @@
 }
 
 .chat-page {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    height: 100vh;
     background: #0f172a;
-    color: white;
 }
 
 .chat-header {
@@ -144,10 +143,11 @@
     animation: fadeIn .25s ease;
 }
 
-.bot-msg {
+.ai-chat-page .bot-msg {
     align-self: flex-start;
     background: #1e293b;
     border: 1px solid #334155;
+    position: relative;
 }
 
 .user-msg {
@@ -170,30 +170,33 @@
     font-family: Consolas, monospace;
 }
 
-.copy-btn {
+.ai-chat-page .copy-btncopy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    float: right;
+    width: 28px;
+    height: 28px;
 
-    background: none;
-
-    border: none;
-
-    color: white;
-
-    cursor: pointer;
-
-    font-size: 16px;
-
-    opacity: .6;
-
+    margin-left: auto;
     margin-bottom: 8px;
 
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+
+    color: #cbd5e1;
+    cursor: pointer;
+
+    font-size: 13px;
+
+    transition: all .2s ease;
 }
 
 .copy-btn:hover {
-
-    opacity: 1;
-
+    background: #334155;
+    color: white;
+    transform: scale(1.05);
 }
 
 .loading {
@@ -254,7 +257,7 @@
 
 }
 
-.chat-input {
+.ai-chat-page .chat-input {
     display: flex;
     gap: 15px;
     padding: 20px;
@@ -290,11 +293,14 @@
 
 }
 
-.chat-input input:focus {
-    border-color: #3b82f6;
+.chat-input textarea:focus {
+
+    outline: none;
+    border: 1px solid #3b82f6;
+
 }
 
-.chat-input input::placeholder {
+.chat-input textarea::placeholder {
     color: #94a3b8;
 }
 

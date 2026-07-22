@@ -2,6 +2,7 @@ import "./ChatHistory.css";
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import toast, { Toaster } from "react-hot-toast";
 
 import { useEffect, useState } from "react";
 import { getChatHistory, deleteChat } from "../services/chatService";
@@ -47,6 +48,7 @@ function ChatHistory() {
     return (
 
         <div className="chat-history-page">
+            <Toaster position="top-right" />
 
             <h1>🤖 AI Chat History</h1>
 
@@ -183,9 +185,10 @@ function ChatHistory() {
 
                             <button
                                 className="copy-btn"
-                                onClick={() =>
-                                    navigator.clipboard.writeText(selectedChat.answer)
-                                }
+                                onClick={() => {
+                                    navigator.clipboard.writeText(selectedChat.answer);
+                                    toast.success("Copied!");
+                                }}
                             >
                                 📋 Copy
                             </button>

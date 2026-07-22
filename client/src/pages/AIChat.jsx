@@ -177,7 +177,7 @@ function AIChat() {
 
             </aside>
 
-            <div className="chat-page">
+            <div className="ai-chat-page">
 
                 <div className="chat-header">
                     🤖 EduCompanion AI
