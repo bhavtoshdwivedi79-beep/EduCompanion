@@ -1,7 +1,8 @@
 import "./Sidebar.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
+    const navigate = useNavigate();
 
     return (
 
@@ -63,11 +64,27 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     ⚙ Settings
                 </li>
 
-                <li onClick={() => setSidebarOpen(false)}>
-                    🚪 Logout
-                </li>
-
             </ul>
+
+            <div className="sidebar-bottom">
+
+                <button
+                    className="logout-btn"
+                    onClick={() => {
+
+                        localStorage.removeItem("token");
+                        navigate("/login");
+
+                    }}
+                >
+
+                    <span>🚪</span>
+
+                    Logout
+
+                </button>
+
+            </div>
 
         </aside>
 

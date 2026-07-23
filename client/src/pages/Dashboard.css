@@ -4,9 +4,14 @@
     background: #0f172a;
 }
 
-.dashboard-main {
-    flex: 1;
-    padding: 30px;
+.dashboard-main{
+
+    margin-left:260px;
+
+    width:calc(100% - 260px);
+
+    min-height:100vh;
+
 }
 
 .dashboard-loading {
@@ -495,7 +500,7 @@
 }
 
 .bar div {
-    
+
     width: 35px;
     min-height: 8px;
 
