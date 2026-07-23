@@ -1,34 +1,35 @@
-.chat-layout {
-
+.ai-chat-layout{
     display: flex;
-
-    height: 100vh;
-
+    min-height: 100vh;
+    background: #0f172a;
 }
 
-.sidebar {
+.ai-sidebar{
+    position: fixed;
+    top: 0;
+    left: 0;
 
     width: 280px;
+    height: 100vh;
 
     background: #111827;
 
-    border-right: 1px solid #374151;
-
     display: flex;
-
     flex-direction: column;
 
     padding: 20px;
 
-}
+    border-right: 1px solid #374151;
 
-.sidebar h2 {
+    z-index: 1000;
+}
+.ai-sidebar h2 {
 
     margin-bottom: 20px;
 
 }
 
-.new-chat-btn {
+.ai-new-chat-btn {
 
     padding: 12px;
 
@@ -46,7 +47,7 @@
 
 }
 
-.history-list {
+.ai-history-list {
 
     flex: 1;
 
@@ -54,7 +55,7 @@
 
 }
 
-.history-item {
+.ai-history-item {
 
     padding: 12px;
 
@@ -70,13 +71,13 @@
 
 }
 
-.history-item:hover {
+.ai-history-item:hover {
 
     background: #334155;
 
 }
 
-.logout-btn {
+.ai-logout-btn {
 
     padding: 12px;
 
@@ -92,14 +93,20 @@
 
 }
 
-.chat-page {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: #0f172a;
+.ai-chat-page{
+    margin-left:280px;
+
+    flex:1;
+
+    display:flex;
+    flex-direction:column;
+
+    min-height:100vh;
+
+    background:#0f172a;
 }
 
-.chat-header {
+.ai-chat-header {
     padding: 18px 30px;
     background: #111827;
     border-bottom: 1px solid #374151;
@@ -108,7 +115,7 @@
     letter-spacing: .5px;
 }
 
-.chat-box {
+.ai-chat-box {
     flex: 1;
     overflow-y: auto;
     padding: 30px;
@@ -117,23 +124,23 @@
     gap: 16px;
 }
 
-.chat-box::-webkit-scrollbar {
+.ai-chat-box::-webkit-scrollbar {
     width: 8px;
 }
 
-.chat-box::-webkit-scrollbar-thumb {
+.ai-chat-box::-webkit-scrollbar-thumb {
     background: #475569;
     border-radius: 20px;
 }
 
-.chat-box::-webkit-scrollbar-track {
+.ai-chat-box::-webkit-scrollbar-track {
 
     background: transparent;
 
 }
 
-.bot-msg,
-.user-msg {
+.ai-bot-msg,
+.ai-user-msg {
     max-width: 75%;
     padding: 16px 20px;
     border-radius: 18px;
@@ -143,34 +150,34 @@
     animation: fadeIn .25s ease;
 }
 
-.ai-chat-page .bot-msg {
+.ai-chat-page .ai-bot-msg {
     align-self: flex-start;
     background: #1e293b;
     border: 1px solid #334155;
     position: relative;
 }
 
-.user-msg {
+.ai-user-msg {
     align-self: flex-end;
     background: linear-gradient(135deg, #2563eb, #1d4ed8);
 }
 
-.bot-msg p,
-.user-msg p {
+.ai-bot-msg p,
+.ai-user-msg p {
     margin: .6rem 0;
 }
 
-.bot-msg pre {
+.ai-bot-msg pre {
     overflow-x: auto;
     border-radius: 12px;
     margin-top: 12px;
 }
 
-.bot-msg code {
+.ai-bot-msg code {
     font-family: Consolas, monospace;
 }
 
-.ai-chat-page .copy-btncopy-btn {
+.ai-chat-page .ai-copy-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -181,7 +188,7 @@
     margin-left: auto;
     margin-bottom: 8px;
 
-    background: #1e293b;
+    background: #09981c;
     border: 1px solid #334155;
     border-radius: 8px;
 
@@ -193,7 +200,7 @@
     transition: all .2s ease;
 }
 
-.copy-btn:hover {
+.ai-copy-btn:hover {
     background: #334155;
     color: white;
     transform: scale(1.05);
@@ -257,7 +264,7 @@
 
 }
 
-.ai-chat-page .chat-input {
+.ai-chat-page .ai-chat-input {
     display: flex;
     gap: 15px;
     padding: 20px;
@@ -265,7 +272,7 @@
     border-top: 1px solid #374151;
 }
 
-.chat-input textarea {
+.ai-chat-input textarea {
 
     flex: 1;
 
@@ -293,18 +300,18 @@
 
 }
 
-.chat-input textarea:focus {
+.ai-chat-input textarea:focus {
 
     outline: none;
     border: 1px solid #3b82f6;
 
 }
 
-.chat-input textarea::placeholder {
+.ai-chat-input textarea::placeholder {
     color: #94a3b8;
 }
 
-.chat-input button {
+.ai-chat-input button {
     padding: 0 28px;
     border: none;
     border-radius: 14px;
@@ -315,18 +322,18 @@
     transition: .25s;
 }
 
-.chat-input button:hover {
+.ai-chat-input button:hover {
     background: #1d4ed8;
     transform: scale(1.03);
 }
 
-.chat-input button:active {
+.ai-chat-input button:active {
 
     transform: scale(.96);
 
 }
 
-.chat-input button:disabled {
+.ai-chat-input button:disabled {
     opacity: .6;
     cursor: not-allowed;
 }

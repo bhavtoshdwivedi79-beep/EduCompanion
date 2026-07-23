@@ -129,21 +129,21 @@ function AIChat() {
 
     return (
 
-        <div className="chat-layout">
+        <div className="ai-chat-layout">
             <Toaster position="top-right" />
 
-            <aside className="sidebar">
+            <aside className="ai-sidebar">
 
                 <h2>EduCompanion</h2>
 
                 <button
-                    className="new-chat-btn"
+                    className="ai-new-chat-btn"
                     onClick={() => window.location.reload()}
                 >
                     + New Chat
                 </button>
 
-                <div className="history-list">
+                <div className="ai-history-list">
 
                     <p>Previous Chats</p>
 
@@ -153,7 +153,7 @@ function AIChat() {
 
                             <div
                                 key={index}
-                                className="history-item"
+                                className="ai-history-item"
                             >
                                 {msg.text.slice(0, 30)}...
                             </div>
@@ -163,7 +163,7 @@ function AIChat() {
                 </div>
 
                 <button
-                    className="logout-btn"
+                    className="ai-logout-btn"
                     onClick={() => {
 
                         localStorage.removeItem("token");
@@ -179,17 +179,17 @@ function AIChat() {
 
             <div className="ai-chat-page">
 
-                <div className="chat-header">
+                <div className="ai-chat-header">
                     🤖 EduCompanion AI
                 </div>
 
-                <div className="chat-box">
+                <div className="ai-chat-box">
 
                     {messages.map((msg, index) => (
 
                         <div
                             key={index}
-                            className={msg.sender === "bot" ? "bot-msg" : "user-msg"}
+                            className={msg.sender === "bot" ? "ai-bot-msg" : "ai-user-msg"}
                         >
 
                             {msg.sender === "bot" ? (
@@ -197,7 +197,7 @@ function AIChat() {
                                 <>
 
                                     <button
-                                        className="copy-btn"
+                                        className="ai-copy-btn"
                                         onClick={() => {
                                             navigator.clipboard.writeText(msg.text);
                                             toast.success("Copied!");
@@ -250,7 +250,7 @@ function AIChat() {
 
                     {loading && (
 
-                        <div className="bot-msg loading">
+                        <div className="ai-bot-msg loading">
 
                             <span></span>
                             <span></span>
@@ -264,7 +264,7 @@ function AIChat() {
 
                 </div>
 
-                <div className="chat-input">
+                <div className="ai-chat-input">
 
                     <textarea
                         value={input}
@@ -277,15 +277,10 @@ function AIChat() {
                             e.target.style.height = e.target.scrollHeight + "px";
                         }}
                         onKeyDown={(e) => {
-
                             if (e.key === "Enter" && !e.shiftKey) {
-
                                 e.preventDefault();
-
-                                sendMessage();
-
+                                handleSend();
                             }
-
                         }}
                     />
 
