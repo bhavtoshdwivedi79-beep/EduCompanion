@@ -24,6 +24,7 @@ function Dashboard() {
         streak: 0,
 
         continueRoute: "/chat",
+        weeklyProgress: [],
         activities: [],
 
     });
@@ -362,41 +363,24 @@ function Dashboard() {
 
                         <div className="bars">
 
-                            <div className="bar">
-                                <div style={{ height: "60%" }}></div>
-                                <p>Mon</p>
-                            </div>
+                            {dashboard.weeklyProgress.map((item) => (
 
-                            <div className="bar">
-                                <div style={{ height: "80%" }}></div>
-                                <p>Tue</p>
-                            </div>
+                                <div
+                                    className="bar"
+                                    key={item.day}
+                                >
 
-                            <div className="bar">
-                                <div style={{ height: "50%" }}></div>
-                                <p>Wed</p>
-                            </div>
+                                    <div
+                                        style={{
+                                            height: `${Math.max(item.count * 20, 8)}%`,
+                                        }}
+                                    />
 
-                            <div className="bar">
-                                <div style={{ height: "95%" }}></div>
-                                <p>Thu</p>
-                            </div>
+                                    <p>{item.day}</p>
 
-                            <div className="bar">
-                                <div style={{ height: "70%" }}></div>
-                                <p>Fri</p>
-                            </div>
+                                </div>
 
-                            <div className="bar">
-                                <div style={{ height: "90%" }}></div>
-                                <p>Sat</p>
-                            </div>
-
-                            <div className="bar">
-                                <div style={{ height: "40%" }}></div>
-                                <p>Sun</p>
-                            </div>
-
+                            ))}
                         </div>
 
                     </div>

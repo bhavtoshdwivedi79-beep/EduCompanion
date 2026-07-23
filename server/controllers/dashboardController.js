@@ -3,6 +3,20 @@ import Chat from "../models/Chat.js";
 import Quiz from "../models/Quiz.js";
 import User from "../models/User.js";
 
+const getDayName = (date) => {
+    const days = [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+    ];
+
+    return days[new Date(date).getDay()];
+};
+
 export const getDashboardData = async (req, res) => {
     try {
 
@@ -63,9 +77,6 @@ export const getDashboardData = async (req, res) => {
             }, 0);
 
             accuracy = Math.round(totalAccuracy / quizHistory.length);
-            const totalActivities = notes + chats + quizzes;
-
-            let progress = Math.min(totalActivities * 2, 100);
 
         }
 
@@ -123,6 +134,7 @@ export const getDashboardData = async (req, res) => {
         });
 
         activities.sort((a, b) => b.date - a.date);
+
         let continueRoute = "/chat";
 
         if (activities.length > 0) {
@@ -150,6 +162,82 @@ export const getDashboardData = async (req, res) => {
             100
         );
 
+        const weekDays = [
+            "Sun",
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat",
+        ];
+
+        const weeklyProgress = weekDays.map(day => ({
+            day,
+            count: 0,
+        }));
+
+        const allActivities = [
+            ...recentNotes.map(note => ({
+                date: note.createdAt,
+            })),
+            ...recentChats.map(chat => ({
+                date: chat.createdAt,
+            })),
+            ...recentQuizzes.map(quiz => ({
+                date: quiz.createdAt,
+            })),
+        ];
+
+        allActivities.forEach(activity => {
+
+            const day = getDayName(activity.date);
+
+            const found = weeklyProgress.find(item => item.day === day);
+
+            if (found) {
+
+                found.count++;
+
+            }
+
+        });
+
+        // Count Notes
+        recentNotes.forEach((note) => {
+            const day = getDayName(note.createdAt);
+
+            const item = weeklyProgress.find((d) => d.day === day);
+
+            if (item) {
+                item.count += 1;
+            }
+        });
+
+        // Count Chats
+        recentChats.forEach((chat) => {
+            const day = getDayName(chat.createdAt);
+
+            const item = weeklyProgress.find((d) => d.day === day);
+
+            if (item) {
+                item.count += 1;
+            }
+        });
+
+        // Count Quizzes
+        recentQuizzes.forEach((quiz) => {
+            const day = getDayName(quiz.createdAt);
+
+            const item = weeklyProgress.find((d) => d.day === day);
+
+            if (item) {
+                item.count += 1;
+            }
+        });
+
+        console.log(weeklyProgress);
+
         res.status(200).json({
 
             success: true,
@@ -170,7 +258,7 @@ export const getDashboardData = async (req, res) => {
                 progress,
                 streak: user.streak,
                 continueRoute,
-
+                weeklyProgress,
                 activities,
 
             },

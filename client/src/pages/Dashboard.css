@@ -477,35 +477,33 @@
 }
 
 .bars {
-
-    margin-top: 30px;
-
     display: flex;
-
-    justify-content: space-between;
-
+    justify-content: space-around;
     align-items: flex-end;
 
     height: 220px;
-
+    margin-top: 30px;
 }
 
 .bar {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
 
-    text-align: center;
-
+    height: 100%;
 }
 
 .bar div {
-
+    
     width: 35px;
+    min-height: 8px;
 
     background: #3b82f6;
 
     border-radius: 10px 10px 0 0;
 
-    transition: .3s;
-
+    transition: 0.3s;
 }
 
 .bar div:hover {
@@ -517,7 +515,7 @@
 .bar p {
 
     margin-top: 10px;
-
+    font-weight: 600;
 }
 
 .activity {
