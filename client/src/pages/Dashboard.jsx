@@ -20,7 +20,10 @@ function Dashboard() {
         chats: 0,
         quizzes: 0,
         accuracy: 0,
+        progress: 0,
         streak: 0,
+
+        continueRoute: "/chat",
         activities: [],
 
     });
@@ -95,7 +98,10 @@ function Dashboard() {
 
                         </p>
 
-                        <button className="start-btn">
+                        <button
+                            className="start-btn"
+                            onClick={() => navigate(dashboard.continueRoute)}
+                        >
                             Continue Learning
                         </button>
 
@@ -295,13 +301,20 @@ function Dashboard() {
 
                     <div className="progress-card">
 
-                        <p>Web Development</p>
+                        <p>Overall Learning Progress</p>
 
                         <div className="progress-bar">
-                            <div className="progress-fill" style={{ width: "75%" }}></div>
+
+                            <div
+                                className="progress-fill"
+                                style={{
+                                    width: `${dashboard.progress}%`
+                                }}
+                            ></div>
+
                         </div>
 
-                        <p>75% Completed</p>
+                        <p>{dashboard.progress}% Completed</p>
 
                     </div>
 

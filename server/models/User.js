@@ -26,6 +26,16 @@ const userSchema = new mongoose.Schema(
             enum: ["student", "teacher"],
             default: "student",
         },
+
+        streak: {
+            type: Number,
+            default: 1,
+        },
+
+        lastActive: {
+            type: Date,
+            default: Date.now,
+        },
     },
     {
         timestamps: true,

@@ -1,11 +1,40 @@
 import SavedNote from "../models/SavedNote.js";
 import Chat from "../models/Chat.js";
 import Quiz from "../models/Quiz.js";
+import User from "../models/User.js";
 
 export const getDashboardData = async (req, res) => {
     try {
 
         const userId = req.user._id;
+        const user = await User.findById(userId);
+
+        const today = new Date();
+
+        const lastActive = new Date(user.lastActive);
+
+        const diffTime = today.setHours(0, 0, 0, 0) -
+            lastActive.setHours(0, 0, 0, 0);
+
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+
+            user.streak += 1;
+            user.lastActive = new Date();
+
+            await user.save();
+
+        }
+
+        else if (diffDays > 1) {
+
+            user.streak = 1;
+            user.lastActive = new Date();
+
+            await user.save();
+
+        }
 
         const notes = await SavedNote.countDocuments({
             user: userId,
@@ -34,6 +63,9 @@ export const getDashboardData = async (req, res) => {
             }, 0);
 
             accuracy = Math.round(totalAccuracy / quizHistory.length);
+            const totalActivities = notes + chats + quizzes;
+
+            let progress = Math.min(totalActivities * 2, 100);
 
         }
 
@@ -91,6 +123,32 @@ export const getDashboardData = async (req, res) => {
         });
 
         activities.sort((a, b) => b.date - a.date);
+        let continueRoute = "/chat";
+
+        if (activities.length > 0) {
+
+            const latest = activities[0];
+
+            if (latest.type === "note") {
+                continueRoute = "/notes";
+            }
+
+            if (latest.type === "chat") {
+                continueRoute = "/chat";
+            }
+
+            if (latest.type === "quiz") {
+                continueRoute = "/quiz";
+            }
+
+        }
+
+        const totalTasks = notes + chats + quizzes;
+
+        const progress = Math.min(
+            Math.round((totalTasks / 20) * 100),
+            100
+        );
 
         res.status(200).json({
 
@@ -109,7 +167,9 @@ export const getDashboardData = async (req, res) => {
                 chats,
                 quizzes,
                 accuracy,
-                streak: 1,
+                progress,
+                streak: user.streak,
+                continueRoute,
 
                 activities,
 
