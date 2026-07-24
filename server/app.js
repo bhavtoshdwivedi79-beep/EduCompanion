@@ -6,6 +6,7 @@ import savedNoteRoutes from "./routes/savedNoteRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
+import profileRoutes from "./routes/profileRoutes.js";
 
 const app = express();
 
@@ -29,6 +30,8 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/quiz", quizRoutes);
 
 app.use("/api/chat", chatRoutes);
+
+app.use("/api/profile", profileRoutes);
 
 // Home
 app.get("/", (req, res) => {

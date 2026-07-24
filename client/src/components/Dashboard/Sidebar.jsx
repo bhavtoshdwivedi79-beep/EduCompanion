@@ -56,9 +56,11 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     </li>
                 </Link>
 
-                <li onClick={() => setSidebarOpen(false)}>
-                    👤 Profile
-                </li>
+                <Link to="/profile">
+                    <li onClick={() => setSidebarOpen(false)}>
+                        👤 Profile
+                    </li>
+                </Link>
 
                 <li onClick={() => setSidebarOpen(false)}>
                     ⚙ Settings
