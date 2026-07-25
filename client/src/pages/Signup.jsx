@@ -2,6 +2,7 @@ import "./Signup.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { signupUser } from "../services/authService";
+import toast from "react-hot-toast";
 
 function Signup() {
 
@@ -28,30 +29,23 @@ function Signup() {
 
     e.preventDefault();
 
+    const toastId = toast.loading("Creating your account...");
+
     try {
 
-      setLoading(true);
+      await signupUser(formData);
 
-      const res = await signupUser(formData);
+      toast.success("🎉 Account created successfully!", {
+        id: toastId,
+      });
 
-      localStorage.setItem("token", res.data.token);
-
-      alert("🎉 Registration Successful");
-
-      navigate("/chat");
+      navigate("/login");
 
     } catch (error) {
 
-      console.error(error);
-
-      alert(
-        error.response?.data?.message ||
-        "Registration Failed"
-      );
-
-    } finally {
-
-      setLoading(false);
+      toast.error("Signup failed.", {
+        id: toastId,
+      });
 
     }
 

@@ -1,8 +1,25 @@
 import "./Sidebar.css";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import LogoutModal from "../LogoutModal/LogoutModal";
 
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+
     const navigate = useNavigate();
+
+    const handleLogout = () => {
+
+        setShowLogoutModal(false);
+
+        localStorage.removeItem("token");
+
+        toast.success("👋 Logged out successfully!");
+
+        navigate("/login");
+
+    };
 
     return (
 
@@ -72,21 +89,26 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
                 <button
                     className="logout-btn"
-                    onClick={() => {
-
-                        localStorage.removeItem("token");
-                        navigate("/login");
-
-                    }}
+                    onClick={() => setShowLogoutModal(true)}
                 >
 
                     <span>🚪</span>
-
+                    
                     Logout
 
                 </button>
 
             </div>
+
+            <LogoutModal
+
+                isOpen={showLogoutModal}
+
+                onClose={() => setShowLogoutModal(false)}
+
+                onConfirm={handleLogout}
+
+            />
 
         </aside>
 

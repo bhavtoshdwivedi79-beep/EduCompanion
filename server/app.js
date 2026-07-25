@@ -17,6 +17,7 @@ app.use(cors({
 
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // AI Routes
 app.use("/api/ai", aiRoutes);

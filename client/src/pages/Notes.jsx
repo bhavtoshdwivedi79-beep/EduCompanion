@@ -2,6 +2,7 @@ import "./Notes.css";
 import html2canvas from "html2canvas";
 import { useState, useRef } from "react";
 import { jsPDF } from "jspdf";
+import toast from "react-hot-toast";
 import { saveNote } from "../services/savedNoteService";
 import { generateNotes } from "../services/chatService";
 
@@ -42,6 +43,8 @@ function Notes() {
 
         setLoading(true);
 
+        const toastId = toast.loading("Generating AI Notes...");
+
         try {
 
             const res = await generateNotes(selectedTopic);
@@ -50,9 +53,17 @@ function Notes() {
 
             setTopic(selectedTopic);
 
+            toast.success("📚 Notes generated successfully!", {
+                id: toastId,
+            });
+
         } catch (err) {
 
             console.log(err);
+
+            toast.error("Failed to generate notes.", {
+                id: toastId,
+            });
 
         }
 
@@ -65,12 +76,11 @@ function Notes() {
         try {
 
             await navigator.clipboard.writeText(notes);
-
-            alert("✅ Notes copied successfully!");
+            toast.success("📋 Notes copied successfully!");
 
         } catch (error) {
 
-            alert("Failed to copy notes.");
+            toast.error("Failed to copy notes.");
 
         }
 
@@ -143,20 +153,26 @@ function Notes() {
 
         if (!topic || !notes) return;
 
+        const toastId = toast.loading("Saving notes...");
+
         try {
 
             await saveNote(topic, notes);
 
-            alert("✅ Notes saved successfully!");
+            toast.success("❤️ Notes saved successfully!", {
+                id: toastId,
+            });
 
         } catch (error) {
 
             console.error(error);
 
-            alert("Failed to save notes.");
+            toast.error("Failed to save notes.", {
+                id: toastId,
+            });
 
         }
-        
+
     };
 
     return (

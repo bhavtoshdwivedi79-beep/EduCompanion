@@ -2,6 +2,7 @@ import "./Login.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { loginUser } from "../services/authService";
+import toast from "react-hot-toast";
 
 function Login() {
 
@@ -27,25 +28,28 @@ function Login() {
 
         e.preventDefault();
 
+        setLoading(true);
+
+        const toastId = toast.loading("Logging in...");
+
         try {
-
-            setLoading(true);
-
             const res = await loginUser(formData);
 
             localStorage.setItem("token", res.data.token);
 
-            alert("🎉 Login Successful");
+            toast.success("🎉 Welcome back!", {
+                id: toastId,
+            });
 
-            navigate("/chat");
+            navigate("/dashboard");
 
         } catch (error) {
 
-            console.error(error);
-
-            alert(
-                error.response?.data?.message ||
-                "Login Failed"
+            toast.error(
+                error.response?.data?.message || "Invalid email or password.",
+                {
+                    id: toastId,
+                }
             );
 
         } finally {

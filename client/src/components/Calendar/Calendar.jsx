@@ -4,6 +4,7 @@ import "./Calendar.css";
 function Calendar({ calendarActivities = {} }) {
 
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedActivities, setSelectedActivities] = useState(null);
 
     const month = currentDate.getMonth();
     const year = currentDate.getFullYear();
@@ -48,13 +49,23 @@ function Calendar({ calendarActivities = {} }) {
 
         const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-        const activities = calendarActivities[dateKey] || [];
+        const activities = calendarActivities[dateKey] || {
+            notes: [],
+            chats: [],
+            quizzes: [],
+        };
 
         cells.push(
 
             <div
                 key={day}
                 className={isToday ? "day today" : "day"}
+                onClick={() => {
+                    setSelectedActivities({
+                        date: dateKey,
+                        ...activities,
+                    });
+                }}
             >
 
                 <span className="date-number">
@@ -63,15 +74,15 @@ function Calendar({ calendarActivities = {} }) {
 
                 <div className="activity-dots">
 
-                    {activities.includes("note") && (
+                    {activities.notes.length > 0 && (
                         <span className="dot note"></span>
                     )}
 
-                    {activities.includes("chat") && (
+                    {activities.chats.length > 0 && (
                         <span className="dot chat"></span>
                     )}
 
-                    {activities.includes("quiz") && (
+                    {activities.quizzes.length > 0 && (
                         <span className="dot quiz"></span>
                     )}
 
@@ -118,6 +129,94 @@ function Calendar({ calendarActivities = {} }) {
                 {cells}
 
             </div>
+
+            {selectedActivities && (
+
+                <div className="activity-popup">
+
+                    <h3>
+                        📅 {selectedActivities.date}
+                    </h3>
+
+                    <div>
+
+                        <h4>📝 Notes</h4>
+
+                        {
+                            selectedActivities.notes.length > 0 ?
+
+                                selectedActivities.notes.map((note, index) => (
+
+                                    <p key={index}>
+                                        • {note.topic}
+                                    </p>
+
+                                ))
+
+                                :
+
+                                <p>No Notes</p>
+
+                        }
+
+                    </div>
+
+                    <div>
+
+                        <h4>🤖 Chats</h4>
+
+                        {
+                            selectedActivities.chats.length > 0 ?
+
+                                selectedActivities.chats.map((chat, index) => (
+
+                                    <p key={index}>
+                                        • {chat.question}
+                                    </p>
+
+                                ))
+
+                                :
+
+                                <p>No Chats</p>
+
+                        }
+
+                    </div>
+
+                    <div>
+
+                        <h4>❓ Quizzes</h4>
+
+                        {
+                            selectedActivities.quizzes.length > 0 ?
+
+                                selectedActivities.quizzes.map((quiz, index) => (
+
+                                    <p key={index}>
+                                        • {quiz.topic}
+                                        ({quiz.score}/{quiz.totalQuestions})
+                                    </p>
+
+                                ))
+
+                                :
+
+                                <p>No Quiz</p>
+
+                        }
+
+                    </div>
+
+                    <button
+                        onClick={() => setSelectedActivities(null)}
+                    >
+                        Close
+                    </button>
+
+                </div>
+
+            )}
 
         </div>
 

@@ -184,11 +184,21 @@ export const getDashboardData = async (req, res) => {
 
             if (!calendarActivities[key]) {
 
-                calendarActivities[key] = [];
+                calendarActivities[key] = {
+                    notes: [],
+                    chats: [],
+                    quizzes: [],
+                };
 
             }
 
-            calendarActivities[key].push("note");
+            calendarActivities[key].notes.push({
+
+                topic: note.topic,
+
+                createdAt: note.createdAt,
+
+            });
 
         });
 
@@ -199,11 +209,21 @@ export const getDashboardData = async (req, res) => {
 
             if (!calendarActivities[key]) {
 
-                calendarActivities[key] = [];
+                calendarActivities[key] = {
+                    notes: [],
+                    chats: [],
+                    quizzes: [],
+                };
 
             }
 
-            calendarActivities[key].push("chat");
+            calendarActivities[key].chats.push({
+
+                question: chat.question,
+
+                createdAt: chat.createdAt,
+
+            });
 
         });
 
@@ -214,11 +234,25 @@ export const getDashboardData = async (req, res) => {
 
             if (!calendarActivities[key]) {
 
-                calendarActivities[key] = [];
+                calendarActivities[key] = {
+                    notes: [],
+                    chats: [],
+                    quizzes: [],
+                };
 
             }
 
-            calendarActivities[key].push("quiz");
+            calendarActivities[key].quizzes.push({
+
+                topic: quiz.topic,
+
+                score: quiz.score,
+
+                totalQuestions: quiz.totalQuestions,
+
+                createdAt: quiz.createdAt,
+
+            });
 
         });
 
