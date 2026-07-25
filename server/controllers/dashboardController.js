@@ -176,40 +176,55 @@ export const getDashboardData = async (req, res) => {
 
         });
 
-        // Count Notes
+        const calendarActivities = {};
+        // Notes
         recentNotes.forEach((note) => {
-            const day = getDayName(note.createdAt);
 
-            const item = weeklyProgress.find((d) => d.day === day);
+            const key = note.createdAt.toISOString().split("T")[0];
 
-            if (item) {
-                item.count += 1;
+            if (!calendarActivities[key]) {
+
+                calendarActivities[key] = [];
+
             }
+
+            calendarActivities[key].push("note");
+
         });
 
-        // Count Chats
+        // Chats
         recentChats.forEach((chat) => {
-            const day = getDayName(chat.createdAt);
 
-            const item = weeklyProgress.find((d) => d.day === day);
+            const key = chat.createdAt.toISOString().split("T")[0];
 
-            if (item) {
-                item.count += 1;
+            if (!calendarActivities[key]) {
+
+                calendarActivities[key] = [];
+
             }
+
+            calendarActivities[key].push("chat");
+
         });
 
-        // Count Quizzes
+        // Quizzes
         recentQuizzes.forEach((quiz) => {
-            const day = getDayName(quiz.createdAt);
 
-            const item = weeklyProgress.find((d) => d.day === day);
+            const key = quiz.createdAt.toISOString().split("T")[0];
 
-            if (item) {
-                item.count += 1;
+            if (!calendarActivities[key]) {
+
+                calendarActivities[key] = [];
+
             }
+
+            calendarActivities[key].push("quiz");
+
         });
 
-        console.log(weeklyProgress);
+        console.log(calendarActivities);
+
+        // console.log(weeklyProgress);
 
         res.status(200).json({
 
@@ -232,6 +247,7 @@ export const getDashboardData = async (req, res) => {
                 streak: user.streak,
                 continueRoute,
                 weeklyProgress,
+                calendarActivities,
                 activities,
 
             },
@@ -251,3 +267,4 @@ export const getDashboardData = async (req, res) => {
 
     }
 };
+

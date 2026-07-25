@@ -1,0 +1,173 @@
+.calendar-card{
+
+    background:#1e293b;
+
+    padding:25px;
+
+    border-radius:20px;
+
+    color:white;
+
+}
+
+.calendar-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:25px;
+
+}
+
+.calendar-header h2{
+
+    font-size:24px;
+
+}
+
+.calendar-header button{
+
+    width:40px;
+
+    height:40px;
+
+    border:none;
+
+    border-radius:50%;
+
+    background:#2563eb;
+
+    color:white;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.calendar-header button:hover{
+
+    background:#3b82f6;
+
+}
+
+.weekdays{
+
+    display:grid;
+
+    grid-template-columns:repeat(7,1fr);
+
+    text-align:center;
+
+    font-weight:600;
+
+    margin-bottom:15px;
+
+}
+
+.calendar-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(7,1fr);
+
+    gap:10px;
+
+}
+
+.day{
+
+    aspect-ratio:1;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    border-radius:12px;
+
+    background:#334155;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.day:hover{
+
+    background:#2563eb;
+
+}
+
+.today{
+
+    background:#3b82f6;
+
+    font-weight:bold;
+
+}
+
+.day{
+
+    position:relative;
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+}
+
+.date-number{
+
+    font-size:15px;
+
+    font-weight:600;
+
+}
+
+.activity-dots{
+
+    display:flex;
+
+    gap:4px;
+
+    margin-top:6px;
+
+}
+
+.dot{
+
+    width:7px;
+
+    height:7px;
+
+    border-radius:50%;
+
+}
+
+.note{
+
+    background:#320684;
+
+}
+
+.chat{
+
+    background:#22c55e;
+
+}
+
+.quiz{
+
+    background:#f59e0b;
+
+}

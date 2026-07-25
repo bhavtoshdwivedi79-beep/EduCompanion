@@ -5,6 +5,7 @@ import Sidebar from "../components/Dashboard/Sidebar";
 import Topbar from "../components/Dashboard/Topbar";
 import { useEffect, useState } from "react";
 import { getDashboardData } from "../services/dashboardService";
+import Calendar from "../components/Calendar/Calendar";
 
 function Dashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -327,33 +328,9 @@ function Dashboard() {
 
                         <h2>📅 Calendar</h2>
 
-                        <div className="calendar">
-
-                            <span>Sun</span>
-                            <span>Mon</span>
-                            <span>Tue</span>
-                            <span>Wed</span>
-                            <span>Thu</span>
-                            <span>Fri</span>
-                            <span>Sat</span>
-
-                            <span>1</span>
-                            <span>2</span>
-                            <span>3</span>
-                            <span>4</span>
-                            <span>5</span>
-                            <span className="today">6</span>
-                            <span>7</span>
-
-                            <span>8</span>
-                            <span>9</span>
-                            <span>10</span>
-                            <span>11</span>
-                            <span>12</span>
-                            <span>13</span>
-                            <span>14</span>
-
-                        </div>
+                        <Calendar
+                            calendarActivities={dashboard.calendarActivities}
+                        />
 
                     </div>
 
