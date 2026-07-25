@@ -23,33 +23,6 @@ export const getDashboardData = async (req, res) => {
         const userId = req.user._id;
         const user = await User.findById(userId);
 
-        const today = new Date();
-
-        const lastActive = new Date(user.lastActive);
-
-        const diffTime = today.setHours(0, 0, 0, 0) -
-            lastActive.setHours(0, 0, 0, 0);
-
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 1) {
-
-            user.streak += 1;
-            user.lastActive = new Date();
-
-            await user.save();
-
-        }
-
-        else if (diffDays > 1) {
-
-            user.streak = 1;
-            user.lastActive = new Date();
-
-            await user.save();
-
-        }
-
         const notes = await SavedNote.countDocuments({
             user: userId,
         });

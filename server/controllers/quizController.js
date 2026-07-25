@@ -1,4 +1,5 @@
 import Quiz from "../models/Quiz.js";
+import updateStreak from "../utils/updateStreak.js";
 
 export const saveQuizResult = async (req, res) => {
 
@@ -20,6 +21,8 @@ export const saveQuizResult = async (req, res) => {
             accuracy,
 
         });
+
+        await updateStreak(req.user._id);
 
         console.log("Saved Successfully");
 

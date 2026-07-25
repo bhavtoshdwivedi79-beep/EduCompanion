@@ -1,4 +1,5 @@
 import Chat from "../models/Chat.js";
+import updateStreak from "../utils/updateStreak.js";
 
 // Get Chat History
 export const getChatHistory = async (req, res) => {
@@ -8,12 +9,16 @@ export const getChatHistory = async (req, res) => {
         const chats = await Chat.find({
 
             user: req.user._id,
+            question,
+            answer,
 
         }).sort({
 
             createdAt: -1,
 
         });
+
+        await updateStreak(req.user._id);
 
         res.status(200).json({
 

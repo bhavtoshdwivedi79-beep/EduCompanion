@@ -1,4 +1,5 @@
 import SavedNote from "../models/SavedNote.js";
+import updateStreak from "../utils/updateStreak.js";
 
 export const saveNote = async (req, res) => {
 
@@ -20,6 +21,8 @@ export const saveNote = async (req, res) => {
             notes,
 
         });
+
+        await updateStreak(req.user._id);
 
         res.status(201).json({
 
