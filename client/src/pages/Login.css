@@ -20,7 +20,8 @@
 
     max-width:430px;
 
-    background:#1e293b;
+    background:var(--card);
+    color:var(--text);
 
     border-radius:20px;
 

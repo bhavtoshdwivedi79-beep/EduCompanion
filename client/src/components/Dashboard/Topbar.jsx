@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useTheme } from "../../context/ThemeContext";
 
 function Topbar({ sidebarOpen, setSidebarOpen }) {
 
@@ -15,6 +16,7 @@ function Topbar({ sidebarOpen, setSidebarOpen }) {
     });
 
     const navigate = useNavigate();
+    const { theme, toggleTheme } = useTheme();
 
     useEffect(() => {
 
@@ -65,8 +67,11 @@ function Topbar({ sidebarOpen, setSidebarOpen }) {
 
             <div className="topbar-right">
 
-                <button className="theme-btn">
-                    🌙
+                <button
+                    className="theme-btn"
+                    onClick={toggleTheme}
+                >
+                    {theme === "dark" ? "☀️" : "🌙"}
                 </button>
 
                 <div className="notification">

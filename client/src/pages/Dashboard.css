@@ -1,16 +1,16 @@
 .dashboard {
     display: flex;
     min-height: 100vh;
-    background: #0f172a;
+    background: var(--bg);
 }
 
-.dashboard-main{
+.dashboard-main {
 
-    margin-left:260px;
+    margin-left: 260px;
 
-    width:calc(100% - 260px);
+    width: calc(100% - 260px);
 
-    min-height:100vh;
+    min-height: 100vh;
 
 }
 
@@ -36,7 +36,7 @@
 
 .welcome-section {
 
-    background: linear-gradient(135deg, #2563eb, #1e3a8a);
+    background: linear-gradient(125deg, #051943, #0a32a2);
 
     border-radius: 20px;
 
@@ -146,7 +146,7 @@
 
     padding: 28px;
 
-    color: white;
+    color: var(--text);
 
     transition: .35s;
 
@@ -196,7 +196,7 @@
 
 .quick-actions h2 {
 
-    color: white;
+    color: var(--text);
 
     margin-bottom: 20px;
 
@@ -212,7 +212,7 @@
 
     background: #1e293b;
 
-    color: white;
+    color: rgba(255, 255, 255, 0.934);
     text-decoration: none;
     color: inherit;
 
@@ -256,7 +256,7 @@
 
 .progress-section h2 {
 
-    color: white;
+    color: var(--text);
 
     margin-bottom: 20px;
 
@@ -264,13 +264,13 @@
 
 .progress-card {
 
-    background: #1e293b;
+    background: linear-gradient(135deg, #7094e2, #14358e);
 
     padding: 30px;
 
     border-radius: 18px;
 
-    color: white;
+    color: var(--text);
 
 }
 
@@ -371,8 +371,7 @@
 }
 
 .profile-card p {
-
-    color: #94a3b8;
+    color: var(--text);
 
     margin-bottom: 15px;
 
@@ -531,7 +530,7 @@
 
 .activity h2 {
 
-    color: white;
+    color: var(--text);
 
     margin-bottom: 20px;
 

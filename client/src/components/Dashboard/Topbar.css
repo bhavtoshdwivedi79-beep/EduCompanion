@@ -8,13 +8,14 @@
 
     gap: 20px;
 
-    background: #1e293b;
+    background: var(--card);
 
     padding: 18px 25px;
 
     border-radius: 15px;
 
-    margin: 20px 0;
+    margin: 1px 0px;
+    margin-bottom: 20px;
 
     flex-wrap: wrap;
 
@@ -32,9 +33,9 @@
 
     border-radius: 10px;
 
-    background: #334155;
+    background: var(--secondary);
 
-    color: white;
+    color: var(--text);
 
     cursor: pointer;
 
@@ -66,16 +67,16 @@
 
     border-radius: 10px;
 
-    background: #334155;
-
-    color: white;
+    background: var(--secondary);
+    color: var(--text);
 
     font-size: 15px;
 
 }
 
 .topbar input::placeholder {
-    color: #94a3b8;
+    color: var(--text);
+    opacity: .6;
 }
 
 .topbar-right {
@@ -109,9 +110,9 @@
 
     border: none;
 
-    background: #334155;
+    background:var(--secondary);
 
-    color: white;
+    color:var(--text);
 
     width: 42px;
 
@@ -130,7 +131,7 @@
 .theme-btn:hover,
 .bell-btn:hover {
 
-    background: #2563eb;
+    background:var(--primary);
 
 }
 
@@ -150,9 +151,9 @@
 
     width: 260px;
 
-    background: #1e293b;
+    background:var(--card);
 
-    color: white;
+    color:var(--text);
 
     border-radius: 15px;
 
@@ -168,7 +169,7 @@
 
     padding: 10px 0;
 
-    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    border-bottom:1px solid var(--border);
 
 }
 
@@ -188,7 +189,7 @@
 
     text-decoration: none;
 
-    color: white;
+    color:var(--text);
 
     max-width: 220px;
 
@@ -263,36 +264,36 @@
 
 }
 
-@media(max-width:480px){
+@media(max-width:480px) {
 
-.topbar{
+    .topbar {
 
-    padding:15px;
+        padding: 15px;
 
-}
+    }
 
-.topbar-right{
+    .topbar-right {
 
-    justify-content:space-between;
+        justify-content: space-between;
 
-}
+    }
 
-.profile-preview span{
+    .profile-preview span {
 
-    display:none;
+        display: none;
 
-}
+    }
 
-.theme-btn,
-.bell-btn,
-.menu-btn{
+    .theme-btn,
+    .bell-btn,
+    .menu-btn {
 
-    width:38px;
+        width: 38px;
 
-    height:38px;
+        height: 38px;
 
-    font-size:16px;
+        font-size: 16px;
 
-}
+    }
 
 }

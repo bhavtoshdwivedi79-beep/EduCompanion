@@ -1,6 +1,6 @@
 import "./Sidebar.css";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import LogoutModal from "../LogoutModal/LogoutModal";
 
@@ -31,53 +31,57 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
             <ul>
 
-                <Link to="/dashboard">
-                    <li onClick={() => setSidebarOpen(false)}>
-                        🏠 Dashboard
-                    </li>
-                </Link>
+                <NavLink
+                    to="/dashboard"
+                    className={({ isActive }) => isActive ? "active-link" : ""}
+                >
+                    <li>🏠 Dashboard</li>
+                </NavLink>
 
-                <Link to="/chat">
-                    <li onClick={() => setSidebarOpen(false)}>
-                        🤖 AI Chat
-                    </li>
-                </Link>
+                <NavLink
+                    to="/chat"
+                    className={({ isActive }) => isActive ? "active-link" : ""}
+                >
+                    <li>🤖 AI Chat</li>
+                </NavLink>
 
-                <Link to="/notes">
-                    <li onClick={() => setSidebarOpen(false)}>
-                        📝 Smart Notes
-                    </li>
-                </Link>
+                <NavLink
+                    to="/notes"
+                    className={({ isActive }) => isActive ? "active-link" : ""}>
+                    <li>📝 Smart Notes</li>
+                </NavLink>
 
-                <Link to="/quiz">
-                    <li onClick={() => setSidebarOpen(false)}>
-                        ❓ AI Quiz
-                    </li>
-                </Link>
+                <NavLink
+                    to="/quiz"
+                    className={({ isActive }) => isActive ? "active-link" : ""}>
+                    <li>❓ AI Quiz</li>
+                </NavLink>
 
-                <Link to="/saved-notes">
-                    <li onClick={() => setSidebarOpen(false)}>
-                        💾 Saved Notes
-                    </li>
-                </Link>
+                <NavLink
+                    to="/saved-notes"
+                    className={({ isActive }) => isActive ? "active-link" : ""}>
+                    <li>💾 Saved Notes</li>
+                </NavLink>
 
-                <Link to="/chat-history">
-                    <li onClick={() => setSidebarOpen(false)}>
+                <NavLink
+                    to="/chat-history"
+                    className={({ isActive }) => isActive ? "active-link" : ""}>
+                    <li>
                         💬 Chat History
                     </li>
-                </Link>
+                </NavLink>
 
-                <Link to="/quiz-history">
-                    <li onClick={() => setSidebarOpen(false)}>
+                <NavLink to="/quiz-history" className={({ isActive }) => isActive ? "active-link" : ""}>
+                    <li>
                         📜 Quiz History
                     </li>
-                </Link>
+                </NavLink>
 
-                <Link to="/profile">
-                    <li onClick={() => setSidebarOpen(false)}>
+                <NavLink to="/profile" className={({ isActive }) => isActive ? "active-link" : ""}>
+                    <li>
                         👤 Profile
                     </li>
-                </Link>
+                </NavLink>
 
                 <li onClick={() => setSidebarOpen(false)}>
                     ⚙ Settings
@@ -93,7 +97,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 >
 
                     <span>🚪</span>
-                    
+
                     Logout
 
                 </button>
