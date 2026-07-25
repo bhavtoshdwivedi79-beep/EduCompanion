@@ -1,56 +1,77 @@
 .topbar {
+
     display: flex;
+
     justify-content: space-between;
+
     align-items: center;
+
+    gap: 20px;
+
     background: #1e293b;
-    padding: 18px 30px;
+
+    padding: 18px 25px;
+
     border-radius: 15px;
-    margin-bottom: 20px;
-    margin-top: 20px;
-}
 
-.menu-btn{
+    margin: 20px 0;
 
-    display:none;
-
-    width:42px;
-
-    height:42px;
-
-    border:none;
-
-    border-radius:10px;
-
-    background:#334155;
-
-    color:white;
-
-    cursor:pointer;
-
-    font-size:22px;
+    flex-wrap: wrap;
 
 }
 
-@media(max-width:900px){
+.menu-btn {
 
-.menu-btn{
+    display: none;
 
-display:block;
+    width: 42px;
+
+    height: 42px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #334155;
+
+    color: white;
+
+    cursor: pointer;
+
+    font-size: 22px;
 
 }
+
+@media(max-width:900px) {
+
+    .menu-btn {
+
+        display: block;
+
+    }
 
 }
 
 .topbar input {
-    width: 320px;
-    max-width: 100%;
+
+    flex: 1;
+
+    min-width: 220px;
+
     padding: 12px 18px;
+
     border: none;
+
     outline: none;
+
     border-radius: 10px;
+
     background: #334155;
+
     color: white;
+
     font-size: 15px;
+
 }
 
 .topbar input::placeholder {
@@ -58,9 +79,17 @@ display:block;
 }
 
 .topbar-right {
+
     display: flex;
+
     align-items: center;
-    gap: 20px;
+
+    gap: 15px;
+
+    margin-left: auto;
+
+    flex-wrap: wrap;
+
 }
 
 .topbar-right span {
@@ -76,76 +105,194 @@ display:block;
 }
 
 .theme-btn,
-.bell-btn{
+.bell-btn {
 
-    border:none;
+    border: none;
 
-    background:#334155;
+    background: #334155;
 
-    color:white;
+    color: white;
 
-    width:42px;
+    width: 42px;
 
-    height:42px;
+    height: 42px;
 
-    border-radius:50%;
+    border-radius: 50%;
 
-    cursor:pointer;
+    cursor: pointer;
 
-    font-size:18px;
+    font-size: 18px;
 
-    transition:.3s;
+    transition: .3s;
 
 }
 
 .theme-btn:hover,
-.bell-btn:hover{
+.bell-btn:hover {
 
-    background:#2563eb;
-
-}
-
-.notification{
-
-    position:relative;
+    background: #2563eb;
 
 }
 
-.notification-box{
+.notification {
 
-    position:absolute;
-
-    top:55px;
-
-    right:0;
-
-    width:260px;
-
-    background:#1e293b;
-
-    color:white;
-
-    border-radius:15px;
-
-    padding:18px;
-
-    box-shadow:0 15px 35px rgba(0,0,0,.3);
-
-    z-index:100;
+    position: relative;
 
 }
 
-.notification-box p{
+.notification-box {
 
-    padding:10px 0;
+    position: absolute;
 
-    border-bottom:1px solid rgba(255,255,255,.08);
+    top: 55px;
+
+    right: 0;
+
+    width: 260px;
+
+    background: #1e293b;
+
+    color: white;
+
+    border-radius: 15px;
+
+    padding: 18px;
+
+    box-shadow: 0 15px 35px rgba(0, 0, 0, .3);
+
+    z-index: 100;
 
 }
 
-.notification-box p:last-child{
+.notification-box p {
 
-    border-bottom:none;
+    padding: 10px 0;
+
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
 
 }
 
+.notification-box p:last-child {
+
+    border-bottom: none;
+
+}
+
+.profile-preview {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    text-decoration: none;
+
+    color: white;
+
+    max-width: 220px;
+
+    transition: .3s;
+
+}
+
+.profile-preview:hover {
+
+    opacity: .85;
+
+}
+
+.profile-preview img {
+
+    width: 42px;
+
+    height: 42px;
+
+    border-radius: 50%;
+
+    flex-shrink: 0;
+
+}
+
+.profile-preview span {
+
+    font-size: 18px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+}
+
+@media(max-width:900px) {
+    .profile-preview span {
+
+        display: none;
+
+    }
+
+    .topbar {
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+    }
+
+    .topbar input {
+
+        width: 100%;
+
+        order: 2;
+
+    }
+
+    .topbar-right {
+
+        width: 100%;
+
+        justify-content: flex-end;
+
+        order: 1;
+
+    }
+
+}
+
+@media(max-width:480px){
+
+.topbar{
+
+    padding:15px;
+
+}
+
+.topbar-right{
+
+    justify-content:space-between;
+
+}
+
+.profile-preview span{
+
+    display:none;
+
+}
+
+.theme-btn,
+.bell-btn,
+.menu-btn{
+
+    width:38px;
+
+    height:38px;
+
+    font-size:16px;
+
+}
+
+}
