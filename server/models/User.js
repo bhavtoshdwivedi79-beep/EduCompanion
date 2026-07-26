@@ -32,6 +32,16 @@ const userSchema = new mongoose.Schema(
             default: 1,
         },
 
+        avatar: {
+            type: String,
+            default: "",
+        },
+
+        avatarPublicId: {
+            type: String,
+            default: "",
+        },
+
         lastActive: {
             type: Date,
             default: Date.now,

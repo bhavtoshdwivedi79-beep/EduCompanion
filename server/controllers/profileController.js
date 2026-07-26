@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import SavedNote from "../models/SavedNote.js";
 import Chat from "../models/Chat.js";
 import Quiz from "../models/Quiz.js";
+import cloudinary from "../config/cloudinary.js";
 
 export const getProfile = async (req, res) => {
     try {
@@ -63,6 +64,83 @@ export const getProfile = async (req, res) => {
 
             success: false,
             message: "Failed to load profile"
+
+        });
+
+    }
+};
+
+export const uploadAvatar = async (req, res) => {
+    try {
+
+        const user = await User.findById(req.user._id);
+
+        // Purana avatar delete karo
+        if (user.avatarPublicId) {
+
+            await cloudinary.uploader.destroy(user.avatarPublicId);
+
+        }
+
+        user.avatar = req.file.path;
+        user.avatarPublicId = req.file.filename;
+
+        await user.save();
+
+        res.status(200).json({
+
+            success: true,
+            message: "Avatar updated successfully",
+
+            avatar: user.avatar,
+
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+
+            success: false,
+            message: "Failed to upload avatar",
+
+        });
+
+    }
+};
+
+export const removeAvatar = async (req, res) => {
+    try {
+
+        const user = await User.findById(req.user._id);
+
+        if (user.avatarPublicId) {
+
+            await cloudinary.uploader.destroy(user.avatarPublicId);
+
+        }
+
+        user.avatar = "";
+        user.avatarPublicId = "";
+
+        await user.save();
+
+        res.status(200).json({
+
+            success: true,
+            message: "Avatar removed successfully",
+
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+
+            success: false,
+            message: "Failed to remove avatar",
 
         });
 
