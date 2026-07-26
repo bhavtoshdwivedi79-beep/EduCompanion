@@ -57,11 +57,8 @@ function Sidebar({
                     className={({ isActive }) => isActive ? "active-link" : ""}
                 >
                     <li>
-
                         <span>🏠</span>
-
                         {!collapsed && <span>Dashboard</span>}
-
                     </li>
                 </NavLink>
 
@@ -70,11 +67,8 @@ function Sidebar({
                     className={({ isActive }) => isActive ? "active-link" : ""}
                 >
                     <li>
-
                         <span>🏠</span>
-
                         {!collapsed && <span>AI Chat</span>}
-
                     </li>
                 </NavLink>
 
@@ -82,9 +76,7 @@ function Sidebar({
                     to="/notes"
                     className={({ isActive }) => isActive ? "active-link" : ""}>
                     <li>
-
                         <span>📝</span>
-
                         {!collapsed && <span>Smart Notes</span>}
 
                     </li>
