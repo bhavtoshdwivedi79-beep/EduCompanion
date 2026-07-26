@@ -4,6 +4,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import LogoutModal from "../LogoutModal/LogoutModal";
 import { HiOutlineBars3 } from "react-icons/hi2";
+import { useUser } from "../../context/UserContext";
 
 function Sidebar({
     sidebarOpen,
@@ -14,6 +15,7 @@ function Sidebar({
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     const navigate = useNavigate();
+    const { user } = useUser();
 
     const handleLogout = () => {
 
@@ -38,6 +40,23 @@ function Sidebar({
                 {collapsed ? "🎓" : "EduCompanion"}
 
             </h2>
+
+            <div className="sidebar-user">
+
+                <img
+                    src={
+                        user?.avatar ||
+                        "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                    }
+                    alt="User"
+                    className="sidebar-avatar"
+                />
+
+                {!collapsed && (
+                    <h4>{user?.name}</h4>
+                )}
+
+            </div>
 
             <div className="collapse-wrapper">
 
@@ -125,7 +144,7 @@ function Sidebar({
 
                 <NavLink onClick={() => setSidebarOpen(false)}>
                     <li>
-                        <span>⚙</span> 
+                        <span>⚙</span>
                         {!collapsed && <span>Settings</span>}</li>
                 </NavLink>
 

@@ -6,6 +6,7 @@ import Topbar from "../components/Dashboard/Topbar";
 import { useEffect, useState } from "react";
 import { getDashboardData } from "../services/dashboardService";
 import Calendar from "../components/Calendar/Calendar";
+import { useUser } from "../context/UserContext";
 
 function Dashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -13,12 +14,8 @@ function Dashboard() {
         JSON.parse(localStorage.getItem("sidebarCollapsed")) || false
     );
     const navigate = useNavigate();
+    const { user } = useUser();
     const [dashboard, setDashboard] = useState({
-
-        user: {
-            name: "",
-            email: "",
-        },
 
         notes: 0,
         chats: 0,
@@ -103,17 +100,11 @@ function Dashboard() {
                     <div className="welcome-text">
 
                         <h1>
-
-                            Welcome Back,
-                            {" "}
-                            {dashboard.user.name || "Learner"} 👋
-
+                            Welcome Back, {user?.name} 👋
                         </h1>
 
                         <p>
-
                             Continue your learning journey with AI-powered tools.
-
                         </p>
 
                         <button
@@ -128,7 +119,10 @@ function Dashboard() {
                     <div className="welcome-image">
 
                         <img
-                            src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                            src={
+                                user?.avatar ||
+                                "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                            }
                             alt="Student"
                         />
 
@@ -244,21 +238,16 @@ function Dashboard() {
                     <div className="profile-card">
 
                         <img
-                            src="https://i.pravatar.cc/100"
+                            src={
+                                user?.avatar ||
+                                "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                            }
                             alt="Profile"
                         />
 
-                        <h3>
+                        <h3>{user?.name}</h3>
 
-                            {dashboard.user.name}
-
-                        </h3>
-
-                        <p>
-
-                            {dashboard.user.email}
-
-                        </p>
+                        <p>{user?.email}</p>
 
                         <span>
 

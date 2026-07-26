@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useState } from "react";
+import { useUser } from "../context/UserContext";
 import "./Profile.css";
 import toast from "react-hot-toast";
 import {
@@ -9,39 +9,9 @@ import {
 
 function Profile() {
 
-    const [user, setUser] = useState(null);
+    const { user, setUser, fetchUser } = useUser();
+
     const [selectedFile, setSelectedFile] = useState(null);
-
-    useEffect(() => {
-
-        const fetchProfile = async () => {
-
-            try {
-
-                const token = localStorage.getItem("token");
-
-                const { data } = await axios.get(
-                    "http://localhost:5000/api/profile",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-
-                setUser(data.profile);
-
-            } catch (error) {
-
-                console.log(error);
-
-            }
-
-        };
-
-        fetchProfile();
-
-    }, []);
 
     const handleUpload = async () => {
 
@@ -61,10 +31,7 @@ function Profile() {
 
             const { data } = await uploadAvatar(formData);
 
-            setUser({
-                ...user,
-                avatar: data.avatar,
-            });
+            await fetchUser();
 
             setSelectedFile(null);
 
@@ -86,10 +53,7 @@ function Profile() {
 
             await removeAvatar();
 
-            setUser({
-                ...user,
-                avatar: "",
-            });
+            await fetchUser();
 
             toast.success("Avatar removed.");
 

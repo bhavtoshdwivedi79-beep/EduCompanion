@@ -1,53 +1,19 @@
 import "./Topbar.css";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { useTheme } from "../../context/ThemeContext";
+import { useUser } from "../../context/UserContext";
 
 function Topbar({ sidebarOpen, setSidebarOpen }) {
 
     const [showNotifications, setShowNotifications] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
 
-    const [user, setUser] = useState({
-        name: "",
-        email: "",
-    });
-
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
 
-    useEffect(() => {
-
-        const fetchUser = async () => {
-
-            try {
-
-                const token = localStorage.getItem("token");
-
-                const { data } = await axios.get(
-                    "http://localhost:5000/api/profile",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-
-                setUser(data.profile);
-
-            } catch (err) {
-
-                console.log(err);
-
-            }
-
-        };
-
-        fetchUser();
-
-    }, []);
+    const { user } = useUser();
 
     return (
 
@@ -96,7 +62,10 @@ function Topbar({ sidebarOpen, setSidebarOpen }) {
                 <Link to="/profile" className="profile-preview">
 
                     <img
-                        src="https://i.pravatar.cc/40"
+                        src={
+                            user?.avatar ||
+                            "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                        }
                         alt="User"
                     />
 
