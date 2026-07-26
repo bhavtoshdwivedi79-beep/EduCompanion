@@ -6,11 +6,34 @@
 
 .dashboard-main {
 
-    margin-left: 260px;
+    margin-left: 250px;
 
-    width: calc(100% - 260px);
+    width: calc(100% - 250px);
 
     min-height: 100vh;
+
+    transition: margin-left .35s ease, width .35s ease;
+
+}
+
+.dashboard-main.collapsed {
+
+    margin-left: 80px;
+
+    width: calc(100% - 80px);
+
+}
+
+@media(max-width:900px) {
+
+    .dashboard-main,
+    .dashboard-main.collapsed {
+
+        margin-left: 0;
+
+        width: 100%;
+
+    }
 
 }
 
@@ -177,7 +200,7 @@
 .stat-card h3 {
 
     font-size: 34px;
-
+    color: white;
     margin-bottom: 8px;
 
 }
@@ -264,7 +287,7 @@
 
 .progress-card {
 
-    background: linear-gradient(135deg, #7094e2, #14358e);
+    background: rgb(14, 14, 232);
 
     padding: 30px;
 
@@ -272,6 +295,10 @@
 
     color: var(--text);
 
+}
+
+.progress-card p {
+    color: white;
 }
 
 .progress-bar {

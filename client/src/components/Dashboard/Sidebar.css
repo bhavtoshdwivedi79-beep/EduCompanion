@@ -4,7 +4,7 @@
     top: 0;
     left: 0;
 
-    width: 250px;
+    width: 240px;
     height: 100vh;
 
     background: var(--card);
@@ -17,13 +17,21 @@
     display: flex;
     flex-direction: column;
 
-    z-index: 1000;
+    transition: width .35s ease, padding .35s ease;
 
-    box-sizing:border-box;
+    box-sizing: border-box;
 
-    overflow-y:auto;
+    overflow-y: auto;
 
-    scrollbar-width:none; 
+    scrollbar-width: none;
+}
+
+.sidebar.collapsed {
+
+    width: 70px;
+
+    padding: 24px 10px;
+
 }
 
 .sidebar-logo {
@@ -31,29 +39,88 @@
     font-size: 28px;
     margin-bottom: 40px;
     text-align: center;
+    transition: .3s;
 }
 
-.sidebar a{
+.sidebar a {
 
-    text-decoration:none;
+    text-decoration: none;
 
-    color:inherit;
+    color: inherit;
 
-    display:block;
+    display: block;
 
 }
 
-.active-link li{
+.collapse-wrapper {
 
-    background:var(--primary);
+    display: flex;
 
-    color:white;
+    justify-content: center;
 
-    transform:translateX(6px);
+    margin-bottom: 25px;
 
-    font-weight:600;
+}
 
-    box-shadow:0 6px 15px rgba(37,99,235,.35);
+.collapse-btn {
+
+    width: 42px;
+
+    height: 42px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: var(--secondary);
+
+    color: var(--text);
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    cursor: pointer;
+
+    transition: .3s;
+
+}
+
+.collapse-btn svg {
+
+    font-size: 24px;
+
+}
+
+.collapse-btn.rotate{
+
+    transform:rotate(180deg);
+
+}
+
+.collapse-btn:hover {
+
+    background: var(--primary);
+
+    color: #fff;
+
+    transform: scale(1.08);
+
+}
+
+.active-link li {
+
+    background: var(--primary);
+
+    color: white;
+
+    transform: translateX(6px);
+
+    font-weight: 600;
+
+    box-shadow: 0 6px 15px rgba(37, 99, 235, .35);
 
 }
 
@@ -66,18 +133,48 @@
     flex-direction: column;
 
     flex: 1;
-    
+
 
 }
 
 .sidebar ul li {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
     padding: 14px 18px;
+
     margin-bottom: 10px;
+
     border-radius: 10px;
-    color:var(--text);
+
+    color: var(--text);
+
     cursor: pointer;
+
     transition: .3s;
+
     font-size: 17px;
+
+}
+
+.sidebar.collapsed ul li {
+
+    justify-content: center;
+
+    padding: 14px 8px;
+
+}
+
+.sidebar.collapsed .logout-btn {
+
+    justify-content: center;
+
+    padding: 14px;
+
 }
 
 .sidebar ul li:hover {
@@ -151,7 +248,7 @@
 
     border: 1px solid rgba(255, 255, 255, .08);
 
-    background:var(--secondary);
+    background: var(--secondary);
 
     color: #f87171;
 

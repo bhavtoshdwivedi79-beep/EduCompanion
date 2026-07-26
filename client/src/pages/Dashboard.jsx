@@ -9,6 +9,9 @@ import Calendar from "../components/Calendar/Calendar";
 
 function Dashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [collapsed, setCollapsed] = useState(
+        JSON.parse(localStorage.getItem("sidebarCollapsed")) || false
+    );
     const navigate = useNavigate();
     const [dashboard, setDashboard] = useState({
 
@@ -58,6 +61,15 @@ function Dashboard() {
 
     }, []);
 
+    useEffect(() => {
+
+        localStorage.setItem(
+            "sidebarCollapsed",
+            JSON.stringify(collapsed)
+        );
+
+    }, [collapsed]);
+
     if (loading) {
 
         return (
@@ -74,13 +86,17 @@ function Dashboard() {
             <Sidebar
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
+                collapsed={collapsed}
+                setCollapsed={setCollapsed}
             />
 
-            <div className="dashboard-main">
+            <div className={collapsed ? "dashboard-main collapsed" : "dashboard-main"}>
 
                 <Topbar
                     sidebarOpen={sidebarOpen}
                     setSidebarOpen={setSidebarOpen}
+                    collapsed={collapsed}
+                    setCollapsed={setCollapsed}
                 />
                 <section className="welcome-section">
 

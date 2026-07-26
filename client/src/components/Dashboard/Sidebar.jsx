@@ -3,8 +3,14 @@ import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import LogoutModal from "../LogoutModal/LogoutModal";
+import { HiOutlineBars3 } from "react-icons/hi2";
 
-function Sidebar({ sidebarOpen, setSidebarOpen }) {
+function Sidebar({
+    sidebarOpen,
+    setSidebarOpen,
+    collapsed,
+    setCollapsed,
+}) {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     const navigate = useNavigate();
@@ -23,11 +29,26 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
     return (
 
-        <aside className={sidebarOpen ? "sidebar active" : "sidebar"}>
+        <aside
+            className={`sidebar ${sidebarOpen ? "active" : ""} ${collapsed ? "collapsed" : ""}`}
+        >
 
             <h2 className="sidebar-logo">
-                EduCompanion
+
+                {collapsed ? "🎓" : "EduCompanion"}
+
             </h2>
+
+            <div className="collapse-wrapper">
+
+                <button
+                    className={`collapse-btn ${collapsed ? "rotate" : ""}`}
+                    onClick={() => setCollapsed(!collapsed)}
+                >
+                    <HiOutlineBars3 />
+                </button>
+
+            </div>
 
             <ul>
 
@@ -35,57 +56,86 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     to="/dashboard"
                     className={({ isActive }) => isActive ? "active-link" : ""}
                 >
-                    <li>🏠 Dashboard</li>
+                    <li>
+
+                        <span>🏠</span>
+
+                        {!collapsed && <span>Dashboard</span>}
+
+                    </li>
                 </NavLink>
 
                 <NavLink
                     to="/chat"
                     className={({ isActive }) => isActive ? "active-link" : ""}
                 >
-                    <li>🤖 AI Chat</li>
+                    <li>
+
+                        <span>🏠</span>
+
+                        {!collapsed && <span>AI Chat</span>}
+
+                    </li>
                 </NavLink>
 
                 <NavLink
                     to="/notes"
                     className={({ isActive }) => isActive ? "active-link" : ""}>
-                    <li>📝 Smart Notes</li>
+                    <li>
+
+                        <span>📝</span>
+
+                        {!collapsed && <span>Smart Notes</span>}
+
+                    </li>
                 </NavLink>
 
                 <NavLink
                     to="/quiz"
                     className={({ isActive }) => isActive ? "active-link" : ""}>
-                    <li>❓ AI Quiz</li>
+                    <li>
+                        <span>❓</span>
+                        {!collapsed && <span>AI Quiz</span>}
+                    </li>
                 </NavLink>
 
                 <NavLink
                     to="/saved-notes"
                     className={({ isActive }) => isActive ? "active-link" : ""}>
-                    <li>💾 Saved Notes</li>
+                    <li>
+                        <span>💾</span>
+                        {!collapsed && <span>Saved Notes</span>}
+                    </li>
                 </NavLink>
 
                 <NavLink
                     to="/chat-history"
                     className={({ isActive }) => isActive ? "active-link" : ""}>
                     <li>
-                        💬 Chat History
+                        <span>💬</span>
+                        {!collapsed && <span>Chat History</span>}
                     </li>
                 </NavLink>
 
                 <NavLink to="/quiz-history" className={({ isActive }) => isActive ? "active-link" : ""}>
                     <li>
-                        📜 Quiz History
+                        <span>📜</span>
+                        {!collapsed && <span>Quiz History</span>}
                     </li>
                 </NavLink>
 
                 <NavLink to="/profile" className={({ isActive }) => isActive ? "active-link" : ""}>
                     <li>
-                        👤 Profile
+                        <span>👤</span>
+                        {!collapsed && <span>Profile</span>}
                     </li>
                 </NavLink>
 
-                <li onClick={() => setSidebarOpen(false)}>
-                    ⚙ Settings
-                </li>
+                <NavLink onClick={() => setSidebarOpen(false)}>
+                    <li>
+                        <span>⚙</span> 
+                        {!collapsed && <span>Settings</span>}</li>
+                </NavLink>
 
             </ul>
 
@@ -97,8 +147,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 >
 
                     <span>🚪</span>
-
-                    Logout
+                    {!collapsed && "Logout"}
 
                 </button>
 
