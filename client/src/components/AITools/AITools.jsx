@@ -1,12 +1,15 @@
 import "./AITools.css";
+import { useNavigate } from "react-router-dom";
 
 function AITools() {
+  const navigate = useNavigate();
 
   const tools = [
 
     {
       icon: "📝",
       title: "AI Notes",
+      route: "/notes",
       desc: "Generate clean, well-structured notes in seconds.",
       button: "Try Now →"
     },
@@ -14,6 +17,7 @@ function AITools() {
     {
       icon: "🧠",
       title: "AI Quiz",
+      route: "/quiz",
       desc: "Practice unlimited AI-generated quizzes.",
       button: "Try Now →"
     },
@@ -21,6 +25,7 @@ function AITools() {
     {
       icon: "💬",
       title: "Doubt Solver",
+      route: "/chat",
       desc: "Ask questions and receive instant AI explanations.",
       button: "Try Now →"
     },
@@ -28,6 +33,7 @@ function AITools() {
     {
       icon: "📅",
       title: "Study Planner",
+      route: null,
       desc: "Create personalized daily study schedules.",
       button: "Try Now →"
     },
@@ -35,6 +41,7 @@ function AITools() {
     {
       icon: "📚",
       title: "Flashcards",
+      route: null,
       desc: "Revise concepts quickly using AI flashcards.",
       button: "Try Now →"
     },
@@ -42,6 +49,7 @@ function AITools() {
     {
       icon: "📈",
       title: "Progress Tracker",
+      route: "/dashboard",
       desc: "Track your learning journey and stay motivated.",
       button: "Try Now →"
     }
@@ -72,7 +80,14 @@ function AITools() {
 
             <p>{tool.desc}</p>
 
-            <button className="tool-btn">
+            <button
+              className="tool-btn"
+              onClick={() => {
+                if (tool.route) {
+                  navigate(tool.route);
+                }
+              }}
+            >
               {tool.button}
             </button>
 
