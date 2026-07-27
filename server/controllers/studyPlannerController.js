@@ -6,9 +6,21 @@ export const createTask = async (req, res) => {
 
     try {
 
-        const { subject, topic, studyDate, studyTime } = req.body;
+        const {
+            subject,
+            topic,
+            studyDate,
+            studyTime,
+            priority,
+        } = req.body;
 
-        if (!subject || !topic || !studyDate || !studyTime) {
+        if (
+            !subject ||
+            !topic ||
+            !studyDate ||
+            !studyTime ||
+            !priority
+        ) {
             return res.status(400).json({
                 success: false,
                 message: "All fields are required.",
@@ -26,6 +38,8 @@ export const createTask = async (req, res) => {
             studyDate,
 
             studyTime,
+            
+            priority,
 
         });
 

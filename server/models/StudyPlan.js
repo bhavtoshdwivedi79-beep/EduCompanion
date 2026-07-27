@@ -30,6 +30,12 @@ const studyPlanSchema = new mongoose.Schema(
             required: true,
         },
 
+        priority: {
+            type: String,
+            enum: ["High", "Medium", "Low"],
+            default: "Medium",
+        },
+
         completed: {
             type: Boolean,
             default: false,

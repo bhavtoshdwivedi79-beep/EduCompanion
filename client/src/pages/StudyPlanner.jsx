@@ -10,6 +10,7 @@ function StudyPlanner() {
         topic: "",
         studyDate: "",
         studyTime: "",
+        priority: "Medium",
     });
 
     const [tasks, setTasks] = useState([]);
@@ -80,12 +81,11 @@ function StudyPlanner() {
             toast.success("📚 Study task added!");
 
             setFormData({
-
                 subject: "",
                 topic: "",
                 studyDate: "",
                 studyTime: "",
-
+                priority: "Medium",
             });
 
             fetchTasks();
@@ -154,11 +154,43 @@ function StudyPlanner() {
 
     };
 
+    const completedTasks = tasks.filter(task => task.completed).length;
+
+    const progress =
+        tasks.length === 0
+            ? 0
+            : Math.round((completedTasks / tasks.length) * 100);
+
     return (
 
         <div className="planner-page">
 
             <h1>📅 Study Planner</h1>
+
+            <div className="planner-progress">
+
+                <div className="progress-info">
+
+                    <h3>Today's Progress</h3>
+
+                    <span>
+
+                        {completedTasks} / {tasks.length} Tasks Completed
+
+                    </span>
+
+                </div>
+
+                <div className="progress-bar">
+
+                    <div
+                        className="progress-fill"
+                        style={{ width: `${progress}%` }}
+                    ></div>
+
+                </div>
+
+            </div>
 
             <form
                 className="planner-form"
@@ -194,6 +226,20 @@ function StudyPlanner() {
                     value={formData.studyTime}
                     onChange={handleChange}
                 />
+
+                <select
+                    name="priority"
+                    value={formData.priority}
+                    onChange={handleChange}
+                >
+
+                    <option value="High">🔴 High Priority</option>
+
+                    <option value="Medium">🟡 Medium Priority</option>
+
+                    <option value="Low">🟢 Low Priority</option>
+
+                </select>
 
                 <button type="submit">
 
@@ -232,17 +278,19 @@ function StudyPlanner() {
 
                                     <div>
 
-                                        <h3>
+                                        <div className="task-header">
 
-                                            {task.subject}
+                                            <h3>{task.subject}</h3>
 
-                                        </h3>
+                                            <span
+                                                className={`priority ${task.priority.toLowerCase()}`}
+                                            >
+                                                {task.priority}
+                                            </span>
 
-                                        <p>
+                                        </div>
 
-                                            {task.topic}
-
-                                        </p>
+                                        <p>{task.topic}</p>
 
                                         <small>
 
@@ -267,13 +315,9 @@ function StudyPlanner() {
                                         >
 
                                             {
-
                                                 task.completed
-
-                                                    ? "↩ Undo"
-
-                                                    : "✔ Complete"
-
+                                                    ? "↩ Mark Pending"
+                                                    : "✔ Mark Complete"
                                             }
 
                                         </button>
