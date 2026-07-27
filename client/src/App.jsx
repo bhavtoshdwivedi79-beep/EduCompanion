@@ -12,6 +12,7 @@ import MainLayout from "./layouts/MainLayout";
 import QuizHistory from "./pages/QuizHistory";
 import ChatHistory from "./pages/ChatHistory";
 import Profile from "./pages/Profile";
+import StudyPlanner from "./pages/StudyPlanner";
 
 function App() {
 
@@ -48,6 +49,8 @@ function App() {
           <Route path="/chat-history" element={<ChatHistory />} />
 
           <Route path="/profile" element={<Profile />} />
+
+          <Route path="/study-planner" element={<StudyPlanner />} />
 
         </Route>
 

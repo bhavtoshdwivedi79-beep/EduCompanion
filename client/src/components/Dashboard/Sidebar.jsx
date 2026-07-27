@@ -142,10 +142,14 @@ function Sidebar({
                     </li>
                 </NavLink>
 
-                <NavLink onClick={() => setSidebarOpen(false)}>
+                <NavLink
+                    to="/study-planner"
+                    className={({ isActive }) => isActive ? "active-link" : ""}
+                >
                     <li>
-                        <span>⚙</span>
-                        {!collapsed && <span>Settings</span>}</li>
+                        <span>📅</span>
+                        {!collapsed && <span>Study Planner</span>}
+                    </li>
                 </NavLink>
 
             </ul>

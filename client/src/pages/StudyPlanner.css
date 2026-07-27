@@ -1,0 +1,314 @@
+.planner-page {
+
+    padding: 30px;
+
+    color: var(--text);
+
+    min-height: 100vh;
+
+    background: var(--bg);
+
+}
+
+.planner-page h1 {
+
+    font-size: 32px;
+
+    margin-bottom: 25px;
+
+    color: var(--text);
+
+}
+
+/* ===========================
+        FORM
+=========================== */
+
+.planner-form {
+
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+
+    gap: 18px;
+
+    background: var(--card);
+
+    padding: 25px;
+
+    border-radius: 18px;
+
+    box-shadow: 0 8px 20px rgba(0,0,0,.08);
+
+    margin-bottom: 35px;
+
+}
+
+.planner-form input {
+
+    padding: 14px;
+
+    border: 1px solid rgba(255,255,255,.08);
+
+    border-radius: 12px;
+
+    background: var(--secondary);
+
+    color: var(--text);
+
+    font-size: 15px;
+
+    outline: none;
+
+    transition: .3s;
+
+}
+
+.planner-form input:focus {
+
+    border-color: var(--primary);
+
+    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+
+}
+
+.planner-form button {
+
+    background: var(--primary);
+
+    color: white;
+
+    border: none;
+
+    border-radius: 12px;
+
+    padding: 14px;
+
+    cursor: pointer;
+
+    font-size: 16px;
+
+    font-weight: 600;
+
+    transition: .3s;
+
+}
+
+.planner-form button:hover {
+
+    transform: translateY(-2px);
+
+    opacity: .95;
+
+}
+
+/* ===========================
+        TASK LIST
+=========================== */
+
+.task-list{
+
+    display:grid;
+
+    gap:20px;
+
+}
+
+.task-card{
+
+    background:var(--card);
+
+    border-radius:18px;
+
+    padding:22px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:20px;
+
+    box-shadow:0 8px 20px rgba(0,0,0,.08);
+
+    transition:.3s;
+
+}
+
+.task-card:hover{
+
+    transform:translateY(-4px);
+
+}
+
+.task-card h3{
+
+    margin-bottom:8px;
+
+    color:var(--primary);
+
+}
+
+.task-card p{
+
+    margin-bottom:10px;
+
+    color:var(--text);
+
+}
+
+.task-card small{
+
+    color:gray;
+
+}
+
+/* ===========================
+      COMPLETED TASK
+=========================== */
+
+.completed{
+
+    border-left:6px solid #22c55e;
+
+    opacity:.85;
+
+}
+
+.completed h3,
+.completed p{
+
+    text-decoration:line-through;
+
+}
+
+/* ===========================
+        BUTTONS
+=========================== */
+
+.task-actions{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:12px;
+
+}
+
+.task-actions button{
+
+    border:none;
+
+    padding:11px 16px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+    font-weight:600;
+
+}
+
+.task-actions button:first-child{
+
+    background:#22c55e;
+
+    color:white;
+
+}
+
+.task-actions button:first-child:hover{
+
+    background:#16a34a;
+
+}
+
+.task-actions button:last-child{
+
+    background:#ef4444;
+
+    color:white;
+
+}
+
+.task-actions button:last-child:hover{
+
+    background:#dc2626;
+
+}
+
+/* ===========================
+        EMPTY STATE
+=========================== */
+
+.empty{
+
+    text-align:center;
+
+    padding:60px;
+
+    background:var(--card);
+
+    border-radius:18px;
+
+    color:gray;
+
+    font-size:18px;
+
+}
+
+/* ===========================
+      RESPONSIVE
+=========================== */
+
+@media(max-width:768px){
+
+.task-card{
+
+    flex-direction:column;
+
+    align-items:flex-start;
+
+}
+
+.task-actions{
+
+    width:100%;
+
+    flex-direction:row;
+
+}
+
+.task-actions button{
+
+    flex:1;
+
+}
+
+}
+
+@media(max-width:500px){
+
+.planner-page{
+
+    padding:18px;
+
+}
+
+.planner-page h1{
+
+    font-size:26px;
+
+}
+
+.planner-form{
+
+    padding:18px;
+
+}
+
+}

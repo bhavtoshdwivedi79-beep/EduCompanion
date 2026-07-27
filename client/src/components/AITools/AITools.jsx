@@ -33,7 +33,7 @@ function AITools() {
     {
       icon: "📅",
       title: "Study Planner",
-      route: null,
+      route: "/study-planner",
       desc: "Create personalized daily study schedules.",
       button: "Try Now →"
     },

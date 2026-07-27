@@ -13,6 +13,7 @@ function MainLayout() {
         "/saved-notes",
         "/quiz-history",
         "/chat-history",
+        "/study-planner",
     ];
 
     const hideNavbar = dashboardRoutes.includes(location.pathname);
