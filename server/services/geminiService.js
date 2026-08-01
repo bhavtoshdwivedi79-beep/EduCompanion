@@ -153,6 +153,67 @@ Rules:
 
     });
 
+    let response = completion.choices[0].message.content;
+
+    response = response
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+
+    return JSON.parse(response);
+
+}
+
+export async function generateFlashcards(topic) {
+
+    const messages = [
+
+        {
+            role: "system",
+            content: `
+You are an AI Flashcard Generator.
+
+Generate exactly 10 flashcards.
+
+Return ONLY a valid JSON array.
+
+Each flashcard must follow this format:
+
+{
+   "question":"Question here",
+   "answer":"Answer here"
+}
+
+Rules:
+- Return only JSON.
+- No markdown.
+- No explanation.
+- No headings.
+- No numbering.
+- Keep answers short (1-3 lines).
+- Cover beginner to intermediate concepts.
+`
+        },
+
+        {
+            role: "user",
+            content: `Generate flashcards on "${topic}".`
+        }
+
+    ];
+
+    const completion = await groq.chat.completions.create({
+
+        model: "llama-3.3-70b-versatile",
+
+        messages,
+
+        temperature: 0.5,
+
+        max_tokens: 1500,
+
+    });
+
     return JSON.parse(completion.choices[0].message.content);
 
 }
