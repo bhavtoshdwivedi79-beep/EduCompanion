@@ -2,6 +2,7 @@ import SavedNote from "../models/SavedNote.js";
 import Chat from "../models/Chat.js";
 import Quiz from "../models/Quiz.js";
 import User from "../models/User.js";
+import Flashcard from "../models/Flashcard.js";
 
 const getDayName = (date) => {
     const days = [
@@ -32,6 +33,10 @@ export const getDashboardData = async (req, res) => {
         });
 
         const quizzes = await Quiz.countDocuments({
+            user: userId,
+        });
+
+        const flashcards = await Flashcard.countDocuments({
             user: userId,
         });
 
@@ -106,6 +111,27 @@ export const getDashboardData = async (req, res) => {
 
         });
 
+        // Recent Flashcards
+        const recentFlashcards = await Flashcard.find({
+            user: userId,
+        })
+            .sort({ createdAt: -1 })
+            .limit(3);
+
+        recentFlashcards.forEach((flashcard) => {
+
+            activities.push({
+
+                type: "flashcard",
+
+                text: `📚 Generated Flashcards on "${flashcard.topic}"`,
+
+                date: flashcard.createdAt,
+
+            });
+
+        });
+
         activities.sort((a, b) => b.date - a.date);
 
         let continueRoute = "/chat";
@@ -126,9 +152,13 @@ export const getDashboardData = async (req, res) => {
                 continueRoute = "/quiz";
             }
 
+            if (latest.type === "flashcard") {
+                continueRoute = "/flashcards";
+            }
+
         }
 
-        const totalTasks = notes + chats + quizzes;
+        const totalTasks = notes + chats + quizzes + flashcards;
 
         const progress = Math.min(
             Math.round((totalTasks / 20) * 100),
@@ -159,6 +189,9 @@ export const getDashboardData = async (req, res) => {
             })),
             ...recentQuizzes.map(quiz => ({
                 date: quiz.createdAt,
+            })),
+            ...recentFlashcards.map(card => ({
+                date: card.createdAt,
             })),
         ];
 
@@ -256,6 +289,36 @@ export const getDashboardData = async (req, res) => {
 
         });
 
+        // Flashcards
+        recentFlashcards.forEach((card) => {
+
+            const key = card.createdAt.toISOString().split("T")[0];
+
+            if (!calendarActivities[key]) {
+
+                calendarActivities[key] = {
+                    notes: [],
+                    chats: [],
+                    quizzes: [],
+                    flashcards: [],
+                };
+
+            }
+
+            if (!calendarActivities[key].flashcards) {
+                calendarActivities[key].flashcards = [];
+            }
+
+            calendarActivities[key].flashcards.push({
+
+                topic: card.topic,
+
+                createdAt: card.createdAt,
+
+            });
+
+        });
+
         console.log(calendarActivities);
 
         // console.log(weeklyProgress);
@@ -276,6 +339,7 @@ export const getDashboardData = async (req, res) => {
                 notes,
                 chats,
                 quizzes,
+                flashcards,
                 accuracy,
                 progress,
                 streak: user.streak,

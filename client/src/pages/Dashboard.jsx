@@ -20,6 +20,7 @@ function Dashboard() {
         notes: 0,
         chats: 0,
         quizzes: 0,
+        flashcards: 0,
         accuracy: 0,
         progress: 0,
         streak: 0,
@@ -159,6 +160,16 @@ function Dashboard() {
                         <h3>{dashboard.quizzes}</h3>
 
                         <p>Quizzes Taken</p>
+
+                    </div>
+
+                    <div className="stat-card">
+
+                        <h2>🃏</h2>
+
+                        <h3>{dashboard.flashcards}</h3>
+
+                        <p>Flashcards Created</p>
 
                     </div>
 
