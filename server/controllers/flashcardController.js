@@ -2,8 +2,10 @@ import Flashcard from "../models/Flashcard.js";
 import { generateFlashcards } from "../services/geminiService.js";
 
 // Generate AI Flashcards
+// Generate AI Flashcards (Only Generate)
 export const createFlashcards = async (req, res) => {
     try {
+
         const { topic } = req.body;
 
         if (!topic) {
@@ -15,26 +17,67 @@ export const createFlashcards = async (req, res) => {
 
         const cards = await generateFlashcards(topic);
 
-        const flashcard = await Flashcard.create({
-
-            user: req.user._id,
-            topic,
-            flashcards: cards,
-
-        });
-
-        res.status(201).json({
+        res.json({
             success: true,
-            flashcard,
+            flashcards: cards,
         });
+
     } catch (error) {
+
         console.error(error);
 
         res.status(500).json({
             success: false,
             message: "Failed to generate flashcards",
         });
+
     }
+};
+
+// Save Flashcards
+export const saveFlashcards = async (req, res) => {
+
+    try {
+
+        const { topic, flashcards } = req.body;
+
+        if (!topic || !flashcards) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Missing Data",
+            });
+
+        }
+
+        const saved = await Flashcard.create({
+
+            user: req.user._id,
+            topic,
+            flashcards,
+
+        });
+
+        res.status(201).json({
+
+            success: true,
+            flashcard: saved,
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+
+            success: false,
+            message: "Failed to save flashcards",
+
+        });
+
+    }
+
 };
 
 // Get All Flashcards

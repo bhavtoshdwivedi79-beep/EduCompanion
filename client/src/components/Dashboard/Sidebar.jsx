@@ -155,13 +155,29 @@ function Sidebar({
                     </li>
                 </NavLink>
 
+                <NavLink
+                    to="/flashcard-history"
+                    className={({ isActive }) =>
+                        isActive ? "active-link" : ""
+                    }
+                >
+                    <li>
+                        <span>🃏</span>
+                        {!collapsed &&
+                            <span>
+                                Flashcard History
+                            </span>
+                        }
+                    </li>
+                </NavLink>
+
                 <NavLink to="/profile" className={({ isActive }) => isActive ? "active-link" : ""}>
                     <li>
                         <span>👤</span>
                         {!collapsed && <span>Profile</span>}
                     </li>
                 </NavLink>
-                
+
             </ul>
 
             <div className="sidebar-bottom">

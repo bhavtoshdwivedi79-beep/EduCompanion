@@ -1,12 +1,26 @@
-import { useState } from "react";
 import "./Flashcards.css";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import toast from "react-hot-toast";
 
 import FlashcardCard from "../components/Flashcard/FlashcardCard";
-import { generateFlashcards } from "../services/flashcardService";
+import FlashcardHistoryModal from "../components/FlashcardHistoryModal/FlashcardHistoryModal";
+import {
+    generateFlashcards,
+    saveFlashcards,
+    getFlashcards,
+    deleteFlashcard,
+} from "../services/flashcardService";
 
 function Flashcards() {
 
     const [topic, setTopic] = useState("");
+
+    const [saved, setSaved] = useState(false);
+
+    const [selectedHistory, setSelectedHistory] = useState(null);
+
+    const [modalOpen, setModalOpen] = useState(false);
 
     const [flashcards, setFlashcards] = useState([]);
 
@@ -14,41 +28,76 @@ function Flashcards() {
 
     const [loading, setLoading] = useState(false);
 
+    const [history, setHistory] = useState([]);
+
     const [error, setError] = useState("");
 
-    const handleGenerate = async () => {
+    const location = useLocation();
 
-        if (!topic.trim()) {
+    const quickTopics = [
+        "Java",
+        "DBMS",
+        "DSA",
+        "Operating System",
+        "Computer Networks",
+        "Python",
+        "React",
+        "JavaScript"
+    ];
 
-            return alert("Please enter a topic.");
+    const handleGenerate = async (selectedTopic) => {
+        const currentTopic = selectedTopic || topic;
 
-        }
+        if (!currentTopic.trim()) return;
 
         try {
-
             setLoading(true);
 
             setError("");
 
-            const data = await generateFlashcards(topic);
+            const data = await generateFlashcards(currentTopic);
 
-            setFlashcards(data.flashcard.flashcards);
+            setFlashcards(data.flashcards);
 
             setCurrentCard(0);
+
+            setSaved(false);
+
+            await fetchHistory();
+
+        } catch (err) {
+
+            console.log(err);
+
+            setError("Failed to generate flashcards.");
+
+        } finally {
+
+            setLoading(false);
+
+        }
+
+    };
+
+    const handleSave = async () => {
+
+        try {
+
+            await saveFlashcards(topic, flashcards);
+
+            toast.success("📚 Flashcards saved successfully!");
+
+            setSaved(true);
+
+            fetchHistory();
 
         }
 
         catch (err) {
 
-            console.error(err);
+            console.log(err);
 
-            setError("Failed to generate flashcards.");
-
-        }
-
-        finally {
-
-            setLoading(false);
+            toast.error("Failed to save flashcards");
 
         }
 
@@ -74,6 +123,41 @@ function Flashcards() {
 
     };
 
+    const fetchHistory = async () => {
+
+        try {
+
+            const data = await getFlashcards();
+
+            setHistory(data.flashcards);
+
+        } catch (err) {
+
+            console.log(err);
+
+        }
+
+    };
+
+    useEffect(() => {
+
+        fetchHistory();
+
+    }, []);
+
+    useEffect(() => {
+        if (location.state) {
+
+            setTopic(location.state.topic);
+
+            setFlashcards(location.state.flashcards);
+
+            setCurrentCard(0);
+
+        }
+
+    }, [location]);
+
     return (
 
         <div className="flashcards-page">
@@ -88,6 +172,24 @@ function Flashcards() {
                     Generate smart flashcards using AI and revise quickly.
                 </p>
 
+                <div className="quick-actions">
+                    <h3>⚡ Quick Generate</h3>
+
+                    <div className="quick-grid">
+                        {quickTopics.map((item) => (
+                            <button
+                                key={item}
+                                onClick={() => {
+                                    setTopic(item);
+                                    handleGenerate(item);
+                                }}
+                            >
+                                {item}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
                 <div className="flashcard-input">
 
                     <input
@@ -97,8 +199,10 @@ function Flashcards() {
                         onChange={(e) => setTopic(e.target.value)}
                     />
 
+
+
                     <button
-                        onClick={handleGenerate}
+                        onClick={() => handleGenerate(topic)}
                         disabled={loading}
                     >
                         {loading ? "Generating..." : "Generate"}
@@ -151,6 +255,17 @@ function Flashcards() {
                                     disabled={currentCard === flashcards.length - 1}
                                 >
                                     Next
+                                </button>
+
+                            </div>
+
+                            <div className="save-flashcards">
+
+                                <button
+                                    onClick={handleSave}
+                                    disabled={saved}
+                                >
+                                    {saved ? "✅ Saved" : "💾 Save Flashcards"}
                                 </button>
 
                             </div>

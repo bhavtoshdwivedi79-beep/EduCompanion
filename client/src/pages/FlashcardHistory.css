@@ -1,0 +1,213 @@
+.flash-history-page {
+
+    padding: 30px;
+
+    min-height: 100vh;
+
+    background: var(--bg);
+
+    color: var(--text);
+
+}
+
+.flash-history-page h1 {
+
+    font-size: 32px;
+
+    margin-bottom: 8px;
+
+    color: var(--text);
+
+}
+
+.flash-history-page>p {
+
+    color: gray;
+
+    margin-bottom: 30px;
+
+}
+
+.history-list {
+
+    display: grid;
+
+    gap: 20px;
+
+}
+
+.history-item {
+
+    background: var(--card);
+
+    border-radius: 18px;
+
+    padding: 22px;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 20px;
+
+    box-shadow: 0 8px 20px rgba(0,0,0,.08);
+
+    transition: .3s;
+
+}
+
+.history-item:hover {
+
+    transform: translateY(-5px);
+
+    box-shadow: 0 18px 35px rgba(0,0,0,.12);
+
+}
+
+.history-item h3 {
+
+    color: var(--primary);
+
+    margin-bottom: 8px;
+
+    font-size: 22px;
+
+}
+
+.history-item p {
+
+    color: var(--text);
+
+    margin-bottom: 8px;
+
+}
+
+.history-item small {
+
+    color: gray;
+
+}
+
+.history-actions {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+
+    min-width: 160px;
+
+}
+
+.history-actions button {
+
+    border: none;
+
+    padding: 12px;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    transition: .3s;
+
+}
+
+.open-btn {
+
+    background: var(--primary);
+
+    color: white;
+
+}
+
+.open-btn:hover {
+
+    opacity: .9;
+
+    transform: translateY(-2px);
+
+}
+
+.delete-btn {
+
+    background: #ef4444;
+
+    color: white;
+
+}
+
+.delete-btn:hover {
+
+    background: #dc2626;
+
+}
+
+.history-loading,
+
+.history-empty {
+
+    background: var(--card);
+
+    border-radius: 18px;
+
+    padding: 60px;
+
+    text-align: center;
+
+    color: gray;
+
+    font-size: 18px;
+
+    box-shadow: 0 8px 20px rgba(0,0,0,.08);
+
+}
+
+@media(max-width:768px){
+
+    .history-item{
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+    }
+
+    .history-actions{
+
+        width:100%;
+
+        flex-direction: row;
+
+    }
+
+    .history-actions button{
+
+        flex:1;
+
+    }
+
+}
+
+@media(max-width:500px){
+
+    .flash-history-page{
+
+        padding:18px;
+
+    }
+
+    .flash-history-page h1{
+
+        font-size:26px;
+
+    }
+
+}

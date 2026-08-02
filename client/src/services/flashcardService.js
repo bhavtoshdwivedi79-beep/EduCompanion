@@ -62,3 +62,27 @@ export const deleteFlashcard = async (id) => {
     return response.data;
 
 };
+
+// Save Flashcards
+export const saveFlashcards = async (topic, flashcards) => {
+
+    const response = await axios.post(
+
+        `${API}/save`,
+
+        {
+            topic,
+            flashcards,
+        },
+
+        {
+            headers: {
+                Authorization: `Bearer ${getToken()}`
+            }
+        }
+
+    );
+
+    return response.data;
+
+};

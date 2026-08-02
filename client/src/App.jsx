@@ -14,6 +14,7 @@ import ChatHistory from "./pages/ChatHistory";
 import Profile from "./pages/Profile";
 import StudyPlanner from "./pages/StudyPlanner";
 import Flashcards from "./pages/Flashcards";
+import FlashcardHistory from "./pages/FlashcardHistory";
 
 function App() {
 
@@ -54,6 +55,8 @@ function App() {
           <Route path="/study-planner" element={<StudyPlanner />} />
 
           <Route path="/flashcards" element={<Flashcards />} />
+
+          <Route path="/flashcard-history" element={<FlashcardHistory />} />
 
         </Route>
 
