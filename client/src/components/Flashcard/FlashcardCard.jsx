@@ -1,13 +1,6 @@
-import { useState } from "react";
 import "./FlashcardCard.css";
 
-function FlashcardCard({ flashcard }) {
-
-    const [flipped, setFlipped] = useState(false);
-
-    const handleFlip = () => {
-        setFlipped(!flipped);
-    };
+function FlashcardCard({ flashcard, flipped, setFlipped }) {
 
     return (
 
@@ -15,7 +8,7 @@ function FlashcardCard({ flashcard }) {
 
             <div
                 className={`flashcard ${flipped ? "flipped" : ""}`}
-                onClick={handleFlip}
+                onClick={() => setFlipped(!flipped)}
             >
 
                 {/* Front */}

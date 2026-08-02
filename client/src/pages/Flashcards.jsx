@@ -32,6 +32,8 @@ function Flashcards() {
 
     const [error, setError] = useState("");
 
+    const [flipped, setFlipped] = useState(false);
+
     const location = useLocation();
 
     const quickTopics = [
@@ -107,7 +109,9 @@ function Flashcards() {
 
         if (currentCard < flashcards.length - 1) {
 
-            setCurrentCard(currentCard + 1);
+            setCurrentCard((prev) => prev + 1);
+
+            setFlipped(false);
 
         }
 
@@ -117,7 +121,9 @@ function Flashcards() {
 
         if (currentCard > 0) {
 
-            setCurrentCard(currentCard - 1);
+            setCurrentCard((prev) => prev - 1);
+
+            setFlipped(false);
 
         }
 
@@ -233,6 +239,8 @@ function Flashcards() {
 
                             <FlashcardCard
                                 flashcard={flashcards[currentCard]}
+                                flipped={flipped}
+                                setFlipped={setFlipped}
                             />
 
                             <div className="flashcard-progress">
