@@ -86,7 +86,7 @@ function Sidebar({
                     className={({ isActive }) => isActive ? "active-link" : ""}
                 >
                     <li>
-                        <span>🏠</span>
+                        <span>🤖</span>
                         {!collapsed && <span>AI Chat</span>}
                     </li>
                 </NavLink>
@@ -107,6 +107,26 @@ function Sidebar({
                     <li>
                         <span>❓</span>
                         {!collapsed && <span>AI Quiz</span>}
+                    </li>
+                </NavLink>
+
+                <NavLink
+                    to="/flashcards"
+                    className={({ isActive }) => isActive ? "active-link" : ""}
+                >
+                    <li>
+                        <span>🃏</span>
+                        {!collapsed && <span>Flashcards</span>}
+                    </li>
+                </NavLink>
+
+                <NavLink
+                    to="/study-planner"
+                    className={({ isActive }) => isActive ? "active-link" : ""}
+                >
+                    <li>
+                        <span>📅</span>
+                        {!collapsed && <span>Study Planner</span>}
                     </li>
                 </NavLink>
 
@@ -141,17 +161,7 @@ function Sidebar({
                         {!collapsed && <span>Profile</span>}
                     </li>
                 </NavLink>
-
-                <NavLink
-                    to="/study-planner"
-                    className={({ isActive }) => isActive ? "active-link" : ""}
-                >
-                    <li>
-                        <span>📅</span>
-                        {!collapsed && <span>Study Planner</span>}
-                    </li>
-                </NavLink>
-
+                
             </ul>
 
             <div className="sidebar-bottom">

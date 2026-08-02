@@ -1,0 +1,159 @@
+.flashcards-page {
+    min-height: 100vh;
+    background: #f4f7fc;
+    padding: 35px;
+}
+
+.flashcards-container {
+    max-width: 1000px;
+    margin: auto;
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 35px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+}
+
+.flashcards-title {
+    text-align: center;
+    font-size: 2.3rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 10px;
+}
+
+.flashcards-subtitle {
+    text-align: center;
+    color: #64748b;
+    margin-bottom: 35px;
+}
+
+.flashcard-input {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.flashcard-input input {
+    flex: 1;
+    padding: 14px 18px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    font-size: 16px;
+    outline: none;
+    transition: 0.3s;
+}
+
+.flashcard-input input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 8px rgba(37, 99, 235, 0.2);
+}
+
+.flashcard-input button {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 14px 25px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.flashcard-input button:hover {
+    background: #1d4ed8;
+}
+
+.flashcard-input button:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+}
+
+.flashcard-progress {
+    text-align: center;
+    margin-top: 25px;
+    margin-bottom: 20px;
+    font-size: 17px;
+    color: #334155;
+    font-weight: 600;
+}
+
+.flashcard-navigation {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.flashcard-navigation button {
+    background: #0f172a;
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: 600;
+}
+
+.flashcard-navigation button:hover {
+    background: #1e293b;
+}
+
+.flashcard-navigation button:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+}
+
+.loading-text {
+    text-align: center;
+    margin-top: 25px;
+    color: #2563eb;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.error-text {
+    text-align: center;
+    color: #dc2626;
+    margin-top: 20px;
+    font-weight: 600;
+}
+
+.empty-state {
+    text-align: center;
+    margin-top: 40px;
+    color: #64748b;
+    font-size: 18px;
+}
+
+@media (max-width: 768px) {
+
+    .flashcards-page {
+        padding: 18px;
+    }
+
+    .flashcards-container {
+        padding: 22px;
+    }
+
+    .flashcards-title {
+        font-size: 1.8rem;
+    }
+
+    .flashcard-input {
+        flex-direction: column;
+    }
+
+    .flashcard-input button {
+        width: 100%;
+    }
+
+    .flashcard-navigation {
+        flex-direction: column;
+    }
+
+    .flashcard-navigation button {
+        width: 100%;
+    }
+}
