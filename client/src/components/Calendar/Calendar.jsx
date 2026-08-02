@@ -53,6 +53,7 @@ function Calendar({ calendarActivities = {} }) {
             notes: [],
             chats: [],
             quizzes: [],
+            flashcards: [],
         };
 
         cells.push(
@@ -84,6 +85,10 @@ function Calendar({ calendarActivities = {} }) {
 
                     {activities.quizzes.length > 0 && (
                         <span className="dot quiz"></span>
+                    )}
+
+                    {activities.flashcards?.length > 0 && (
+                        <span className="dot flashcard"></span>
                     )}
 
                 </div>
@@ -203,6 +208,30 @@ function Calendar({ calendarActivities = {} }) {
                                 :
 
                                 <p>No Quiz</p>
+
+                        }
+
+                    </div>
+
+                    <div>
+
+                        <h4>📚 Flashcards</h4>
+
+                        {
+
+                            selectedActivities.flashcards?.length > 0 ?
+
+                                selectedActivities.flashcards.map((flashcard, index) => (
+
+                                    <p key={index}>
+                                        • {flashcard.topic}
+                                    </p>
+
+                                ))
+
+                                :
+
+                                <p>No Flashcards</p>
 
                         }
 

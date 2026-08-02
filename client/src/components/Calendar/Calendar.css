@@ -172,6 +172,10 @@
 
 }
 
+.dot.flashcard {
+    background: #b01389;
+}
+
 .activity-popup {
 
     margin-top: 25px;
