@@ -50,9 +50,9 @@ function QuizHistory() {
 
     return (
 
-        <div className="history-page">
+        <div className="quiz-history-page">
 
-            <h1 className="history-title">
+            <h1 className="quiz-history-title">
 
                 📜 Quiz History
 
