@@ -164,7 +164,7 @@
 
 .stat-card {
 
-    background: #1e293b;
+    background: var(--secondary);
 
     border-radius: 18px;
 
@@ -201,14 +201,14 @@
 .stat-card h3 {
 
     font-size: 34px;
-    color: white;
+    color: var(--text);
     margin-bottom: 8px;
 
 }
 
 .stat-card p {
 
-    color: #94a3b8;
+    color: var(--text);
 
 }
 
@@ -234,9 +234,10 @@
 
 .action-card {
 
-    background: #1e293b;
+    background: var(--secondary);
 
     color: rgba(255, 255, 255, 0.934);
+    
     text-decoration: none;
     color: inherit;
 
@@ -348,17 +349,20 @@
 .streak-card,
 .goal-card {
 
-    background: #1e293b;
+    background: var(--card);
+    width: 100%;
+    max-width: 760px;
 
-    border-radius: 18px;
+    border-radius: 20px;
 
-    padding: 30px;
+    padding: 40px;
 
-    color: white;
+    color: var(--text);
 
     transition: .35s;
 
-    border: 1px solid rgba(255, 255, 255, .08);
+    border: 1px solid var(--border);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, .15);
 
 }
 
@@ -429,6 +433,14 @@
 
 }
 
+.streak-card h2 {
+    color: var(--text);
+}
+
+.streak-card p {
+    color: var(--text);
+}
+
 /* Goals */
 
 .goal-text {
@@ -441,12 +453,21 @@
 
 }
 
+.goal-card h2 {
+    color: var(--text);
+}
+
 .goal-card ul {
 
     list-style: none;
+    color: var(--text);
 
     margin-top: 20px;
 
+}
+
+.goal-card p {
+    color: var(--text);
 }
 
 .goal-card li {
@@ -470,13 +491,15 @@
 .calendar-card,
 .chart-card {
 
-    background: #1e293b;
+    background: var(--card);
 
     padding: 30px;
 
     border-radius: 18px;
 
-    color: white;
+    color: var(--text);
+    border: 1px solid var(--border);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, .15);
 
 }
 
@@ -500,6 +523,10 @@
 
     border-radius: 8px;
 
+}
+
+.calendar-card h2 {
+    color: var(--text);
 }
 
 .today {
@@ -551,6 +578,7 @@
 }
 
 .activity {
+    color: var(--text);
 
     margin-bottom: 40px;
 
@@ -566,22 +594,26 @@
 
 .activity-card {
 
-    background: #1e293b;
+    background: var(--card);
+    color: var(--text);
 
     padding: 30px;
 
-    border-radius: 18px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, .15);
 
 }
 
 .activity-card p {
 
-    color: #cbd5e1;
+    color: var(--text);
 
     margin: 18px 0;
 
     border-bottom: 1px solid rgba(255, 255, 255, .08);
 
     padding-bottom: 12px;
+    
 
 }

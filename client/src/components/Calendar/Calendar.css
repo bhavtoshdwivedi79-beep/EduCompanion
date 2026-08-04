@@ -1,14 +1,17 @@
 .calendar-card {
 
-    background: #1e293b;
+    background: var(--card);
 
     padding: 25px;
 
     border-radius: 20px;
 
     color: white;
+    border: 1px solid var(--border);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, .15);
 
 }
+
 
 .calendar-header {
 
@@ -23,6 +26,7 @@
 }
 
 .calendar-header h2 {
+    color: var(--text);
 
     font-size: 24px;
 
@@ -59,6 +63,7 @@
     display: grid;
 
     grid-template-columns: repeat(7, 1fr);
+    color: var(--text);
 
     text-align: center;
 
