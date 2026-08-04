@@ -259,3 +259,110 @@
     color: white;
     transform: scale(1.05);
 }
+
+/* Delete Modal */
+
+.delete-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.65);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:1000;
+    animation:fadeIn .25s ease;
+}
+
+.delete-modal{
+
+    width:420px;
+    max-width:90%;
+
+    background:var(--card);
+
+    border:1px solid var(--border);
+
+    border-radius:18px;
+
+    padding:30px;
+
+    text-align:center;
+
+    color:var(--text);
+
+    box-shadow:0 20px 45px rgba(0,0,0,.35);
+
+}
+
+.delete-modal h2{
+
+    margin-bottom:15px;
+
+}
+
+.delete-modal p{
+
+    color:var(--text-secondary);
+
+    margin-bottom:30px;
+
+    line-height:1.7;
+
+}
+
+.delete-actions{
+
+    display:flex;
+
+    justify-content:center;
+
+    gap:15px;
+
+}
+
+.cancel-btn,
+.confirm-btn{
+
+    border:none;
+
+    padding:12px 26px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    transition:.25s;
+
+}
+
+.cancel-btn{
+
+    background:#64748b;
+
+    color:white;
+
+}
+
+.cancel-btn:hover{
+
+    background:#475569;
+
+}
+
+.confirm-btn{
+
+    background:#ef4444;
+
+    color:white;
+
+}
+
+.confirm-btn:hover{
+
+    background:#dc2626;
+
+}

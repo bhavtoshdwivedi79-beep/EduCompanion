@@ -1,12 +1,18 @@
 import "./QuizHistory.css";
 
 import { useEffect, useState } from "react";
-import { getQuizHistory } from "../services/quizService";
+import toast, { Toaster } from "react-hot-toast";
+
+import {
+    getQuizHistory,
+    deleteQuiz
+} from "../services/quizService";
 
 function QuizHistory() {
 
     const [quizzes, setQuizzes] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [deleteQuizId, setDeleteQuizId] = useState(null);
 
     useEffect(() => {
 
@@ -48,9 +54,34 @@ function QuizHistory() {
 
     }
 
+    const handleDelete = async () => {
+
+        try {
+
+            await deleteQuiz(deleteQuizId);
+
+            toast.success("Quiz deleted successfully!");
+
+            setDeleteQuizId(null);
+
+            const data = await getQuizHistory();
+
+            setQuizzes(data);
+
+        } catch (error) {
+
+            toast.error("Failed to delete quiz.");
+
+            console.log(error);
+
+        }
+
+    };
+
     return (
 
         <div className="quiz-history-page">
+            <Toaster position="top-right" />
 
             <h1 className="quiz-history-title">
 
@@ -109,6 +140,17 @@ function QuizHistory() {
 
                             </p>
 
+                            <div className="history-buttons">
+
+                                <button
+                                    className="delete-btn"
+                                    onClick={() => setDeleteQuizId(quiz._id)}
+                                >
+                                    🗑 Delete
+                                </button>
+
+                            </div>
+
                         </div>
 
                     ))}
@@ -116,6 +158,56 @@ function QuizHistory() {
                 </div>
 
             )}
+
+            {
+                deleteQuizId && (
+
+                    <div
+                        className="delete-overlay"
+                        onClick={() => setDeleteQuizId(null)}
+                    >
+
+                        <div
+                            className="delete-modal"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+
+                            <h2>🗑 Delete Quiz?</h2>
+
+                            <p>
+
+                                Are you sure you want to delete this quiz history?
+
+                                <br />
+
+                                This action cannot be undone.
+
+                            </p>
+
+                            <div className="delete-actions">
+
+                                <button
+                                    className="cancel-btn"
+                                    onClick={() => setDeleteQuizId(null)}
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    className="confirm-btn"
+                                    onClick={handleDelete}
+                                >
+                                    Delete
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                )
+            }
 
         </div>
 

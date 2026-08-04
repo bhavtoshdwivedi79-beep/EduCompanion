@@ -47,21 +47,35 @@ export const getQuizHistory = async () => {
     const token = localStorage.getItem("token");
 
     const res = await quizAPI.get(
-
         "/history",
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+
+    return res.data.quizzes;
+};
+
+/* ================= DELETE QUIZ ================= */
+
+export const deleteQuiz = async (id) => {
+
+    const token = localStorage.getItem("token");
+
+    const res = await quizAPI.delete(
+
+        `/delete/${id}`,
 
         {
-
             headers: {
-
                 Authorization: `Bearer ${token}`,
-
             },
-
         }
 
     );
 
-    return res.data.quizzes;
+    return res.data;
 
 };

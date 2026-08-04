@@ -11,6 +11,7 @@ function ChatHistory() {
 
     const [chats, setChats] = useState([]);
     const [selectedChat, setSelectedChat] = useState(null);
+    const [deleteChatId, setDeleteChatId] = useState(null);
 
     const fetchChats = async () => {
         try {
@@ -25,19 +26,21 @@ function ChatHistory() {
         fetchChats();
     }, []);
 
-    const handleDelete = async (id) => {
-
-        const ok = window.confirm("Delete this chat?");
-
-        if (!ok) return;
+    const handleDelete = async () => {
 
         try {
 
-            await deleteChat(id);
+            await deleteChat(deleteChatId);
+
+            toast.success("Chat deleted successfully!");
+
+            setDeleteChatId(null);
 
             fetchChats();
 
         } catch (error) {
+
+            toast.error("Failed to delete chat.");
 
             console.log(error);
 
@@ -90,7 +93,7 @@ function ChatHistory() {
 
                                     <button
                                         className="delete-btn"
-                                        onClick={() => handleDelete(chat._id)}
+                                        onClick={() => setDeleteChatId(chat._id)}
                                     >
                                         🗑 Delete
                                     </button>
@@ -206,6 +209,52 @@ function ChatHistory() {
                 </div>
 
             )}
+
+            {
+                deleteChatId && (
+
+                    <div
+                        className="delete-overlay"
+                        onClick={() => setDeleteChatId(null)}
+                    >
+
+                        <div
+                            className="delete-modal"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+
+                            <h2>🗑 Delete Chat?</h2>
+
+                            <p>
+                                Are you sure you want to delete this conversation?
+                                <br />
+                                This action cannot be undone.
+                            </p>
+
+                            <div className="delete-actions">
+
+                                <button
+                                    className="cancel-btn"
+                                    onClick={() => setDeleteChatId(null)}
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    className="confirm-btn"
+                                    onClick={handleDelete}
+                                >
+                                    Delete
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                )
+            }
 
         </div>
 

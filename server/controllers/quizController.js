@@ -83,3 +83,51 @@ export const getQuizHistory = async (req, res) => {
     }
 
 };
+
+export const deleteQuiz = async (req, res) => {
+
+    try {
+
+        const quiz = await Quiz.findOneAndDelete({
+
+            _id: req.params.id,
+
+            user: req.user._id,
+
+        });
+
+        if (!quiz) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Quiz not found.",
+
+            });
+
+        }
+
+        res.status(200).json({
+
+            success: true,
+
+            message: "Quiz deleted successfully.",
+
+        });
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Failed to delete quiz.",
+
+        });
+
+    }
+
+};
