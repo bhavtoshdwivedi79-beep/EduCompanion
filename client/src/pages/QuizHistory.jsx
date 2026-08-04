@@ -114,31 +114,39 @@ function QuizHistory() {
 
                             </h2>
 
-                            <p>
+                            <div className="history-info">
 
-                                🎯 Score:
-                                <strong>
-                                    {" "}
-                                    {quiz.score}/{quiz.totalQuestions}
-                                </strong>
+                                <div className="info-row">
+                                    <span className="info-icon">🎯</span>
+                                    <span className="info-label">Score</span>
 
-                            </p>
+                                    <strong className="info-value">
+                                        {quiz.score}/{quiz.totalQuestions}
+                                    </strong>
+                                </div>
 
-                            <p>
+                                <div className="info-row">
+                                    <span className="info-icon">📊</span>
+                                    <span className="info-label">Accuracy</span>
 
-                                📊 Accuracy:
-                                <strong>
-                                    {" "}
-                                    {quiz.accuracy}%
-                                </strong>
+                                    <strong className="info-value">
+                                        {quiz.accuracy}%
+                                    </strong>
+                                </div>
 
-                            </p>
+                                <div className="info-row">
+                                    <span className="info-icon">🗓️</span>
 
-                            <p>
+                                    <span className="info-label">
+                                        Date
+                                    </span>
 
-                                📅 {new Date(quiz.createdAt).toLocaleString()}
+                                    <strong className="info-value date-value">
+                                        {new Date(quiz.createdAt).toLocaleString()}
+                                    </strong>
+                                </div>
 
-                            </p>
+                            </div>
 
                             <div className="history-buttons">
 
