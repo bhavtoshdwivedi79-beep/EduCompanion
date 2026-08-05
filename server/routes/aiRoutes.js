@@ -13,12 +13,14 @@ const router = express.Router();
 
 router.post("/chat", protect, chatWithAI);
 
-router.get("/history", protect, getChatHistory);
-
 router.post("/notes", protect, generateNotes);
 
 router.post("/quiz", protect, generateQuiz);
 
-router.delete("/chat/:id", protect, deleteChat);
+router.get(
+    "/history/:conversationId",
+    protect,
+    getChatHistory
+);
 
 export default router;

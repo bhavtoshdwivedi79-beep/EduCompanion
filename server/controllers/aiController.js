@@ -1,4 +1,5 @@
 import Chat from "../models/Chat.js";
+import Conversation from "../models/Conversation.js";
 import {
     askAI,
     generateNotes as generateNotesAI,
@@ -9,7 +10,32 @@ export const chatWithAI = async (req, res) => {
 
     try {
 
-        const { message } = req.body;
+        const { message, conversationId } = req.body;
+
+        let conversation;
+
+        if (conversationId) {
+
+            conversation = await Conversation.findOne({
+                _id: conversationId,
+                user: req.user._id,
+            });
+
+            if (!conversation) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Conversation not found",
+                });
+            }
+
+        } else {
+
+            conversation = await Conversation.create({
+                user: req.user._id,
+                title: message.substring(0, 40),
+            });
+
+        }
 
         if (!message) {
             return res.status(400).json({
@@ -21,6 +47,7 @@ export const chatWithAI = async (req, res) => {
         // Last 10 chats
         const previousChats = await Chat.find({
             user: req.user._id,
+            conversation: conversation._id,
         })
             .sort({ createdAt: 1 })
             .limit(10);
@@ -48,15 +75,43 @@ export const chatWithAI = async (req, res) => {
 
         const answer = await askAI(history);
 
+        // Update title only for first message
+
+        const totalMessages = await Chat.countDocuments({
+
+            conversation: conversation._id,
+
+        });
+
+        if (totalMessages === 0) {
+
+            conversation.title =
+
+                message.length > 40
+
+                    ? message.substring(0, 40) + "..."
+
+                    : message;
+
+            await conversation.save();
+
+        }
+
         await Chat.create({
             user: req.user._id,
+            conversation: conversation._id,
             question: message,
             answer,
         });
 
         res.status(200).json({
+
             success: true,
+
             reply: answer,
+
+            conversationId: conversation._id,
+
         });
 
     } catch (error) {
@@ -78,6 +133,7 @@ export const getChatHistory = async (req, res) => {
 
         const chats = await Chat.find({
             user: req.user._id,
+            conversation: req.params.conversationId,
         }).sort({
             createdAt: 1,
         });
@@ -89,11 +145,9 @@ export const getChatHistory = async (req, res) => {
 
     } catch (error) {
 
-        console.error(error);
-
         res.status(500).json({
             success: false,
-            message: "Failed to fetch chat history",
+            message: "Failed to fetch history",
         });
 
     }
@@ -161,7 +215,7 @@ export const generateNotes = async (req, res) => {
             });
 
         }
-        
+
         const notes = await generateNotesAI(topic);
 
         res.status(200).json({

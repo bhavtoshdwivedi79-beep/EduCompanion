@@ -2,6 +2,10 @@ import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { sendMessage, getHistory } from "../services/chatService";
+import {
+    getConversations,
+    createConversation,
+} from "../services/conversationService";
 import "../components/AIChat/AIChat.css";
 
 import ReactMarkdown from "react-markdown";
@@ -18,13 +22,29 @@ function AIChat() {
 
     const [loading, setLoading] = useState(false);
 
+    const [conversations, setConversations] = useState([]);
+
+    const [currentConversation, setCurrentConversation] = useState(null);
+
     const chatEndRef = useRef(null);
 
     const navigate = useNavigate();
 
     useEffect(() => {
-        loadHistory();
+
+        loadConversations();
+
     }, []);
+
+    useEffect(() => {
+
+        if (currentConversation) {
+
+            loadHistory(currentConversation);
+
+        }
+
+    }, [currentConversation]);
 
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({
@@ -32,13 +52,41 @@ function AIChat() {
         });
     }, [messages, loading]);
 
-    const loadHistory = async () => {
+    const loadConversations = async () => {
+
+        try {
+
+            const res = await getConversations();
+
+            if (res.data.success) {
+
+                setConversations(res.data.conversations);
+
+                if (res.data.conversations.length > 0) {
+
+                    setCurrentConversation(res.data.conversations[0]._id);
+
+                }
+
+            }
+
+        }
+
+        catch (err) {
+
+            console.log(err);
+
+        }
+
+    };
+
+    const loadHistory = async (conversationId) => {
 
         try {
 
             const token = localStorage.getItem("token");
 
-            const res = await getHistory(token);
+            const res = await getHistory(conversationId, token);
 
             if (res.data.success) {
 
@@ -101,7 +149,12 @@ function AIChat() {
 
             const token = localStorage.getItem("token");
 
-            const res = await sendMessage(question, token);
+            const res = await sendMessage(
+                question,
+                currentConversation
+            );
+
+            await loadConversations();
 
             setMessages(prev => [
                 ...prev,
@@ -127,6 +180,35 @@ function AIChat() {
 
     };
 
+    const handleNewChat = async () => {
+
+        try {
+
+            const res = await createConversation();
+
+            if (res.data.success) {
+
+                await loadConversations();
+
+                setCurrentConversation(res.data.conversation._id);
+
+                setMessages([
+                    {
+                        sender: "bot",
+                        text: "Hello 👋 Ask me anything about your studies.",
+                    },
+                ]);
+
+            }
+
+        } catch (err) {
+
+            console.log(err);
+
+        }
+
+    };
+
     return (
 
         <div className="ai-chat-layout">
@@ -138,7 +220,7 @@ function AIChat() {
 
                 <button
                     className="ai-new-chat-btn"
-                    onClick={() => window.location.reload()}
+                    onClick={handleNewChat}
                 >
                     + New Chat
                 </button>
@@ -147,18 +229,21 @@ function AIChat() {
 
                     <p>Previous Chats</p>
 
-                    {messages
-                        .filter(msg => msg.sender === "user")
-                        .map((msg, index) => (
+                    {conversations.map((conv) => (
 
-                            <div
-                                key={index}
-                                className="ai-history-item"
-                            >
-                                {msg.text.slice(0, 30)}...
-                            </div>
+                        <div
+                            key={conv._id}
+                            className={
+                                currentConversation === conv._id
+                                    ? "ai-history-item active"
+                                    : "ai-history-item"
+                            }
+                            onClick={() => setCurrentConversation(conv._id)}
+                        >
+                            {conv.title}
+                        </div>
 
-                        ))}
+                    ))}
 
                 </div>
 

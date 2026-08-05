@@ -8,6 +8,12 @@ const chatSchema = new mongoose.Schema(
             required: true,
         },
 
+        conversation: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Conversation",
+            required: true,
+        },
+
         question: {
             type: String,
             required: true,

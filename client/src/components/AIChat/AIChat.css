@@ -79,6 +79,19 @@
 
 }
 
+.ai-history-item.active{
+    background:#2563eb;
+    color:white;
+}
+
+.active-chat{
+
+    background:#2563eb;
+    color:white;
+
+}
+
+
 .ai-logout-btn {
 
     padding: 12px;
