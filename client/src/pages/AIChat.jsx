@@ -5,6 +5,8 @@ import { sendMessage, getHistory } from "../services/chatService";
 import {
     getConversations,
     createConversation,
+    deleteConversation,
+    renameConversation,
 } from "../services/conversationService";
 import "../components/AIChat/AIChat.css";
 
@@ -25,6 +27,12 @@ function AIChat() {
     const [conversations, setConversations] = useState([]);
 
     const [currentConversation, setCurrentConversation] = useState(null);
+
+    const [deleteConversationId, setDeleteConversationId] = useState(null);
+
+    const [editingConversation, setEditingConversation] = useState(null);
+
+    const [newTitle, setNewTitle] = useState("");
 
     const chatEndRef = useRef(null);
 
@@ -209,6 +217,79 @@ function AIChat() {
 
     };
 
+    const handleDeleteConversation = async () => {
+
+        try {
+
+            await deleteConversation(deleteConversationId);
+
+            setDeleteConversationId(null);
+
+            await loadConversations();
+
+            setMessages([
+                {
+                    sender: "bot",
+                    text: "Hello 👋 Ask me anything about your studies.",
+                },
+            ]);
+
+            setCurrentConversation(null);
+
+            toast.success("Conversation deleted!");
+
+        }
+
+        catch (err) {
+
+            console.log(err);
+
+            toast.error("Failed to delete conversation");
+
+        }
+
+    };
+
+    const handleRenameConversation = async () => {
+
+        if (!newTitle.trim()) {
+
+            toast.error("Title cannot be empty");
+
+            return;
+
+        }
+
+        try {
+
+            await renameConversation(
+
+                editingConversation,
+
+                newTitle
+
+            );
+
+            toast.success("Conversation renamed!");
+
+            setEditingConversation(null);
+
+            setNewTitle("");
+
+            await loadConversations();
+
+        }
+
+        catch (err) {
+
+            console.log(err);
+
+            toast.error("Rename failed");
+
+        }
+
+    };
+
     return (
 
         <div className="ai-chat-layout">
@@ -232,15 +313,119 @@ function AIChat() {
                     {conversations.map((conv) => (
 
                         <div
+
                             key={conv._id}
+
                             className={
+
                                 currentConversation === conv._id
+
                                     ? "ai-history-item active"
+
                                     : "ai-history-item"
+
                             }
-                            onClick={() => setCurrentConversation(conv._id)}
+
                         >
-                            {conv.title}
+
+                            {
+
+                                editingConversation === conv._id
+
+                                    ?
+
+                                    <>
+
+                                        <input
+
+                                            className="rename-input"
+
+                                            value={newTitle}
+
+                                            onChange={(e) => setNewTitle(e.target.value)}
+
+                                            autoFocus
+
+                                            onKeyDown={(e) => {
+
+                                                if (e.key === "Enter") {
+
+                                                    handleRenameConversation();
+
+                                                }
+
+                                            }}
+
+                                        />
+
+                                        <button
+
+                                            className="save-btn"
+
+                                            onClick={handleRenameConversation}
+
+                                        >
+
+                                            ✔
+
+                                        </button>
+
+                                    </>
+
+                                    :
+
+                                    <>
+
+                                        <span
+
+                                            className="conversation-title"
+
+                                            onClick={() => setCurrentConversation(conv._id)}
+
+                                        >
+
+                                            {conv.title}
+
+                                        </span>
+
+                                        <div className="conversation-actions">
+
+                                            <button
+
+                                                className="conversation-edit"
+
+                                                onClick={() => {
+
+                                                    setEditingConversation(conv._id);
+
+                                                    setNewTitle(conv.title);
+
+                                                }}
+
+                                            >
+
+                                                ✏️
+
+                                            </button>
+
+                                            <button
+
+                                                className="conversation-delete"
+
+                                                onClick={() => setDeleteConversationId(conv._id)}
+
+                                            >
+
+                                                🗑
+
+                                            </button>
+
+                                        </div>
+
+                                    </>
+
+                            }
+
                         </div>
 
                     ))}
@@ -376,6 +561,52 @@ function AIChat() {
                 </div>
 
             </div>
+
+            {
+                deleteConversationId && (
+
+                    <div
+                        className="delete-overlay"
+                        onClick={() => setDeleteConversationId(null)}
+                    >
+
+                        <div
+                            className="delete-modal"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+
+                            <h2>Delete Conversation?</h2>
+
+                            <p>
+
+                                This conversation and all its messages
+                                will be permanently deleted.
+
+                            </p>
+
+                            <div className="delete-actions">
+
+                                <button
+                                    className="cancel-btn"
+                                    onClick={() => setDeleteConversationId(null)}
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    className="confirm-btn"
+                                    onClick={handleDeleteConversation}
+                                >
+                                    Delete
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                )}
 
         </div>
 

@@ -20,4 +20,38 @@ export const getConversations = () => API.get("/");
 
 export const createConversation = () => API.post("/");
 
-export const deleteConversation = (id) => API.delete(`/${id}`);
+export const deleteConversation = (id) => {
+
+    return API.delete(`/${id}`, {
+
+        headers: {
+
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+
+        },
+
+    });
+
+};
+
+export const renameConversation = (id, title) => {
+
+    return API.put(
+
+        `/${id}`,
+
+        { title },
+
+        {
+
+            headers: {
+
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+
+            },
+
+        }
+
+    );
+
+};
