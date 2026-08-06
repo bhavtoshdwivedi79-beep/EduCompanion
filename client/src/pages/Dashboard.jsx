@@ -331,7 +331,7 @@ function Dashboard() {
 
                 <section className="progress-section">
 
-                    <h2>📚 Learning Progress</h2>
+                    <h2>📚 Weekly Learning Progress</h2>
 
                     <div className="progress-card">
 
@@ -381,7 +381,7 @@ function Dashboard() {
 
                                     <div
                                         style={{
-                                            height: `${Math.max(item.count * 20, 8)}%`,
+                                            height: `${Math.min(item.count * 20, 100)}%`,
                                         }}
                                     />
 

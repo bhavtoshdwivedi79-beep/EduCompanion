@@ -24,6 +24,15 @@ export const getDashboardData = async (req, res) => {
         const userId = req.user._id;
         const user = await User.findById(userId);
 
+        // Current Week Start (Sunday)
+        const today = new Date();
+
+        const startOfWeek = new Date(today);
+
+        startOfWeek.setDate(today.getDate() - today.getDay());
+
+        startOfWeek.setHours(0, 0, 0, 0);
+
         const notes = await SavedNote.countDocuments({
             user: userId,
         });
@@ -43,6 +52,57 @@ export const getDashboardData = async (req, res) => {
         const quizHistory = await Quiz.find({
             user: userId,
         });
+
+        const weeklyNotes = await SavedNote.countDocuments({
+            user: userId,
+            createdAt: { $gte: startOfWeek },
+        });
+
+        const weeklyChats = await Chat.countDocuments({
+            user: userId,
+            createdAt: { $gte: startOfWeek },
+        });
+
+        const weeklyQuizzes = await Quiz.countDocuments({
+            user: userId,
+            createdAt: { $gte: startOfWeek },
+        });
+
+        const weeklyFlashcards = await Flashcard.countDocuments({
+            user: userId,
+            createdAt: { $gte: startOfWeek },
+        });
+
+        const weeklyNotesData = await SavedNote.find({
+            user: userId,
+            createdAt: { $gte: startOfWeek },
+        });
+
+        const weeklyChatsData = await Chat.find({
+            user: userId,
+            createdAt: { $gte: startOfWeek },
+        });
+
+        const weeklyQuizzesData = await Quiz.find({
+            user: userId,
+            createdAt: { $gte: startOfWeek },
+        });
+
+        const weeklyFlashcardsData = await Flashcard.find({
+            user: userId,
+            createdAt: { $gte: startOfWeek },
+        });
+
+        const weeklyTasks =
+            weeklyNotes +
+            weeklyChats +
+            weeklyQuizzes +
+            weeklyFlashcards;
+
+        const progress = Math.min(
+            Math.round((weeklyTasks / 20) * 100),
+            100
+        );
 
         let accuracy = 0;
 
@@ -158,12 +218,7 @@ export const getDashboardData = async (req, res) => {
 
         }
 
-        const totalTasks = notes + chats + quizzes + flashcards;
 
-        const progress = Math.min(
-            Math.round((totalTasks / 20) * 100),
-            100
-        );
 
         const weekDays = [
             "Sun",
@@ -181,18 +236,23 @@ export const getDashboardData = async (req, res) => {
         }));
 
         const allActivities = [
-            ...recentNotes.map(note => ({
+
+            ...weeklyNotesData.map(note => ({
                 date: note.createdAt,
             })),
-            ...recentChats.map(chat => ({
+
+            ...weeklyChatsData.map(chat => ({
                 date: chat.createdAt,
             })),
-            ...recentQuizzes.map(quiz => ({
+
+            ...weeklyQuizzesData.map(quiz => ({
                 date: quiz.createdAt,
             })),
-            ...recentFlashcards.map(card => ({
+
+            ...weeklyFlashcardsData.map(card => ({
                 date: card.createdAt,
             })),
+
         ];
 
         allActivities.forEach(activity => {
