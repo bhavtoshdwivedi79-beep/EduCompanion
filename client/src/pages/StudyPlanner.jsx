@@ -2,6 +2,7 @@ import "./StudyPlanner.css";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 function StudyPlanner() {
 
@@ -16,6 +17,7 @@ function StudyPlanner() {
     const [tasks, setTasks] = useState([]);
 
     const token = localStorage.getItem("token");
+    const navigate = useNavigate();
 
     const fetchTasks = async () => {
 
@@ -320,6 +322,18 @@ function StudyPlanner() {
                                                     : "✔ Mark Complete"
                                             }
 
+                                        </button>
+
+                                        <button
+                                            onClick={() =>
+                                                navigate("/notes", {
+                                                    state: {
+                                                        topic: task.topic,
+                                                    },
+                                                })
+                                            }
+                                        >
+                                            📝 Generate Notes
                                         </button>
 
                                         <button

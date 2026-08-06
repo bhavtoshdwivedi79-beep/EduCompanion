@@ -1,6 +1,7 @@
 import "./Notes.css";
 import html2canvas from "html2canvas";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { jsPDF } from "jspdf";
 import toast from "react-hot-toast";
 import { saveNote } from "../services/savedNoteService";
@@ -32,6 +33,7 @@ function Notes() {
         "Cyber Security",
     ];
     const notesRef = useRef();
+    const location = useLocation();
 
     const handleGenerate = async (selectedTopic = topic) => {
 
@@ -148,6 +150,20 @@ function Notes() {
         pdf.save(`${topic}-Notes.pdf`);
 
     };
+
+    useEffect(() => {
+
+        if (location.state?.topic) {
+
+            setTopic(location.state.topic);
+
+            handleGenerate(location.state.topic);
+
+            window.history.replaceState({}, document.title);
+
+        }
+
+    }, []);
 
     const handleSave = async () => {
 

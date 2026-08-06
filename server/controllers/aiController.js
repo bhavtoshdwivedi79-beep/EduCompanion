@@ -5,6 +5,7 @@ import {
     generateNotes as generateNotesAI,
     generateQuizAI,
 } from "../services/geminiService.js";
+import updateStreak from "../utils/updateStreak.js";
 
 export const chatWithAI = async (req, res) => {
 
@@ -103,6 +104,9 @@ export const chatWithAI = async (req, res) => {
             question: message,
             answer,
         });
+
+        await updateStreak(req.user._id);
+
 
         res.status(200).json({
 
@@ -218,6 +222,8 @@ export const generateNotes = async (req, res) => {
 
         const notes = await generateNotesAI(topic);
 
+        await updateStreak(req.user._id);
+
         res.status(200).json({
 
             success: true,
@@ -257,6 +263,8 @@ export const generateQuiz = async (req, res) => {
         }
 
         const quiz = await generateQuizAI(topic);
+
+        await updateStreak(req.user._id);
 
         res.status(200).json({
             success: true,

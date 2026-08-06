@@ -25,7 +25,7 @@ export const saveNote = async (req, res) => {
         await updateStreak(req.user._id);
 
         res.status(201).json({
-
+            
             success: true,
 
             note: saved,

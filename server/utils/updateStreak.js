@@ -2,16 +2,21 @@ import User from "../models/User.js";
 
 const updateStreak = async (userId) => {
 
+    console.log("updateStreak Called");
+
     const user = await User.findById(userId);
 
     if (!user) return;
 
+    console.log("User ID:", user._id);
+    console.log("Current Streak:", user.streak);
+    console.log("Last Active:", user.lastActive);
+
     const today = new Date();
     const lastActive = new Date(user.lastActive);
 
-    // sirf date compare hogi
-    today.setHours(0,0,0,0);
-    lastActive.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
+    lastActive.setHours(0, 0, 0, 0);
 
     const diffDays = Math.round(
         (today.getTime() - lastActive.getTime()) /
@@ -26,8 +31,7 @@ const updateStreak = async (userId) => {
 
     if (diffDays === 1) {
         user.streak += 1;
-    }
-    else if (diffDays > 1) {
+    } else if (diffDays > 1) {
         user.streak = 1;
     }
 
@@ -40,7 +44,6 @@ const updateStreak = async (userId) => {
     }
 
     console.log("==============");
-
 };
 
 export default updateStreak;
