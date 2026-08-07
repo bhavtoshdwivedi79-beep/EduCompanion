@@ -122,6 +122,7 @@
     position: relative;
 
     display: flex;
+    background: var(--primary);
 
     flex-direction: column;
 
@@ -185,9 +186,9 @@
 
     margin-top: 25px;
 
-    background: #1e293b;
+    background: var(--secondary);
 
-    color: white;
+    color: var(--text);
 
     border-radius: 18px;
 
@@ -208,14 +209,14 @@
 .activity-popup h4 {
 
     margin-top: 18px;
-
+    color: var(--text);
     margin-bottom: 8px;
 
 }
 
 .activity-popup p {
 
-    color: #cbd5e1;
+    color: var(--text);
 
     margin: 5px 0;
 

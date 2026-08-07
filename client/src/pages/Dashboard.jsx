@@ -225,35 +225,10 @@ function Dashboard() {
 
                         <div
                             className="action-card"
-                            onClick={() => navigate("/quiz-history")}
+                            onClick={() => navigate("/study-planner")}
                         >
-                            📜
-                            <h3>Quiz History</h3>
-                        </div>
-
-
-                        <div
-                            className="action-card"
-                            onClick={() => navigate("/saved-notes")}
-                        >
-                            💾
-                            <h3>Saved Notes</h3>
-                        </div>
-
-                        <div
-                            className="action-card"
-                            onClick={() => navigate("/chat-history")}
-                        >
-                            💬
-                            <h3>Chat History</h3>
-                        </div>
-
-                        <div
-                            className="action-card"
-                            onClick={() => navigate("/flashcard-history")}
-                        >
-                            📚
-                            <h3>Flashcard History</h3>
+                            📅
+                            <h3>Study Planner</h3>
                         </div>
 
                     </div>

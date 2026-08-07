@@ -41,7 +41,7 @@ function AITools() {
     {
       icon: "📚",
       title: "Flashcards",
-      route: null,
+      route: "/flashcards",
       desc: "Revise concepts quickly using AI flashcards.",
       button: "Try Now →"
     },
