@@ -24,6 +24,9 @@
     overflow-y: auto;
 
     scrollbar-width: none;
+
+    border: 1px solid var(--border);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, .15);
 }
 
 .sidebar.collapsed {
@@ -37,7 +40,7 @@
 .sidebar-logo {
     color: var(--primary);
     font-size: 28px;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
     text-align: center;
     transition: .3s;
 }
@@ -60,6 +63,11 @@
 
     margin-bottom: 25px;
 
+}
+
+.sidebar.collapsed .collapse-wrapper{
+    justify-content:flex-end;
+    padding:0;
 }
 
 .collapse-btn {

@@ -36,9 +36,7 @@ function Sidebar({
         >
 
             <h2 className="sidebar-logo">
-
-                {collapsed ? "🎓" : "EduCompanion"}
-
+                {collapsed ? "🎓" : ""}
             </h2>
 
             <div className="sidebar-user">

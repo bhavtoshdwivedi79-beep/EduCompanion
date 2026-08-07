@@ -39,7 +39,7 @@ function Navbar() {
         <nav className="navbar">
 
             <div className="logo">
-                EduCompanion
+                🎓 EduCompanion
             </div>
 
             <div className="nav-right">

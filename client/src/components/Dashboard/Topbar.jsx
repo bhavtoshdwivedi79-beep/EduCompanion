@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { useUser } from "../../context/UserContext";
+import { GraduationCap } from "lucide-react";
 
 function Topbar({ sidebarOpen, setSidebarOpen }) {
 
@@ -26,10 +27,13 @@ function Topbar({ sidebarOpen, setSidebarOpen }) {
                 ☰
             </button>
 
-            <input
-                type="text"
-                placeholder="Search..."
-            />
+            <div className="topbar-logo">
+
+                <GraduationCap size={28} />
+
+                <h2>EduCompanion</h2>
+
+            </div>
 
             <div className="topbar-right">
 
