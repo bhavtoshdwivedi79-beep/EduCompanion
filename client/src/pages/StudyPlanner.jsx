@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { useNotifications } from "../context/NotificationContext";
 
 function StudyPlanner() {
 
@@ -18,6 +19,7 @@ function StudyPlanner() {
 
     const token = localStorage.getItem("token");
     const navigate = useNavigate();
+    const { addNotification } = useNotifications();
 
     const fetchTasks = async () => {
 
@@ -82,6 +84,10 @@ function StudyPlanner() {
 
             toast.success("📚 Study task added!");
 
+            addNotification(
+                `📅 Study Plan added: "${formData.subject} - ${formData.topic}"`
+            );
+
             setFormData({
                 subject: "",
                 topic: "",
@@ -118,6 +124,8 @@ function StudyPlanner() {
 
             );
 
+            addNotification("✅ Study task completed");
+
             fetchTasks();
 
         } catch (error) {
@@ -145,6 +153,7 @@ function StudyPlanner() {
             );
 
             toast.success("🗑 Task deleted");
+            addNotification("🗑 Study task deleted");
 
             fetchTasks();
 

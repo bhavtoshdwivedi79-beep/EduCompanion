@@ -6,6 +6,7 @@ import {
     generateQuiz,
     saveQuizResult,
 } from "../services/quizService";
+import { useNotifications } from "../context/NotificationContext";
 
 function Quiz() {
 
@@ -13,6 +14,7 @@ function Quiz() {
     const [quiz, setQuiz] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const { addNotification } = useNotifications();
 
     const [answers, setAnswers] = useState({});
     const [submitted, setSubmitted] = useState(false);
@@ -63,11 +65,9 @@ function Quiz() {
         let marks = 0;
 
         quiz.forEach((q, index) => {
-
             if (answers[index] === q.answer) {
                 marks++;
             }
-
         });
 
         const accuracy = Math.round((marks / quiz.length) * 100);
@@ -88,6 +88,11 @@ function Quiz() {
                 accuracy,
 
             });
+
+            // 🔔 Notification
+            addNotification(
+                `❓ Quiz completed on "${topic}" (${marks}/${quiz.length})`
+            );
 
         } catch (error) {
 

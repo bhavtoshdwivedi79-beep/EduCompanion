@@ -10,6 +10,7 @@ import profileRoutes from "./routes/profileRoutes.js";
 import studyPlannerRoutes from "./routes/studyPlannerRoutes.js";
 import flashcardRoutes from "./routes/flashcardRoutes.js";
 import conversationRoutes from "./routes/conversationRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 const app = express();
 
@@ -42,6 +43,8 @@ app.use("/api/study-planner", studyPlannerRoutes);
 app.use("/api/flashcards", flashcardRoutes);
 
 app.use("/api/conversations", conversationRoutes);
+
+app.use("/api/notifications", notificationRoutes);
 
 // Home
 app.get("/", (req, res) => {

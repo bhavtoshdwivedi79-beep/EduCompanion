@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { useUser } from "../../context/UserContext";
 import { GraduationCap } from "lucide-react";
+import { useNotifications } from "../../context/NotificationContext";
 
 function Topbar({ sidebarOpen, setSidebarOpen }) {
 
@@ -15,6 +16,14 @@ function Topbar({ sidebarOpen, setSidebarOpen }) {
     const { theme, toggleTheme } = useTheme();
 
     const { user } = useUser();
+
+    const {
+        notifications,
+        markAllRead
+    } = useNotifications();
+
+    const unread =
+        notifications.filter(n => !n.read).length;
 
     return (
 
@@ -48,17 +57,83 @@ function Topbar({ sidebarOpen, setSidebarOpen }) {
 
                     <button
                         className="bell-btn"
-                        onClick={() => setShowNotifications(!showNotifications)}
+                        onClick={() => {
+
+                            setShowNotifications(!showNotifications);
+
+                            if (!showNotifications) {
+
+                                markAllRead();
+
+                            }
+
+                        }}
                     >
+
                         🔔
+
+                        {unread > 0 && (
+
+                            <span className="notification-count">
+
+                                {unread}
+
+                            </span>
+
+                        )}
+
                     </button>
 
                     {showNotifications && (
+
                         <div className="notification-box">
-                            <p>🎉 Welcome to EduCompanion!</p>
-                            <p>📝 2 New Notes Generated</p>
-                            <p>🔥 Keep your streak alive!</p>
+
+                            <div className="notification-header">
+
+                                <h4>Notifications</h4>
+
+                                {notifications.length > 0 && (
+
+                                    <button
+                                        className="mark-read-btn"
+                                        onClick={markAllRead}
+                                    >
+                                        Mark all read
+                                    </button>
+
+                                )}
+
+                            </div>
+
+                            {notifications.length === 0 ? (
+
+                                <p className="empty-notification">
+                                    No notifications yet.
+                                </p>
+
+                            ) : (
+
+                                notifications.map((item) => (
+
+                                    <div
+                                        key={item._id}
+                                        className={`notification-item ${!item.read ? "unread" : ""}`}
+                                    >
+
+                                        <p>{item.message}</p>
+
+                                        <small>
+                                            {new Date(item.createdAt).toLocaleString()}
+                                        </small>
+
+                                    </div>
+
+                                ))
+
+                            )}
+
                         </div>
+
                     )}
 
                 </div>

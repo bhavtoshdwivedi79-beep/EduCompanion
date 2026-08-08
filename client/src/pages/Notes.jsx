@@ -6,6 +6,7 @@ import { jsPDF } from "jspdf";
 import toast from "react-hot-toast";
 import { saveNote } from "../services/savedNoteService";
 import { generateNotes } from "../services/chatService";
+import { useNotifications } from "../context/NotificationContext";
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -15,6 +16,7 @@ function Notes() {
     const [topic, setTopic] = useState("");
     const [notes, setNotes] = useState("");
     const [loading, setLoading] = useState(false);
+    const { addNotification } = useNotifications();
     const recommendedTopics = [
         "Operating System",
         "DBMS",
@@ -58,6 +60,8 @@ function Notes() {
             toast.success("📚 Notes generated successfully!", {
                 id: toastId,
             });
+
+            addNotification(`📝 Notes generated on "${selectedTopic}"`);
 
         } catch (err) {
 
@@ -178,6 +182,8 @@ function Notes() {
             toast.success("❤️ Notes saved successfully!", {
                 id: toastId,
             });
+
+            addNotification(`📝 Notes saved on "${topic}"`);
 
         } catch (error) {
 

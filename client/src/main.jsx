@@ -5,6 +5,7 @@ import App from "./App.jsx";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "./context/ThemeContext";
 import { UserProvider } from "./context/UserContext";
+import { NotificationProvider } from "./context/NotificationContext";
 
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -19,16 +20,20 @@ createRoot(document.getElementById("root")).render(
 
     <ThemeProvider>
 
-      <UserProvider>
+      <NotificationProvider>
 
-        <App />
+        <UserProvider>
 
-        <Toaster
-          position="top-right"
-          reverseOrder={false}
-        />
+          <App />
 
-      </UserProvider>
+          <Toaster
+            position="top-right"
+            reverseOrder={false}
+          />
+
+        </UserProvider>
+
+      </NotificationProvider>
 
     </ThemeProvider>
 

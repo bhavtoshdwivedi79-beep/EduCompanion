@@ -11,6 +11,7 @@ import {
     getFlashcards,
     deleteFlashcard,
 } from "../services/flashcardService";
+import { useNotifications } from "../context/NotificationContext";
 
 function Flashcards() {
 
@@ -35,6 +36,7 @@ function Flashcards() {
     const [flipped, setFlipped] = useState(false);
 
     const location = useLocation();
+    const { addNotification } = useNotifications();
 
     const quickTopics = [
         "Java",
@@ -60,6 +62,8 @@ function Flashcards() {
             const data = await generateFlashcards(currentTopic);
 
             setFlashcards(data.flashcards);
+
+            addNotification(`🃏 Flashcards generated on "${currentTopic}"`);
 
             setCurrentCard(0);
 
@@ -88,6 +92,8 @@ function Flashcards() {
             await saveFlashcards(topic, flashcards);
 
             toast.success("📚 Flashcards saved successfully!");
+
+            addNotification(`🃏 Flashcards saved on "${topic}"`);
 
             setSaved(true);
 
