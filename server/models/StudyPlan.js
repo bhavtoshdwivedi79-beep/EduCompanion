@@ -40,6 +40,19 @@ const studyPlanSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+
+        // Reminder kitne minutes pehle aaye
+        reminderMinutes: {
+            type: Number,
+            enum: [10, 15, 20, 30, 60],
+            default: 20,
+        },
+
+        // Reminder already send hua ya nahi
+        reminderSent: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,
