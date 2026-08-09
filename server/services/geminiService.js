@@ -36,7 +36,92 @@ Rules:
         max_tokens: 1024,
     });
 
+
+
     return completion.choices[0].message.content;
+}
+
+export async function analyzeImage(
+    imageBuffer,
+    mimeType,
+    question
+) {
+
+    const base64Image =
+        imageBuffer.toString("base64");
+
+    const completion =
+        await groq.chat.completions.create({
+
+            model: "qwen/qwen3.6-27b",
+
+            messages: [
+
+                {
+                    role: "system",
+
+                    content: `
+You are EduCompanion, an AI Study Assistant.
+
+Analyze the uploaded image carefully.
+
+Answer the student's question based only on what is visible in the image.
+
+Rules:
+
+- Explain in simple English.
+- Use Markdown formatting.
+- If the image contains text, read it carefully.
+- If it contains a diagram, explain the diagram.
+- If it contains a mathematical problem, solve it step by step.
+- If the image contains code, explain the code clearly.
+- If the image is unclear, honestly say that it is unclear.
+- Do not invent information that is not visible in the image.
+- Be student-friendly.
+                    `,
+                },
+
+                {
+                    role: "user",
+
+                    content: [
+
+                        {
+                            type: "text",
+
+                            text:
+                                question ||
+                                "Explain this image in detail.",
+                        },
+
+                        {
+                            type: "image_url",
+
+                            image_url: {
+
+                                url:
+                                    `data:${mimeType};base64,${base64Image}`,
+
+                            },
+
+                        },
+
+                    ],
+
+                },
+
+            ],
+
+            temperature: 0.7,
+
+            max_completion_tokens: 1500,
+
+        });
+
+    return completion
+        .choices[0]
+        .message
+        .content;
 }
 
 export async function generateNotes(topic) {

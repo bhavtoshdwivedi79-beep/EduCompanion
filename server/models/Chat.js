@@ -23,6 +23,21 @@ const chatSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+
+        imageUrl: {
+            type: String,
+            default: "",
+        },
+
+        imagePublicId: {
+            type: String,
+            default: "",
+        },
+
+        imageName: {
+            type: String,
+            default: "",
+        },
     },
     {
         timestamps: true,
