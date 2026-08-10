@@ -801,7 +801,7 @@
 .message-file-preview:hover {
     transform: translateY(-2px);
 
-    background: var(--card);
+    background: rgb(102, 125, 175);
 }
 
 .file-icon {

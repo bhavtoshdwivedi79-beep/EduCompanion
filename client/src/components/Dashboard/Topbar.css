@@ -226,6 +226,7 @@
 .notification-header {
 
     display: flex;
+    color: var(--text);
 
     justify-content: space-between;
 
@@ -259,7 +260,8 @@
 
     margin-bottom: 10px;
 
-    background: var(--secondary);
+    background: var(--bg);
+    color: var(--text);
 
 }
 
@@ -279,7 +281,7 @@
 
 .notification-item small {
 
-    color: gray;
+    color: var(--text);
 
 }
 
