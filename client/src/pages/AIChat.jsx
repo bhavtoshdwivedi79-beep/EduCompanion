@@ -188,17 +188,47 @@ function AIChat() {
                     // ==========================================
 
                     chats.push({
+
                         sender: "user",
+
                         text: chat.question,
 
-                        // Restore image/file from database
                         attachment: chat.imageUrl
                             ? {
-                                name: chat.imageName || "Uploaded Image",
-                                type: "image/*",
-                                preview: chat.imageUrl,
+                                name:
+                                    chat.imageName ||
+                                    "Uploaded Image",
+
+                                type:
+                                    chat.fileType ||
+                                    "image/*",
+
+                                preview:
+                                    chat.imageUrl,
+
+                                url:
+                                    chat.imageUrl,
                             }
-                            : null,
+
+                            : chat.fileUrl
+                                ? {
+                                    name:
+                                        chat.fileName ||
+                                        "Uploaded File",
+
+                                    type:
+                                        chat.fileType ||
+                                        "application/octet-stream",
+
+                                    preview:
+                                        null,
+
+                                    url:
+                                        chat.fileUrl,
+                                }
+
+                                : null,
+
                     });
 
 
@@ -207,8 +237,11 @@ function AIChat() {
                     // ==========================================
 
                     chats.push({
+
                         sender: "bot",
+
                         text: chat.answer,
+
                     });
 
                 });
@@ -221,9 +254,12 @@ function AIChat() {
                 if (chats.length === 0) {
 
                     chats.push({
+
                         sender: "bot",
+
                         text:
                             "Hello 👋 Ask me anything about your studies.",
+
                     });
 
                 }
@@ -233,7 +269,9 @@ function AIChat() {
 
             }
 
-        } catch (err) {
+        }
+
+        catch (err) {
 
             console.log(
                 "Failed to load chat history:",
@@ -564,16 +602,15 @@ function AIChat() {
 
             if (
                 fileBeingSent &&
-                res.data.imageUrl
+                (
+                    res.data.imageUrl ||
+                    res.data.fileUrl
+                )
             ) {
 
                 setMessages((prev) => {
 
                     const updated = [...prev];
-
-
-                    // Find the last user message
-                    // and replace its temporary preview
 
                     for (
                         let i = updated.length - 1;
@@ -585,6 +622,10 @@ function AIChat() {
                             updated[i].sender === "user"
                         ) {
 
+                            const isImage =
+                                fileBeingSent.type.startsWith("image/");
+
+
                             updated[i] = {
 
                                 ...updated[i],
@@ -592,14 +633,28 @@ function AIChat() {
                                 attachment: {
 
                                     name:
-                                        res.data.imageName ||
-                                        fileBeingSent.name,
+                                        isImage
+                                            ? (
+                                                res.data.imageName ||
+                                                fileBeingSent.name
+                                            )
+                                            : (
+                                                res.data.fileName ||
+                                                fileBeingSent.name
+                                            ),
 
                                     type:
                                         fileBeingSent.type,
 
                                     preview:
-                                        res.data.imageUrl,
+                                        isImage
+                                            ? res.data.imageUrl
+                                            : null,
+
+                                    url:
+                                        isImage
+                                            ? res.data.imageUrl
+                                            : res.data.fileUrl,
 
                                 },
 
@@ -610,7 +665,6 @@ function AIChat() {
                         }
 
                     }
-
 
                     return updated;
 
@@ -1043,31 +1097,55 @@ function AIChat() {
 
                                     <div className="message-attachment">
 
+                                        {/* ==========================================
+                IMAGE
+            ========================================== */}
+
                                         {msg.attachment.type?.startsWith(
                                             "image/"
                                         ) ? (
 
                                             <img
                                                 src={
-                                                    msg.attachment.preview
+                                                    msg.attachment.preview ||
+                                                    msg.attachment.url
                                                 }
+
                                                 alt="attachment"
+
                                                 className="message-image-preview"
                                             />
 
                                         ) : (
 
-                                            <div className="message-file-preview">
+                                            /* ==========================================
+                                               PDF / FILE
+                                            ========================================== */
 
-                                                📄
+                                            <a
+                                                href={msg.attachment.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="message-file-preview"
+                                            >
 
-                                                <span>
-                                                    {
-                                                        msg.attachment.name
-                                                    }
+                                                <span className="file-icon">
+                                                    📄
                                                 </span>
 
-                                            </div>
+                                                <span className="file-info">
+
+                                                    <strong>
+                                                        {msg.attachment.name}
+                                                    </strong>
+
+                                                    <small>
+                                                        Click to open PDF
+                                                    </small>
+
+                                                </span>
+
+                                            </a>
 
                                         )}
 

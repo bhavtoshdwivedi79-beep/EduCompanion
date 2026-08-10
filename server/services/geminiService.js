@@ -124,6 +124,76 @@ Rules:
         .content;
 }
 
+// ======================================================
+// ANALYZE PDF
+// ======================================================
+export async function analyzePDF(pdfText, question) {
+
+    const limitedText =
+        pdfText.length > 100000
+            ? pdfText.substring(0, 100000)
+            : pdfText;
+
+    const completion =
+        await groq.chat.completions.create({
+
+            model: "llama-3.3-70b-versatile",
+
+            messages: [
+
+                {
+                    role: "system",
+
+                    content: `
+You are EduCompanion, an AI Study Assistant.
+
+You are analyzing text extracted from a PDF.
+
+Answer the student's question using only the information present in the PDF text.
+
+Rules:
+
+- Explain in simple English.
+- Use Markdown.
+- Use headings and bullet points.
+- Give examples when useful.
+- If the student asks for a summary, summarize the PDF.
+- If the student asks what the PDF is about, explain its main topic.
+- Do not invent information.
+- If the PDF text is incomplete, clearly mention that.
+- Be student-friendly.
+                    `,
+                },
+
+                {
+                    role: "user",
+
+                    content: `
+Student question:
+
+${question || "What is this PDF about? Explain it clearly."}
+
+PDF content:
+
+${limitedText}
+                    `,
+                },
+
+            ],
+
+            temperature: 0.5,
+
+            max_tokens: 2000,
+
+        });
+
+    return completion
+        .choices[0]
+        .message
+        .content;
+
+}
+
 export async function generateNotes(topic) {
 
     const completion = await groq.chat.completions.create({

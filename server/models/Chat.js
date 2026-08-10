@@ -24,6 +24,10 @@ const chatSchema = new mongoose.Schema(
             required: true,
         },
 
+        // ==========================================
+        // IMAGE DATA
+        // ==========================================
+
         imageUrl: {
             type: String,
             default: "",
@@ -38,7 +42,32 @@ const chatSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+
+        // ==========================================
+        // FILE / PDF DATA
+        // ==========================================
+
+        fileUrl: {
+            type: String,
+            default: "",
+        },
+
+        filePublicId: {
+            type: String,
+            default: "",
+        },
+
+        fileName: {
+            type: String,
+            default: "",
+        },
+
+        fileType: {
+            type: String,
+            default: "",
+        },
     },
+
     {
         timestamps: true,
     }
