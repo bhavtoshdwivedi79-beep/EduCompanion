@@ -53,28 +53,35 @@ export const uploadFile = (buffer, originalName) => {
 
     return new Promise((resolve, reject) => {
 
-        const safeName =
-            originalName
-                .replace(/\.[^/.]+$/, "")
-                .replace(/[^a-zA-Z0-9-_]/g, "-");
-
         const publicId =
-            `educompanion/${Date.now()}-${safeName}`;
+            `educompanion/${Date.now()}-${originalName.replace(
+                /\.[^/.]+$/,
+                ""
+            )}`;
 
         const uploadStream =
             cloudinary.uploader.upload_stream(
 
                 {
-                    resource_type: "raw",
+                    resource_type: "image",
+
                     public_id: publicId,
+
+                    format: "pdf",
+
+                    timeout: 120000,
                 },
 
                 (error, result) => {
 
                     if (error) {
+
                         reject(error);
+
                     } else {
+
                         resolve(result);
+
                     }
 
                 }
@@ -134,15 +141,19 @@ export const deleteFile = (publicId) => {
             publicId,
 
             {
-                resource_type: "raw",
+                resource_type: "image",
             },
 
             (error, result) => {
 
                 if (error) {
+
                     reject(error);
+
                 } else {
+
                     resolve(result);
+
                 }
 
             }
