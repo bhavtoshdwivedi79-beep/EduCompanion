@@ -3,8 +3,9 @@ import "./SavedNotes.css";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
+import pdfMake from "pdfmake/build/pdfmake";
+import pdfFonts from "pdfmake/build/vfs_fonts";
+
 
 import { useEffect, useState } from "react";
 import { useRef } from "react";
@@ -15,6 +16,7 @@ import {
 
 function SavedNotes() {
 
+    pdfMake.vfs = pdfFonts.vfs;
     const [search, setSearch] = useState("");
     const [notes, setNotes] = useState([]);
 
@@ -56,9 +58,322 @@ function SavedNotes() {
 
     const handleDownload = (note) => {
 
-        setPdfNote(note);
+        if (!note?.notes) {
 
-    }
+            toast.error("No notes available to download.");
+
+            return;
+
+        }
+
+        try {
+
+            const lines = note.notes.split("\n");
+
+            const content = [];
+
+            lines.forEach((line) => {
+
+                const trimmed = line.trim();
+
+
+                // ==========================================
+                // EMPTY LINE
+                // ==========================================
+
+                if (!trimmed) {
+
+                    content.push({
+                        text: " ",
+                        margin: [0, 3],
+                    });
+
+                    return;
+
+                }
+
+
+                // ==========================================
+                // H1
+                // ==========================================
+
+                if (trimmed.startsWith("# ")) {
+
+                    content.push({
+
+                        text: trimmed
+                            .replace(/^# /, "")
+                            .replace(/\*\*/g, ""),
+
+                        style: "title",
+
+                        margin: [0, 0, 0, 15],
+
+                    });
+
+                    return;
+
+                }
+
+
+                // ==========================================
+                // H2
+                // ==========================================
+
+                if (trimmed.startsWith("## ")) {
+
+                    content.push({
+
+                        text: trimmed
+                            .replace(/^## /, "")
+                            .replace(/\*\*/g, ""),
+
+                        style: "heading2",
+
+                    });
+
+                    return;
+
+                }
+
+
+                // ==========================================
+                // H3
+                // ==========================================
+
+                if (trimmed.startsWith("### ")) {
+
+                    content.push({
+
+                        text: trimmed
+                            .replace(/^### /, "")
+                            .replace(/\*\*/g, ""),
+
+                        style: "heading3",
+
+                    });
+
+                    return;
+
+                }
+
+
+                // ==========================================
+                // BULLET LIST
+                // ==========================================
+
+                if (
+                    trimmed.startsWith("- ") ||
+                    trimmed.startsWith("* ")
+                ) {
+
+                    content.push({
+
+                        text:
+                            "• " +
+                            trimmed.substring(2),
+
+                        style: "bullet",
+
+                    });
+
+                    return;
+
+                }
+
+
+                // ==========================================
+                // NUMBERED LIST
+                // ==========================================
+
+                if (/^\d+\.\s/.test(trimmed)) {
+
+                    content.push({
+
+                        text: trimmed,
+
+                        style: "bullet",
+
+                    });
+
+                    return;
+
+                }
+
+
+                // ==========================================
+                // HORIZONTAL LINE
+                // ==========================================
+
+                if (trimmed === "---") {
+
+                    content.push({
+
+                        canvas: [
+
+                            {
+                                type: "line",
+
+                                x1: 0,
+                                y1: 0,
+
+                                x2: 515,
+                                y2: 0,
+
+                                lineWidth: 1,
+
+                            },
+
+                        ],
+
+                        margin: [0, 10],
+
+                    });
+
+                    return;
+
+                }
+
+
+                // ==========================================
+                // NORMAL TEXT
+                // ==========================================
+
+                content.push({
+
+                    text: trimmed
+                        .replace(
+                            /\*\*(.*?)\*\*/g,
+                            "$1"
+                        )
+                        .replace(
+                            /\*(.*?)\*/g,
+                            "$1"
+                        )
+                        .replace(
+                            /`(.*?)`/g,
+                            "$1"
+                        ),
+
+                    style: "body",
+
+                });
+
+            });
+
+
+            // ==========================================
+            // PDF DOCUMENT
+            // ==========================================
+
+            const documentDefinition = {
+
+                pageSize: "A4",
+
+                pageMargins: [
+                    45,
+                    50,
+                    45,
+                    50,
+                ],
+
+                content,
+
+                styles: {
+
+                    title: {
+
+                        fontSize: 22,
+
+                        bold: true,
+
+                        alignment: "center",
+
+                        margin: [0, 0, 0, 20],
+
+                    },
+
+                    heading2: {
+
+                        fontSize: 16,
+
+                        bold: true,
+
+                        margin: [0, 15, 0, 8],
+
+                    },
+
+                    heading3: {
+
+                        fontSize: 13,
+
+                        bold: true,
+
+                        margin: [0, 10, 0, 5],
+
+                    },
+
+                    body: {
+
+                        fontSize: 10.5,
+
+                        lineHeight: 1.5,
+
+                        margin: [0, 3, 0, 6],
+
+                    },
+
+                    bullet: {
+
+                        fontSize: 10.5,
+
+                        lineHeight: 1.5,
+
+                        margin: [10, 2, 0, 4],
+
+                    },
+
+                },
+
+                defaultStyle: {
+
+                    font: "Roboto",
+
+                },
+
+            };
+
+
+            // ==========================================
+            // DOWNLOAD
+            // ==========================================
+
+            pdfMake
+                .createPdf(documentDefinition)
+                .download(
+                    `${note.topic || "Saved-Notes"}-Notes.pdf`
+                );
+
+
+            toast.success(
+                "📄 Text-based PDF downloaded!"
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Saved Notes PDF error:",
+                error
+            );
+
+            toast.error(
+                "Failed to download PDF."
+            );
+
+        }
+
+    };
 
     useEffect(() => {
 

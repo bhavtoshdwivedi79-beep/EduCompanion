@@ -1,8 +1,8 @@
 import "./Notes.css";
-import html2canvas from "html2canvas";
+
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { jsPDF } from "jspdf";
+
 import toast from "react-hot-toast";
 import { saveNote } from "../services/savedNoteService";
 import { generateNotes } from "../services/chatService";
@@ -11,7 +11,11 @@ import { useNotifications } from "../context/NotificationContext";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import pdfMake from "pdfmake/build/pdfmake";
+import pdfFonts from "pdfmake/build/vfs_fonts";
+
 function Notes() {
+    pdfMake.vfs = pdfFonts.vfs;
 
     const [topic, setTopic] = useState("");
     const [notes, setNotes] = useState("");
@@ -92,66 +96,267 @@ function Notes() {
 
     };
 
-    const handleDownload = async () => {
+    const handleDownload = () => {
 
-        const input = notesRef.current;
+        if (!notes || !topic) {
 
-        const canvas = await html2canvas(input, {
-            scale: 3,
-            useCORS: true,
-            backgroundColor: "#0f172a",
-            logging: false
-        });
+            toast.error("No notes available to download.");
 
-        const imgData = canvas.toDataURL("image/png");
-
-        const pdf = new jsPDF("p", "mm", "a4");
-
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-
-        const imgWidth = pdfWidth;
-
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-        let heightLeft = imgHeight;
-
-        let position = 0;
-
-        pdf.addImage(
-            imgData,
-            "PNG",
-            0,
-            position,
-            imgWidth,
-            imgHeight,
-            undefined,
-            "MEDIUM"
-        );
-
-        heightLeft -= pdfHeight;
-
-        while (heightLeft > 0) {
-
-            position = heightLeft - imgHeight;
-
-            pdf.addPage();
-
-            pdf.addImage(
-                imgData,
-                "PNG",
-                0,
-                position,
-                imgWidth,
-                imgHeight
-            );
-
-            heightLeft -= pdfHeight;
+            return;
 
         }
 
-        pdf.save(`${topic}-Notes.pdf`);
+        try {
+
+            const lines = notes.split("\n");
+
+            const content = [];
+
+            lines.forEach((line) => {
+
+                const trimmed = line.trim();
+
+                // Empty line
+                if (!trimmed) {
+
+                    content.push({
+                        text: " ",
+                        margin: [0, 3],
+                    });
+
+                    return;
+
+                }
+
+                // H1
+                if (trimmed.startsWith("# ")) {
+
+                    content.push({
+
+                        text: trimmed
+                            .replace(/^# /, "")
+                            .replace(/\*\*/g, ""),
+
+                        style: "title",
+
+                        margin: [0, 0, 0, 15],
+
+                    });
+
+                    return;
+
+                }
+
+                // H2
+                if (trimmed.startsWith("## ")) {
+
+                    content.push({
+
+                        text: trimmed
+                            .replace(/^## /, "")
+                            .replace(/\*\*/g, ""),
+
+                        style: "heading2",
+
+                    });
+
+                    return;
+
+                }
+
+                // H3
+                if (trimmed.startsWith("### ")) {
+
+                    content.push({
+
+                        text: trimmed
+                            .replace(/^### /, "")
+                            .replace(/\*\*/g, ""),
+
+                        style: "heading3",
+
+                    });
+
+                    return;
+
+                }
+
+                // Bullet list
+                if (
+                    trimmed.startsWith("- ") ||
+                    trimmed.startsWith("* ")
+                ) {
+
+                    content.push({
+
+                        text:
+                            "• " +
+                            trimmed.substring(2),
+
+                        style: "bullet",
+
+                    });
+
+                    return;
+
+                }
+
+                // Numbered list
+                if (/^\d+\.\s/.test(trimmed)) {
+
+                    content.push({
+
+                        text: trimmed,
+
+                        style: "bullet",
+
+                    });
+
+                    return;
+
+                }
+
+                // Horizontal line
+                if (trimmed === "---") {
+
+                    content.push({
+
+                        canvas: [
+
+                            {
+                                type: "line",
+                                x1: 0,
+                                y1: 0,
+                                x2: 515,
+                                y2: 0,
+                                lineWidth: 1,
+                            },
+
+                        ],
+
+                        margin: [0, 10],
+
+                    });
+
+                    return;
+
+                }
+
+                // Normal paragraph
+                content.push({
+
+                    text: trimmed
+                        .replace(/\*\*(.*?)\*\*/g, "$1")
+                        .replace(/\*(.*?)\*/g, "$1")
+                        .replace(/`(.*?)`/g, "$1"),
+
+                    style: "body",
+
+                });
+
+            });
+
+
+            const documentDefinition = {
+
+                pageSize: "A4",
+
+                pageMargins: [
+                    45,
+                    50,
+                    45,
+                    50,
+                ],
+
+                content,
+
+                styles: {
+
+                    title: {
+
+                        fontSize: 22,
+
+                        bold: true,
+
+                        alignment: "center",
+
+                        margin: [0, 0, 0, 20],
+
+                    },
+
+                    heading2: {
+
+                        fontSize: 16,
+
+                        bold: true,
+
+                        margin: [0, 15, 0, 8],
+
+                    },
+
+                    heading3: {
+
+                        fontSize: 13,
+
+                        bold: true,
+
+                        margin: [0, 10, 0, 5],
+
+                    },
+
+                    body: {
+
+                        fontSize: 10.5,
+
+                        lineHeight: 1.5,
+
+                        margin: [0, 3, 0, 6],
+
+                    },
+
+                    bullet: {
+
+                        fontSize: 10.5,
+
+                        lineHeight: 1.5,
+
+                        margin: [10, 2, 0, 4],
+
+                    },
+
+                },
+
+                defaultStyle: {
+
+                    font: "Roboto",
+
+                },
+
+            };
+
+
+            pdfMake
+                .createPdf(documentDefinition)
+                .download(`${topic}-Notes.pdf`);
+
+
+            toast.success(
+                "📄 Text-based PDF downloaded!"
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "PDF generation error:",
+                error
+            );
+
+            toast.error(
+                "Failed to download PDF."
+            );
+
+        }
 
     };
 
