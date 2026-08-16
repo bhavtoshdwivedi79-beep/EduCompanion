@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "canvas": "^3.2.3",
     "cloudinary": "^1.41.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -22,7 +23,9 @@
     "mongoose": "^8.24.1",
     "multer": "^2.2.0",
     "multer-storage-cloudinary": "^4.0.0",
-    "pdf-parse": "^2.4.5"
+    "pdf-parse": "^2.4.5",
+    "pdf-to-img": "^6.2.0",
+    "pdfjs-dist": "^6.2.108"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

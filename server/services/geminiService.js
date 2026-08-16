@@ -194,6 +194,140 @@ ${limitedText}
 
 }
 
+// ======================================================
+// ANALYZE SCANNED PDF IMAGES
+// ======================================================
+
+export async function analyzePDFImages(
+    imageBuffers,
+    question
+) {
+
+    if (
+        !imageBuffers ||
+        imageBuffers.length === 0
+    ) {
+        throw new Error(
+            "No PDF page images found"
+        );
+    }
+
+    console.log(
+        `🤖 Analyzing ${imageBuffers.length} PDF pages with AI...`
+    );
+
+    const imageContents =
+        imageBuffers.map(
+            (imageBuffer, index) => {
+
+                const base64Image =
+                    imageBuffer.toString("base64");
+
+                return {
+
+                    type: "image_url",
+
+                    image_url: {
+
+                        url:
+                            `data:image/png;base64,${base64Image}`,
+
+                    },
+
+                };
+
+            }
+        );
+
+
+    const completion =
+        await groq.chat.completions.create({
+
+            // Use the same vision-capable model
+            // that is already working for your images.
+            model: "qwen/qwen3.6-27b",
+
+            messages: [
+
+                {
+                    role: "system",
+
+                    content: `
+You are EduCompanion, an AI Study Assistant.
+
+The user has uploaded a scanned PDF.
+Each PDF page has been converted into an image.
+
+Analyze ALL provided pages carefully.
+
+Answer the student's question using the information visible in the pages.
+
+Rules:
+
+- Read text from all pages carefully.
+- Consider all pages together.
+- Do not ignore later pages.
+- If the pages contain handwritten notes, try to understand them.
+- If the pages contain diagrams, explain them.
+- If the pages contain mathematical problems, solve them step by step.
+- If the pages contain code, explain the code clearly.
+- Use Markdown formatting.
+- Use headings and bullet points.
+- Explain in simple English.
+- Be student-friendly.
+- Do not invent information.
+- If something is unclear or unreadable, say so honestly.
+- If the student asks for an explanation, explain the relevant content from the pages.
+- If the student asks for a summary, summarize the complete visible content.
+                    `,
+                },
+
+                {
+
+                    role: "user",
+
+                    content: [
+
+                        {
+
+                            type: "text",
+
+                            text:
+                                question ||
+                                "Explain these scanned PDF pages clearly and completely.",
+
+                        },
+
+                        ...imageContents,
+
+                    ],
+
+                },
+
+            ],
+
+            temperature: 0.5,
+
+            max_completion_tokens: 4000,
+
+        });
+
+
+    const answer =
+        completion
+            .choices[0]
+            .message
+            .content;
+
+
+    console.log(
+        "✅ Scanned PDF analysis completed"
+    );
+
+
+    return answer;
+}
+
 export async function generateNotes(topic) {
 
     const completion = await groq.chat.completions.create({

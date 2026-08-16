@@ -4,6 +4,7 @@ import Conversation from "../models/Conversation.js";
 import {
     analyzeImage,
     analyzePDF,
+    analyzePDFImages,
     askAI,
     generateNotes as generateNotesAI,
     generateQuizAI,
@@ -13,6 +14,10 @@ import {
 import {
     extractPDFText
 } from "../services/pdfService.js";
+
+import {
+    convertPDFToImages
+} from "../services/pdfImageService.js";
 
 import updateStreak from "../utils/updateStreak.js";
 
@@ -243,6 +248,10 @@ export const chatWithAI = async (req, res) => {
         // PDF CHAT
         // ======================================================
 
+        // ======================================================
+        // PDF CHAT
+        // ======================================================
+
         if (
             req.file &&
             req.file.mimetype === "application/pdf"
@@ -256,7 +265,7 @@ export const chatWithAI = async (req, res) => {
             try {
 
                 // ==============================================
-                // 1. EXTRACT PDF TEXT
+                // 1. TRY TEXT EXTRACTION
                 // ==============================================
 
                 console.log("📖 Reading PDF...");
@@ -268,18 +277,8 @@ export const chatWithAI = async (req, res) => {
                     req.file.buffer
                 );
 
-                if (!pdfText || !pdfText.trim()) {
-
-                    return res.status(400).json({
-                        success: false,
-                        message:
-                            "This PDF does not contain readable text. It may be a scanned or image-only PDF.",
-                    });
-
-                }
-
                 console.log(
-                    `✅ PDF readable: ${pages} pages`
+                    `📄 Pages detected: ${pages}`
                 );
 
                 console.log(
@@ -287,25 +286,115 @@ export const chatWithAI = async (req, res) => {
                 );
 
 
+                let pdfAnswer;
+                let pdfMode = "text";
+
+
                 // ==============================================
-                // 2. ANALYZE PDF WITH AI
+                // 2. TEXT PDF
                 // ==============================================
 
-                console.log("🤖 Analyzing PDF with AI...");
+                if (
+                    pdfText &&
+                    pdfText.trim().length > 20
+                ) {
 
-                const pdfAnswer =
-                    await analyzePDF(
-                        pdfText,
-                        message
+                    console.log(
+                        "📄 Text-based PDF detected"
                     );
 
-                console.log(
-                    "✅ PDF analyzed successfully"
-                );
+                    console.log(
+                        "🤖 Analyzing PDF text with AI..."
+                    );
+
+                    pdfAnswer =
+                        await analyzePDF(
+                            pdfText,
+                            message
+                        );
+
+                    console.log(
+                        "✅ Text PDF analyzed successfully"
+                    );
+
+                }
 
 
                 // ==============================================
-                // 3. OPTIONAL CLOUDINARY UPLOAD
+                // 3. SCANNED / IMAGE PDF
+                // ==============================================
+
+                else {
+
+                    console.log(
+                        "🖼️ No readable text found"
+                    );
+
+                    console.log(
+                        "📸 Assuming scanned/image-based PDF..."
+                    );
+
+                    console.log(
+                        "🔄 Converting PDF pages to images..."
+                    );
+
+
+                    const pageImages =
+                        await convertPDFToImages(
+                            req.file.buffer
+                        );
+
+
+                    if (
+                        !pageImages ||
+                        pageImages.length === 0
+                    ) {
+
+                        return res.status(400).json({
+
+                            success: false,
+
+                            message:
+                                "Unable to convert PDF pages into images.",
+
+                        });
+
+                    }
+
+
+                    console.log(
+                        `✅ ${pageImages.length} PDF pages converted to images`
+                    );
+
+
+                    // ------------------------------------------------
+                    // Analyze all page images
+                    // ------------------------------------------------
+
+                    console.log(
+                        "🤖 Analyzing scanned PDF with AI..."
+                    );
+
+
+                    pdfAnswer =
+                        await analyzePDFImages(
+                            pageImages,
+                            message
+                        );
+
+
+                    pdfMode = "scanned";
+
+
+                    console.log(
+                        "✅ Scanned PDF analyzed successfully"
+                    );
+
+                }
+
+
+                // ==============================================
+                // 4. UPLOAD PDF TO CLOUDINARY
                 // ==============================================
 
                 let cloudinaryResult = null;
@@ -316,11 +405,13 @@ export const chatWithAI = async (req, res) => {
                         "☁️ Uploading PDF to Cloudinary..."
                     );
 
+
                     cloudinaryResult =
                         await uploadFile(
                             req.file.buffer,
                             req.file.originalname
                         );
+
 
                     console.log(
                         "✅ PDF uploaded to Cloudinary"
@@ -333,12 +424,12 @@ export const chatWithAI = async (req, res) => {
                         uploadError.message
                     );
 
-                    // Do NOT stop PDF AI processing.
+                    // AI processing should still succeed.
                 }
 
 
                 // ==============================================
-                // 4. SAVE CHAT
+                // 5. SAVE CHAT
                 // ==============================================
 
                 const chat =
@@ -372,8 +463,13 @@ export const chatWithAI = async (req, res) => {
                     });
 
 
+                console.log(
+                    "✅ PDF chat saved to database"
+                );
+
+
                 // ==============================================
-                // 5. UPDATE STREAK
+                // 6. UPDATE STREAK
                 // ==============================================
 
                 await updateStreak(
@@ -382,7 +478,7 @@ export const chatWithAI = async (req, res) => {
 
 
                 // ==============================================
-                // 6. RESPONSE
+                // 7. SEND RESPONSE
                 // ==============================================
 
                 return res.status(200).json({
@@ -409,6 +505,8 @@ export const chatWithAI = async (req, res) => {
 
                     pages,
 
+                    pdfMode,
+
                 });
 
 
@@ -418,6 +516,7 @@ export const chatWithAI = async (req, res) => {
                     "❌ PDF CHAT ERROR:",
                     pdfError
                 );
+
 
                 return res.status(500).json({
 
