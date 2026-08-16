@@ -1,4 +1,5 @@
 import dns from "dns";
+
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 import dotenv from "dotenv";
@@ -10,18 +11,42 @@ import checkStudyReminders from "./services/reminderService.js";
 
 const PORT = process.env.PORT || 5000;
 
-// Connect Database
-connectDB();
+const startServer = async () => {
 
-// Start Reminder Service
-setInterval(() => {
-    checkStudyReminders();
-}, 60 * 1000);
+    try {
 
-// Check once immediately when server starts
-checkStudyReminders();
+        // Connect MongoDB FIRST
+        await connectDB();
 
-app.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT}`);
-    console.log(`⏰ Study reminder service started`);
-});
+        // Start server AFTER MongoDB is connected
+        app.listen(PORT, () => {
+
+            console.log(`🚀 Server is running on port ${PORT}`);
+            console.log(`⏰ Study reminder service started`);
+
+        });
+
+        // Check reminders after DB is ready
+        checkStudyReminders();
+
+        // Check reminders every minute
+        setInterval(() => {
+
+            checkStudyReminders();
+
+        }, 60 * 1000);
+
+    } catch (error) {
+
+        console.error(
+            "❌ Failed to start server:",
+            error
+        );
+
+        process.exit(1);
+
+    }
+
+};
+
+startServer();

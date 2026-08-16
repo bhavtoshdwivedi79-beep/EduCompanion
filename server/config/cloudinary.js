@@ -69,6 +69,8 @@ export const uploadFile = (buffer, originalName) => {
 
                     format: "pdf",
 
+                    type: "upload",
+
                     timeout: 120000,
                 },
 
@@ -126,7 +128,6 @@ export const deleteImage = (publicId) => {
     });
 
 };
-
 
 // ======================================================
 // DELETE FILE / PDF
