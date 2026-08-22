@@ -33,19 +33,31 @@ import {
 // CHAT WITH AI
 // ======================================================
 
-export const chatWithAI = async (req, res) => {
+export const chatWithAI = async (
+    req,
+    res
+) => {
 
     try {
 
-        console.log("MESSAGE:", req.body.message);
+        console.log(
+            "MESSAGE:",
+            req.body.message
+        );
+
 
         console.log(
             "FILE:",
             req.file
                 ? {
-                    name: req.file.originalname,
-                    type: req.file.mimetype,
-                    size: req.file.size,
+                    name:
+                        req.file.originalname,
+
+                    type:
+                        req.file.mimetype,
+
+                    size:
+                        req.file.size,
                 }
                 : null
         );
@@ -58,7 +70,7 @@ export const chatWithAI = async (req, res) => {
 
 
         // ==================================================
-        // 1. FIND OR CREATE CONVERSATION
+        // FIND OR CREATE CONVERSATION
         // ==================================================
 
         let conversation;
@@ -66,13 +78,16 @@ export const chatWithAI = async (req, res) => {
 
         if (conversationId) {
 
-            conversation = await Conversation.findOne({
+            conversation =
+                await Conversation.findOne({
 
-                _id: conversationId,
+                    _id:
+                        conversationId,
 
-                user: req.user._id,
+                    user:
+                        req.user._id,
 
-            });
+                });
 
 
             if (!conversation) {
@@ -81,7 +96,8 @@ export const chatWithAI = async (req, res) => {
 
                     success: false,
 
-                    message: "Conversation not found",
+                    message:
+                        "Conversation not found",
 
                 });
 
@@ -89,30 +105,38 @@ export const chatWithAI = async (req, res) => {
 
         } else {
 
-            conversation = await Conversation.create({
+            conversation =
+                await Conversation.create({
 
-                user: req.user._id,
+                    user:
+                        req.user._id,
 
-                title: message
-                    ? (
-                        message.length > 40
-                            ? message.substring(0, 40) + "..."
-                            : message
-                    )
-                    : "Image Chat",
+                    title:
+                        message
+                            ? (
+                                message.length > 40
+                                    ? message.substring(
+                                        0,
+                                        40
+                                    ) + "..."
+                                    : message
+                            )
+                            : "New Chat",
 
-            });
+                });
 
         }
 
 
         // ==================================================
-        // 2. IMAGE CHAT
+        // IMAGE CHAT
         // ==================================================
 
         if (
             req.file &&
-            req.file.mimetype.startsWith("image/")
+            req.file.mimetype.startsWith(
+                "image/"
+            )
         ) {
 
             console.log(
@@ -121,28 +145,40 @@ export const chatWithAI = async (req, res) => {
 
 
             // ------------------------------------------------
-            // Upload image to Cloudinary
+            // Upload image
             // ------------------------------------------------
 
-            console.log(
-                "☁️ Uploading image to Cloudinary..."
-            );
+            let cloudinaryResult;
 
+            try {
 
-            const cloudinaryResult =
-                await uploadImage(
-                    req.file.buffer
+                console.log(
+                    "☁️ Uploading image to Cloudinary..."
                 );
 
 
-            console.log(
-                "✅ Image uploaded:",
-                cloudinaryResult.secure_url
-            );
+                cloudinaryResult =
+                    await uploadImage(
+                        req.file.buffer
+                    );
+
+
+                console.log(
+                    "✅ Image uploaded"
+                );
+
+            } catch (uploadError) {
+
+                console.error(
+                    "❌ Image upload failed:",
+                    uploadError.message
+                );
+
+            }
 
 
             // ------------------------------------------------
-            // Analyze image using AI
+            // Analyze image
             // ------------------------------------------------
 
             console.log(
@@ -168,7 +204,7 @@ export const chatWithAI = async (req, res) => {
 
 
             // ------------------------------------------------
-            // Save chat + image information
+            // Save chat
             // ------------------------------------------------
 
             const chat =
@@ -187,15 +223,13 @@ export const chatWithAI = async (req, res) => {
                     answer:
                         imageAnswer,
 
-                    // IMPORTANT
-                    // These values make the image
-                    // persistent after refresh.
-
                     imageUrl:
-                        cloudinaryResult.secure_url,
+                        cloudinaryResult?.secure_url ||
+                        "",
 
                     imagePublicId:
-                        cloudinaryResult.public_id,
+                        cloudinaryResult?.public_id ||
+                        "",
 
                     imageName:
                         req.file.originalname,
@@ -203,23 +237,10 @@ export const chatWithAI = async (req, res) => {
                 });
 
 
-            console.log(
-                "✅ Chat + image information saved"
-            );
-
-
-            // ------------------------------------------------
-            // Update streak
-            // ------------------------------------------------
-
             await updateStreak(
                 req.user._id
             );
 
-
-            // ------------------------------------------------
-            // Send response
-            // ------------------------------------------------
 
             return res.status(200).json({
 
@@ -244,74 +265,124 @@ export const chatWithAI = async (req, res) => {
 
         }
 
-        // ======================================================
-        // PDF CHAT
-        // ======================================================
 
-        // ======================================================
+        // ==================================================
         // PDF CHAT
-        // ======================================================
+        // ==================================================
 
         if (
             req.file &&
-            req.file.mimetype === "application/pdf"
+            req.file.mimetype ===
+            "application/pdf"
         ) {
 
-            console.log("📄 PDF received:", {
-                name: req.file.originalname,
-                size: req.file.size,
-            });
+            console.log(
+                "📄 PDF received:",
+                {
+                    name:
+                        req.file.originalname,
+
+                    size:
+                        req.file.size,
+                }
+            );
+
 
             try {
 
-                // ==============================================
-                // 1. TRY TEXT EXTRACTION
-                // ==============================================
+                // ==========================================
+                // EXTRACT PDF TEXT
+                // ==========================================
 
-                console.log("📖 Reading PDF...");
+                console.log(
+                    "📖 Reading PDF..."
+                );
+
 
                 const {
                     pdfText,
                     pages,
-                } = await extractPDFText(
-                    req.file.buffer
-                );
+                } =
+                    await extractPDFText(
+                        req.file.buffer
+                    );
+
 
                 console.log(
-                    `📄 Pages detected: ${pages}`
+                    `📄 PDF pages detected: ${pages}`
                 );
 
+
                 console.log(
-                    `📝 Extracted characters: ${pdfText.length}`
+                    `📝 Raw extracted characters: ${pdfText.length}`
+                );
+
+
+                // ==========================================
+                // CLEAN TEXT
+                // ==========================================
+
+                const cleanedPDFText =
+                    (pdfText || "")
+                        .replace(
+                            /--\s*\d+\s+of\s+\d+\s*--/gi,
+                            ""
+                        )
+                        .replace(
+                            /\n{3,}/g,
+                            "\n\n"
+                        )
+                        .trim();
+
+                const meaningfulText =
+                    cleanedPDFText
+                        .replace(/\s+/g, "")
+                        .trim();
+
+                const hasMeaningfulText =
+                    meaningfulText.length >= 30;
+
+
+                console.log(
+                    `🔎 Meaningful PDF text: ${hasMeaningfulText}`
+                );
+
+
+                console.log(
+                    `📝 Cleaned text characters: ${cleanedPDFText.length}`
                 );
 
 
                 let pdfAnswer;
-                let pdfMode = "text";
 
 
-                // ==============================================
-                // 2. TEXT PDF
-                // ==============================================
+                // ==========================================
+                // TEXT PDF
+                // ==========================================
 
                 if (
-                    pdfText &&
-                    pdfText.trim().length > 20
+                    hasMeaningfulText
                 ) {
 
                     console.log(
                         "📄 Text-based PDF detected"
                     );
 
+
                     console.log(
                         "🤖 Analyzing PDF text with AI..."
                     );
 
+
                     pdfAnswer =
                         await analyzePDF(
-                            pdfText,
+
+                            cleanedPDFText,
+
                             message
+
                         );
+
 
                     console.log(
                         "✅ Text PDF analyzed successfully"
@@ -320,29 +391,35 @@ export const chatWithAI = async (req, res) => {
                 }
 
 
-                // ==============================================
-                // 3. SCANNED / IMAGE PDF
-                // ==============================================
+                // ==========================================
+                // SCANNED PDF
+                // ==========================================
 
                 else {
 
                     console.log(
-                        "🖼️ No readable text found"
+                        "📸 Scanned/Image-based PDF detected"
                     );
 
-                    console.log(
-                        "📸 Assuming scanned/image-based PDF..."
-                    );
 
                     console.log(
-                        "🔄 Converting PDF pages to images..."
+                        `🖼️ Converting ${pages} PDF pages to images...`
                     );
 
 
                     const pageImages =
                         await convertPDFToImages(
-                            req.file.buffer
+
+                            req.file.buffer,
+
+                            pages
+
                         );
+
+
+                    console.log(
+                        `🖼️ Converted ${pageImages.length}/${pages} PDF pages to images`
+                    );
 
 
                     if (
@@ -355,35 +432,30 @@ export const chatWithAI = async (req, res) => {
                             success: false,
 
                             message:
-                                "Unable to convert PDF pages into images.",
+                                "Unable to read the pages of this scanned PDF.",
 
                         });
 
                     }
 
 
-                    console.log(
-                        `✅ ${pageImages.length} PDF pages converted to images`
-                    );
-
-
-                    // ------------------------------------------------
-                    // Analyze all page images
-                    // ------------------------------------------------
+                    // ======================================
+                    // ANALYZE SCANNED PAGES
+                    // ======================================
 
                     console.log(
-                        "🤖 Analyzing scanned PDF with AI..."
+                        "🤖 Analyzing scanned PDF pages with AI..."
                     );
 
 
                     pdfAnswer =
                         await analyzePDFImages(
+
                             pageImages,
+
                             message
+
                         );
-
-
-                    pdfMode = "scanned";
 
 
                     console.log(
@@ -393,11 +465,12 @@ export const chatWithAI = async (req, res) => {
                 }
 
 
-                // ==============================================
-                // 4. UPLOAD PDF TO CLOUDINARY
-                // ==============================================
+                // ==========================================
+                // UPLOAD PDF
+                // ==========================================
 
                 let cloudinaryResult = null;
+
 
                 try {
 
@@ -408,8 +481,11 @@ export const chatWithAI = async (req, res) => {
 
                     cloudinaryResult =
                         await uploadFile(
+
                             req.file.buffer,
+
                             req.file.originalname
+
                         );
 
 
@@ -424,13 +500,12 @@ export const chatWithAI = async (req, res) => {
                         uploadError.message
                     );
 
-                    // AI processing should still succeed.
                 }
 
 
-                // ==============================================
-                // 5. SAVE CHAT
-                // ==============================================
+                // ==========================================
+                // SAVE CHAT
+                // ==========================================
 
                 const chat =
                     await Chat.create({
@@ -449,10 +524,12 @@ export const chatWithAI = async (req, res) => {
                             pdfAnswer,
 
                         fileUrl:
-                            cloudinaryResult?.secure_url || "",
+                            cloudinaryResult?.secure_url ||
+                            "",
 
                         filePublicId:
-                            cloudinaryResult?.public_id || "",
+                            cloudinaryResult?.public_id ||
+                            "",
 
                         fileName:
                             req.file.originalname,
@@ -464,22 +541,22 @@ export const chatWithAI = async (req, res) => {
 
 
                 console.log(
-                    "✅ PDF chat saved to database"
+                    "✅ PDF chat saved successfully"
                 );
 
 
-                // ==============================================
-                // 6. UPDATE STREAK
-                // ==============================================
+                // ==========================================
+                // UPDATE STREAK
+                // ==========================================
 
                 await updateStreak(
                     req.user._id
                 );
 
 
-                // ==============================================
-                // 7. SEND RESPONSE
-                // ==============================================
+                // ==========================================
+                // RESPONSE
+                // ==========================================
 
                 return res.status(200).json({
 
@@ -504,8 +581,6 @@ export const chatWithAI = async (req, res) => {
                         chat.fileType,
 
                     pages,
-
-                    pdfMode,
 
                 });
 
@@ -534,7 +609,7 @@ export const chatWithAI = async (req, res) => {
 
 
         // ==================================================
-        // 4. NORMAL TEXT CHAT
+        // NORMAL TEXT CHAT
         // ==================================================
 
         if (!message) {
@@ -552,7 +627,7 @@ export const chatWithAI = async (req, res) => {
 
 
         // ==================================================
-        // 5. GET PREVIOUS CHATS
+        // PREVIOUS CHATS
         // ==================================================
 
         const previousChats =
@@ -565,14 +640,16 @@ export const chatWithAI = async (req, res) => {
                     conversation._id,
 
             })
+
                 .sort({
                     createdAt: 1,
                 })
+
                 .limit(10);
 
 
         // ==================================================
-        // 6. CREATE AI HISTORY
+        // AI HISTORY
         // ==================================================
 
         const history = [];
@@ -583,7 +660,8 @@ export const chatWithAI = async (req, res) => {
 
                 history.push({
 
-                    role: "user",
+                    role:
+                        "user",
 
                     content:
                         chat.question,
@@ -593,7 +671,8 @@ export const chatWithAI = async (req, res) => {
 
                 history.push({
 
-                    role: "assistant",
+                    role:
+                        "assistant",
 
                     content:
                         chat.answer,
@@ -604,11 +683,10 @@ export const chatWithAI = async (req, res) => {
         );
 
 
-        // Current message
-
         history.push({
 
-            role: "user",
+            role:
+                "user",
 
             content:
                 message,
@@ -617,7 +695,7 @@ export const chatWithAI = async (req, res) => {
 
 
         // ==================================================
-        // 7. ASK AI
+        // ASK AI
         // ==================================================
 
         const answer =
@@ -627,7 +705,7 @@ export const chatWithAI = async (req, res) => {
 
 
         // ==================================================
-        // 8. UPDATE CONVERSATION TITLE
+        // UPDATE TITLE
         // ==================================================
 
         const totalMessages =
@@ -639,12 +717,17 @@ export const chatWithAI = async (req, res) => {
             });
 
 
-        if (totalMessages === 0) {
+        if (
+            totalMessages === 0
+        ) {
 
             conversation.title =
                 message.length > 40
 
-                    ? message.substring(0, 40) + "..."
+                    ? message.substring(
+                        0,
+                        40
+                    ) + "..."
 
                     : message;
 
@@ -655,7 +738,7 @@ export const chatWithAI = async (req, res) => {
 
 
         // ==================================================
-        // 9. SAVE NORMAL CHAT
+        // SAVE NORMAL CHAT
         // ==================================================
 
         await Chat.create({
@@ -675,18 +758,10 @@ export const chatWithAI = async (req, res) => {
         });
 
 
-        // ==================================================
-        // 10. UPDATE STREAK
-        // ==================================================
-
         await updateStreak(
             req.user._id
         );
 
-
-        // ==================================================
-        // 11. SEND RESPONSE
-        // ==================================================
 
         return res.status(200).json({
 
@@ -745,6 +820,7 @@ export const getChatHistory = async (
                     req.params.conversationId,
 
             })
+
                 .sort({
                     createdAt: 1,
                 });
@@ -793,9 +869,9 @@ export const deleteChat = async (
 
     try {
 
-        // ------------------------------------------------
-        // Find chat first
-        // ------------------------------------------------
+        // ==============================================
+        // FIND CHAT
+        // ==============================================
 
         const chat =
             await Chat.findOne({
@@ -823,9 +899,9 @@ export const deleteChat = async (
         }
 
 
-        // ------------------------------------------------
-        // Delete image from Cloudinary
-        // ------------------------------------------------
+        // ==============================================
+        // DELETE IMAGE
+        // ==============================================
 
         if (
             chat.imagePublicId
@@ -847,22 +923,21 @@ export const deleteChat = async (
                     "✅ Cloudinary image deleted"
                 );
 
-
             } catch (cloudinaryError) {
 
                 console.error(
-                    "⚠️ Cloudinary delete failed:",
-                    cloudinaryError
+                    "⚠️ Cloudinary image delete failed:",
+                    cloudinaryError.message
                 );
 
-                // Continue deleting MongoDB chat.
             }
 
         }
 
-        // ------------------------------------------------
-        // Delete PDF / FILE from Cloudinary
-        // ------------------------------------------------
+
+        // ==============================================
+        // DELETE PDF
+        // ==============================================
 
         if (
             chat.filePublicId
@@ -874,9 +949,11 @@ export const deleteChat = async (
                     "☁️ Deleting PDF from Cloudinary..."
                 );
 
+
                 await deleteFile(
                     chat.filePublicId
                 );
+
 
                 console.log(
                     "✅ Cloudinary PDF deleted"
@@ -886,18 +963,17 @@ export const deleteChat = async (
 
                 console.error(
                     "⚠️ Cloudinary PDF delete failed:",
-                    cloudinaryError
+                    cloudinaryError.message
                 );
 
-                // Continue deleting MongoDB chat.
             }
 
         }
 
 
-        // ------------------------------------------------
-        // Delete chat from MongoDB
-        // ------------------------------------------------
+        // ==============================================
+        // DELETE MONGODB CHAT
+        // ==============================================
 
         await Chat.deleteOne({
 
@@ -951,7 +1027,10 @@ export const generateNotes = async (
 
     try {
 
-        const { topic } = req.body;
+        const {
+            topic
+        } = req.body;
+
 
         if (!topic) {
 
@@ -959,20 +1038,24 @@ export const generateNotes = async (
 
                 success: false,
 
-                message: "Topic is required",
+                message:
+                    "Topic is required",
 
             });
 
         }
+
 
         const notes =
             await generateNotesAI(
                 topic
             );
 
+
         await updateStreak(
             req.user._id
         );
+
 
         return res.status(200).json({
 
@@ -982,12 +1065,14 @@ export const generateNotes = async (
 
         });
 
+
     } catch (error) {
 
         console.error(
             "❌ generateNotes ERROR:",
             error
         );
+
 
         return res.status(500).json({
 
@@ -1001,6 +1086,7 @@ export const generateNotes = async (
     }
 
 };
+
 
 
 // ======================================================
