@@ -3,7 +3,7 @@ import User from "../models/User.js";
 
 export const protect = async (req, res, next) => {
   try {
-    console.log("Authorization:", req.headers.authorization);
+    // console.log("Authorization:", req.headers.authorization);
 
     let token = req.headers.authorization;
 
@@ -17,7 +17,7 @@ export const protect = async (req, res, next) => {
 
     token = token.split(" ")[1];
 
-    console.log("Token:", token);
+    // console.log("Token:", token);
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 

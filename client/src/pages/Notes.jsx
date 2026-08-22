@@ -112,30 +112,257 @@ function Notes() {
 
             const content = [];
 
-            lines.forEach((line) => {
+            let i = 0;
 
-                const trimmed = line.trim();
+            // ==================================================
+            // HELPER: CLEAN MARKDOWN
+            // ==================================================
 
-                // Empty line
+            const cleanMarkdown = (text = "") => {
+
+                return text
+                    .replace(/\*\*(.*?)\*\*/g, "$1")
+                    .replace(/__(.*?)__/g, "$1")
+                    .replace(/\*(.*?)\*/g, "$1")
+                    .replace(/_(.*?)_/g, "$1")
+                    .replace(/`(.*?)`/g, "$1")
+                    .trim();
+
+            };
+
+
+            // ==================================================
+            // HELPER: CONVERT MARKDOWN TABLE ROW
+            // ==================================================
+
+            const parseTableRow = (line) => {
+
+                return line
+                    .trim()
+                    .replace(/^\|/, "")
+                    .replace(/\|$/, "")
+                    .split("|")
+                    .map(cell => cleanMarkdown(cell));
+
+            };
+
+
+            // ==================================================
+            // PROCESS MARKDOWN
+            // ==================================================
+
+            while (i < lines.length) {
+
+                const rawLine = lines[i];
+
+                const trimmed = rawLine.trim();
+
+
+                // ==================================================
+                // EMPTY LINE
+                // ==================================================
+
                 if (!trimmed) {
 
                     content.push({
+
                         text: " ",
+
                         margin: [0, 3],
+
                     });
 
-                    return;
+                    i++;
+
+                    continue;
 
                 }
 
+
+                // ==================================================
+                // TABLE DETECTION
+                // ==================================================
+
+                if (
+                    trimmed.startsWith("|") &&
+                    i + 1 < lines.length &&
+                    /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)+\|?\s*$/
+                        .test(lines[i + 1])
+                ) {
+
+                    const header =
+                        parseTableRow(lines[i]);
+
+                    const separator =
+                        parseTableRow(lines[i + 1]);
+
+
+                    const body = [];
+
+                    i += 2;
+
+
+                    // ------------------------------------------
+                    // READ TABLE BODY
+                    // ------------------------------------------
+
+                    while (i < lines.length) {
+
+                        const tableLine =
+                            lines[i].trim();
+
+
+                        if (
+                            !tableLine ||
+                            !tableLine.includes("|")
+                        ) {
+
+                            break;
+
+                        }
+
+
+                        body.push(
+                            parseTableRow(tableLine)
+                        );
+
+                        i++;
+
+                    }
+
+
+                    // ------------------------------------------
+                    // NORMALIZE COLUMN COUNT
+                    // ------------------------------------------
+
+                    const columnCount =
+                        header.length;
+
+
+                    const normalizedBody =
+                        body.map(row => {
+
+                            const newRow = [...row];
+
+                            while (
+                                newRow.length <
+                                columnCount
+                            ) {
+
+                                newRow.push("");
+
+                            }
+
+                            return newRow.slice(
+                                0,
+                                columnCount
+                            );
+
+                        });
+
+
+                    const tableBody = [
+
+                        header.map(cell => ({
+
+                            text: cell,
+
+                            bold: true,
+
+                            fontSize: 9,
+
+                            alignment: "left",
+
+                        })),
+
+                        ...normalizedBody.map(row =>
+                            row.map(cell => ({
+
+                                text: cell,
+
+                                fontSize: 8.5,
+
+                                alignment: "left",
+
+                            }))
+                        ),
+
+                    ];
+
+
+                    // ------------------------------------------
+                    // ADD ACTUAL PDF TABLE
+                    // ------------------------------------------
+
+                    content.push({
+
+                        table: {
+
+                            headerRows: 1,
+
+                            widths:
+                                new Array(
+                                    columnCount
+                                ).fill("*"),
+
+                            body: tableBody,
+
+                        },
+
+                        layout: {
+
+                            fillColor: (
+                                rowIndex
+                            ) => {
+
+                                return rowIndex === 0
+                                    ? "#e8eef7"
+                                    : null;
+
+                            },
+
+                            hLineWidth: () => 0.5,
+
+                            vLineWidth: () => 0.5,
+
+                            hLineColor: () => "#999999",
+
+                            vLineColor: () => "#999999",
+
+                            paddingLeft: () => 5,
+
+                            paddingRight: () => 5,
+
+                            paddingTop: () => 5,
+
+                            paddingBottom: () => 5,
+
+                        },
+
+                        margin: [0, 8, 0, 12],
+
+                    });
+
+
+                    continue;
+
+                }
+
+
+                // ==================================================
                 // H1
+                // ==================================================
+
                 if (trimmed.startsWith("# ")) {
 
                     content.push({
 
-                        text: trimmed
-                            .replace(/^# /, "")
-                            .replace(/\*\*/g, ""),
+                        text: cleanMarkdown(
+                            trimmed.replace(
+                                /^# /,
+                                ""
+                            )
+                        ),
 
                         style: "title",
 
@@ -143,45 +370,69 @@ function Notes() {
 
                     });
 
-                    return;
+                    i++;
+
+                    continue;
 
                 }
 
+
+                // ==================================================
                 // H2
+                // ==================================================
+
                 if (trimmed.startsWith("## ")) {
 
                     content.push({
 
-                        text: trimmed
-                            .replace(/^## /, "")
-                            .replace(/\*\*/g, ""),
+                        text: cleanMarkdown(
+                            trimmed.replace(
+                                /^## /,
+                                ""
+                            )
+                        ),
 
                         style: "heading2",
 
                     });
 
-                    return;
+                    i++;
+
+                    continue;
 
                 }
 
+
+                // ==================================================
                 // H3
+                // ==================================================
+
                 if (trimmed.startsWith("### ")) {
 
                     content.push({
 
-                        text: trimmed
-                            .replace(/^### /, "")
-                            .replace(/\*\*/g, ""),
+                        text: cleanMarkdown(
+                            trimmed.replace(
+                                /^### /,
+                                ""
+                            )
+                        ),
 
                         style: "heading3",
 
                     });
 
-                    return;
+                    i++;
+
+                    continue;
 
                 }
 
-                // Bullet list
+
+                // ==================================================
+                // BULLET LIST
+                // ==================================================
+
                 if (
                     trimmed.startsWith("- ") ||
                     trimmed.startsWith("* ")
@@ -191,32 +442,48 @@ function Notes() {
 
                         text:
                             "• " +
-                            trimmed.substring(2),
+                            cleanMarkdown(
+                                trimmed.substring(2)
+                            ),
 
                         style: "bullet",
 
                     });
 
-                    return;
+                    i++;
+
+                    continue;
 
                 }
 
-                // Numbered list
+
+                // ==================================================
+                // NUMBERED LIST
+                // ==================================================
+
                 if (/^\d+\.\s/.test(trimmed)) {
 
                     content.push({
 
-                        text: trimmed,
+                        text: cleanMarkdown(
+                            trimmed
+                        ),
 
                         style: "bullet",
 
                     });
 
-                    return;
+                    i++;
+
+                    continue;
 
                 }
 
-                // Horizontal line
+
+                // ==================================================
+                // HORIZONTAL LINE
+                // ==================================================
+
                 if (trimmed === "---") {
 
                     content.push({
@@ -224,12 +491,19 @@ function Notes() {
                         canvas: [
 
                             {
+
                                 type: "line",
+
                                 x1: 0,
+
                                 y1: 0,
+
                                 x2: 515,
+
                                 y2: 0,
+
                                 lineWidth: 1,
+
                             },
 
                         ],
@@ -238,37 +512,53 @@ function Notes() {
 
                     });
 
-                    return;
+                    i++;
+
+                    continue;
 
                 }
 
-                // Normal paragraph
+
+                // ==================================================
+                // NORMAL PARAGRAPH
+                // ==================================================
+
                 content.push({
 
-                    text: trimmed
-                        .replace(/\*\*(.*?)\*\*/g, "$1")
-                        .replace(/\*(.*?)\*/g, "$1")
-                        .replace(/`(.*?)`/g, "$1"),
+                    text: cleanMarkdown(
+                        trimmed
+                    ),
 
                     style: "body",
 
                 });
 
-            });
+                i++;
 
+            }
+
+
+            // ==================================================
+            // PDF DOCUMENT
+            // ==================================================
 
             const documentDefinition = {
 
                 pageSize: "A4",
 
                 pageMargins: [
-                    45,
+                    40,
                     50,
-                    45,
+                    40,
                     50,
                 ],
 
                 content,
+
+
+                // ==================================================
+                // STYLES
+                // ==================================================
 
                 styles: {
 
@@ -280,7 +570,12 @@ function Notes() {
 
                         alignment: "center",
 
-                        margin: [0, 0, 0, 20],
+                        margin: [
+                            0,
+                            0,
+                            0,
+                            20
+                        ],
 
                     },
 
@@ -290,7 +585,12 @@ function Notes() {
 
                         bold: true,
 
-                        margin: [0, 15, 0, 8],
+                        margin: [
+                            0,
+                            15,
+                            0,
+                            8
+                        ],
 
                     },
 
@@ -300,7 +600,12 @@ function Notes() {
 
                         bold: true,
 
-                        margin: [0, 10, 0, 5],
+                        margin: [
+                            0,
+                            10,
+                            0,
+                            5
+                        ],
 
                     },
 
@@ -310,7 +615,12 @@ function Notes() {
 
                         lineHeight: 1.5,
 
-                        margin: [0, 3, 0, 6],
+                        margin: [
+                            0,
+                            3,
+                            0,
+                            6
+                        ],
 
                     },
 
@@ -320,11 +630,17 @@ function Notes() {
 
                         lineHeight: 1.5,
 
-                        margin: [10, 2, 0, 4],
+                        margin: [
+                            10,
+                            2,
+                            0,
+                            4
+                        ],
 
                     },
 
                 },
+
 
                 defaultStyle: {
 
@@ -335,13 +651,21 @@ function Notes() {
             };
 
 
+            // ==================================================
+            // DOWNLOAD
+            // ==================================================
+
             pdfMake
-                .createPdf(documentDefinition)
-                .download(`${topic}-Notes.pdf`);
+                .createPdf(
+                    documentDefinition
+                )
+                .download(
+                    `${topic}-Notes.pdf`
+                );
 
 
             toast.success(
-                "📄 Text-based PDF downloaded!"
+                "📄 Notes PDF downloaded successfully!"
             );
 
 
