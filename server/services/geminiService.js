@@ -14,9 +14,80 @@ const groq = new Groq({
 
 export async function askAI(history) {
 
+    // ==================================================
+    // LIMIT CONVERSATION HISTORY
+    // ==================================================
+
+    const MAX_HISTORY_CHARS = 12000;
+
+    let totalChars = 0;
+
+    const limitedHistory = [];
+
+    // Latest messages are more important,
+    // so process history from newest to oldest.
+    for (
+        let i = history.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const message = history[i];
+
+        if (
+            !message ||
+            !message.content
+        ) {
+            continue;
+        }
+
+        let content =
+            String(message.content);
+
+        // Limit each individual message
+        if (content.length > 2500) {
+
+            content =
+                content.substring(
+                    0,
+                    2500
+                ) +
+                "\n\n[Previous response shortened for context.]";
+
+        }
+
+        // Check total history size
+        if (
+            totalChars + content.length >
+            MAX_HISTORY_CHARS
+        ) {
+
+            break;
+
+        }
+
+        limitedHistory.unshift({
+
+            role:
+                message.role,
+
+            content,
+
+        });
+
+        totalChars += content.length;
+
+    }
+
+
+    // ==================================================
+    // AI MESSAGES
+    // ==================================================
+
     const messages = [
 
         {
+
             role: "system",
 
             content: `
@@ -34,35 +105,63 @@ Rules:
 - Remember previous conversation and answer accordingly.
 - Be friendly and conversational.
             `,
+
         },
 
-        ...history,
+        ...limitedHistory,
 
     ];
 
 
+    console.log(
+        `🧠 AI history: ${limitedHistory.length} messages`
+    );
+
+    console.log(
+        `📝 AI history characters: ${totalChars}`
+    );
+
+
+    // ==================================================
+    // ASK GROQ
+    // ==================================================
+
     const completion =
         await groq.chat.completions.create({
 
-            model: "openai/gpt-oss-120b",
+            model:
+                "openai/gpt-oss-120b",
 
             messages,
 
-            temperature: 0.7,
+            temperature:
+                0.7,
 
-            max_tokens: 1024,
+            max_tokens:
+                1024,
 
         });
 
 
-    return completion
-        .choices[0]
-        .message
-        .content;
+    const answer =
+        completion
+            ?.choices?.[0]
+            ?.message
+            ?.content;
+
+
+    if (!answer) {
+
+        throw new Error(
+            "AI returned an empty response"
+        );
+
+    }
+
+
+    return answer;
 
 }
-
-
 
 // ======================================================
 // ANALYZE NORMAL IMAGE
@@ -181,22 +280,25 @@ Rules:
 
 }
 
-
-
 // ======================================================
 // ANALYZE TEXT-BASED PDF
-// ======================================================
-
-// ======================================================
-// ANALYZE TEXT-BASED PDF
+// QUESTION-AWARE PDF ANALYSIS
 // ======================================================
 
 export async function analyzePDF(
     pdfText,
+    pageImages,
     question
 ) {
 
-    if (!pdfText || !pdfText.trim()) {
+    // ==================================================
+    // VALIDATE INPUT
+    // ==================================================
+
+    if (
+        !pdfText ||
+        !pdfText.trim()
+    ) {
 
         throw new Error(
             "No readable text found in PDF"
@@ -205,110 +307,615 @@ export async function analyzePDF(
     }
 
 
+    const cleanQuestion =
+        (question || "").trim();
+
+
+    // ==================================================
+    // DETECT QUESTION TYPE
+    // ==================================================
+
+    const visualKeywords = [
+
+        "image",
+        "photo",
+        "photograph",
+        "picture",
+        "person",
+        "face",
+        "appearance",
+        "look like",
+        "shown",
+        "visible",
+        "visual",
+        "chart",
+        "graph",
+        "diagram",
+        "table",
+        "figure",
+        "screenshot",
+        "illustration",
+        "logo",
+        "qr code",
+        "qr",
+        "color",
+        "colour",
+        "wearing",
+        "attire",
+        "dress",
+        "clothing"
+
+    ];
+
+
+    const lowerQuestion =
+        cleanQuestion.toLowerCase();
+
+
+    const isVisualQuestion =
+        visualKeywords.some(
+            keyword =>
+                lowerQuestion.includes(
+                    keyword
+                )
+        );
+
+
+    console.log(
+        `🔎 PDF question: ${cleanQuestion}`
+    );
+
+
+    console.log(
+        `🧠 Question type: ${
+            isVisualQuestion
+                ? "VISUAL"
+                : "TEXT"
+        }`
+    );
+
+
+    // ==================================================
+    // LIMIT EXTRACTED TEXT
+    // ==================================================
+
+    const MAX_TEXT_CHARS = 12000;
+
+
     const limitedText =
-        pdfText.length > 100000
+        pdfText.length > MAX_TEXT_CHARS
             ? pdfText.substring(
                 0,
-                100000
+                MAX_TEXT_CHARS
             )
             : pdfText;
 
 
     console.log(
-        `📄 Sending ${limitedText.length} characters to AI...`
+        `📄 PDF text available: ${limitedText.length} characters`
     );
 
 
+    // ==================================================
+    // VISUAL QUESTION
+    // ==================================================
+
+    if (
+        isVisualQuestion
+    ) {
+
+        console.log(
+            "🖼️ Visual question detected"
+        );
+
+
+        if (
+            !pageImages ||
+            !Array.isArray(pageImages) ||
+            pageImages.length === 0
+        ) {
+
+            throw new Error(
+                "No PDF page images available for visual analysis"
+            );
+
+        }
+
+
+        // ==================================================
+        // IMPORTANT
+        // ONLY SEND NECESSARY TEXT
+        // ==================================================
+
+        const visualContext =
+            limitedText.length > 4000
+                ? limitedText.substring(
+                    0,
+                    4000
+                )
+                : limitedText;
+
+
+        console.log(
+            `📝 Visual context text: ${visualContext.length} characters`
+        );
+
+
+        // ==================================================
+        // CREATE MULTIMODAL CONTENT
+        // ==================================================
+
+        const content = [];
+
+
+        content.push({
+
+            type: "text",
+
+            text: `
+You are EduCompanion, an AI Study Assistant.
+
+The student is asking a VISUAL question about a PDF.
+
+You must carefully inspect the provided PDF page images.
+
+Student question:
+${cleanQuestion || "Describe the visual content of this PDF."}
+
+Use the extracted PDF text only as supporting context.
+
+IMPORTANT RULES:
+
+- Focus primarily on what is VISIBLY present in the PDF images.
+- Do not assume that information exists visually just because it appears in extracted text.
+- If the student asks about a person, describe only visible characteristics.
+- If the student asks about clothing, describe visible clothing.
+- If the student asks about a photograph, describe the photograph.
+- If the student asks about a chart, graph, table, or diagram, inspect it visually.
+- If the requested visual information is unclear, say that clearly.
+- Do not invent details.
+- Do not identify a real person by name from facial appearance alone.
+- The PDF text may be used to understand the context of the image.
+- Answer the student's exact question directly.
+- Keep the answer concise but useful.
+- Use Markdown when helpful.
+
+Extracted PDF context:
+
+${visualContext}
+            `
+
+        });
+
+
+        // ==================================================
+        // ADD PDF PAGE IMAGES
+        // ==================================================
+
+        for (
+            let index = 0;
+            index < pageImages.length;
+            index++
+        ) {
+
+            const imageBuffer =
+                pageImages[index];
+
+
+            if (
+                !imageBuffer ||
+                !Buffer.isBuffer(
+                    imageBuffer
+                )
+            ) {
+
+                console.warn(
+                    `⚠️ Skipping invalid page image ${index + 1}`
+                );
+
+                continue;
+
+            }
+
+
+            const base64Image =
+                imageBuffer.toString(
+                    "base64"
+                );
+
+
+            console.log(
+                `🖼️ Preparing visual page ${
+                    index + 1
+                }...`
+            );
+
+
+            content.push({
+
+                type: "text",
+
+                text:
+                    `PDF Page ${index + 1}:`
+
+            });
+
+
+            content.push({
+
+                type: "image_url",
+
+                image_url: {
+
+                    url:
+                        `data:image/jpeg;base64,${base64Image}`
+
+                }
+
+            });
+
+        }
+
+
+        // ==================================================
+        // VALIDATE IMAGES
+        // ==================================================
+
+        if (
+            content.length <= 1
+        ) {
+
+            throw new Error(
+                "No valid PDF page images available"
+            );
+
+        }
+
+
+        // ==================================================
+        // VISION AI REQUEST
+        // ==================================================
+
+        try {
+
+            console.log(
+                "🤖 Sending visual PDF question to Vision AI..."
+            );
+
+
+            const completion =
+                await groq.chat.completions.create({
+
+                    model:
+                        "qwen/qwen3.6-27b",
+
+
+                    messages: [
+
+                        {
+
+                            role: "system",
+
+                            content:
+                                "You are EduCompanion. Answer visual PDF questions using the provided page images."
+
+                        },
+
+                        {
+
+                            role: "user",
+
+                            content
+
+                        }
+
+                    ],
+
+
+                    temperature: 0.2,
+
+                    max_completion_tokens: 800,
+
+                    reasoning_effort:
+                        "none"
+
+                });
+
+
+            const answer =
+                completion
+                    ?.choices?.[0]
+                    ?.message
+                    ?.content;
+
+
+            if (
+                !answer
+            ) {
+
+                throw new Error(
+                    "Vision AI returned an empty response"
+                );
+
+            }
+
+
+            console.log(
+                "✅ Visual PDF analysis completed"
+            );
+
+
+            return answer;
+
+        }
+
+
+        catch (error) {
+
+            console.error(
+                "❌ VISUAL PDF AI ERROR:",
+                error
+            );
+
+
+            // ==================================================
+            // FALLBACK
+            // ==================================================
+
+            if (
+                error?.status === 413 ||
+                error?.error?.code ===
+                    "rate_limit_exceeded"
+            ) {
+
+                console.warn(
+                    "⚠️ Vision request exceeded TPM limit."
+                );
+
+
+                console.log(
+                    "🔄 Retrying with first PDF page only..."
+                );
+
+
+                try {
+
+                    const firstImage =
+                        pageImages[0];
+
+
+                    if (
+                        !firstImage ||
+                        !Buffer.isBuffer(
+                            firstImage
+                        )
+                    ) {
+
+                        throw error;
+
+                    }
+
+
+                    const base64Image =
+                        firstImage.toString(
+                            "base64"
+                        );
+
+
+                    const fallbackContent = [
+
+                        {
+
+                            type: "text",
+
+                            text: `
+Describe the visual content relevant to this question:
+
+${cleanQuestion}
+
+Inspect the PDF page image carefully.
+
+Only describe information that is visibly present.
+Do not invent details.
+                            `
+
+                        },
+
+                        {
+
+                            type: "image_url",
+
+                            image_url: {
+
+                                url:
+                                    `data:image/jpeg;base64,${base64Image}`
+
+                            }
+
+                        }
+
+                    ];
+
+
+                    const fallbackCompletion =
+                        await groq.chat.completions.create({
+
+                            model:
+                                "qwen/qwen3.6-27b",
+
+
+                            messages: [
+
+                                {
+
+                                    role: "user",
+
+                                    content:
+                                        fallbackContent
+
+                                }
+
+                            ],
+
+
+                            temperature: 0.2,
+
+                            max_completion_tokens: 600,
+
+                            reasoning_effort:
+                                "none"
+
+                        });
+
+
+                    const fallbackAnswer =
+                        fallbackCompletion
+                            ?.choices?.[0]
+                            ?.message
+                            ?.content;
+
+
+                    if (
+                        !fallbackAnswer
+                    ) {
+
+                        throw error;
+
+                    }
+
+
+                    console.log(
+                        "✅ Visual fallback completed"
+                    );
+
+
+                    return fallbackAnswer;
+
+                }
+
+                catch (
+                    fallbackError
+                ) {
+
+                    console.error(
+                        "❌ Visual fallback failed:",
+                        fallbackError
+                    );
+
+
+                    throw fallbackError;
+
+                }
+
+            }
+
+
+            throw error;
+
+        }
+
+    }
+
+
+    // ==================================================
+    // TEXT QUESTION
+    // ==================================================
+
+    console.log(
+        "📝 Text question detected"
+    );
+
+
+    console.log(
+        "📄 Using extracted PDF text only"
+    );
+
+
+    // ==================================================
+    // TEXT-ONLY PROMPT
+    // ==================================================
+
+    const textPrompt = `
+
+You are EduCompanion, an AI Study Assistant.
+
+The student is asking a TEXT question about a PDF.
+
+Answer the question using the extracted PDF text below.
+
+Student question:
+${cleanQuestion || "What is this PDF about?"}
+
+IMPORTANT RULES:
+
+- Answer the student's exact question.
+- Use only information supported by the PDF text.
+- Do not invent information.
+- Do not describe visual elements unless the text explicitly provides that information.
+- If the requested information is not present, clearly say so.
+- Give a direct and useful answer.
+- Use simple English.
+- Use Markdown formatting when useful.
+- Use headings or bullet points when appropriate.
+- Keep the answer reasonably concise.
+
+Extracted PDF text:
+
+${limitedText}
+
+`;
+
+
+    // ==================================================
+    // TEXT AI REQUEST
+    // ==================================================
+
     try {
+
+        console.log(
+            "🤖 Sending text-only PDF question to AI..."
+        );
+
 
         const completion =
             await groq.chat.completions.create({
 
-                // ==================================================
-                // CURRENT GROQ MODEL
-                // ==================================================
-
                 model:
-                    "openai/gpt-oss-120b",
+                    "qwen/qwen3.6-27b",
 
 
                 messages: [
-
-                    // ==============================================
-                    // SYSTEM
-                    // ==============================================
 
                     {
 
                         role: "system",
 
-                        content: `
-You are EduCompanion, an AI Study Assistant.
-
-You are analyzing the text extracted from a PDF.
-
-Your task is to answer the student's question using ONLY
-the information available in the provided PDF content.
-
-Rules:
-
-- Explain in simple English.
-- Use Markdown formatting.
-- Use clear headings.
-- Use bullet points where useful.
-- Give examples when they are supported by the PDF.
-- If the student asks to elaborate, explain the relevant
-  content in detail.
-- If the student asks for a summary, provide a clear summary.
-- If the student asks a specific question, answer that question
-  directly.
-- Do not invent information that is not present in the PDF.
-- If the extracted PDF text appears incomplete, clearly mention it.
-- Preserve important technical terms.
-- If the PDF contains tables, preserve the table information
-  using Markdown table format whenever possible.
-- If the PDF contains formulas, code, definitions, or examples,
-  explain them clearly.
-- Be student-friendly and educational.
-                        `,
+                        content:
+                            "You are EduCompanion, an AI Study Assistant."
 
                     },
-
-
-                    // ==============================================
-                    // USER
-                    // ==============================================
 
                     {
 
                         role: "user",
 
-                        content: `
-Student question:
+                        content:
+                            textPrompt
 
-${question || "What is this PDF about? Explain it clearly."}
-
-
-PDF content:
-
-${limitedText}
-                        `,
-
-                    },
+                    }
 
                 ],
 
 
-                temperature: 0.4,
+                temperature: 0.3,
 
-                max_completion_tokens: 2500,
+                max_completion_tokens: 1000,
+
+                reasoning_effort:
+                    "none"
 
             });
 
-
-        // ==================================================
-        // GET RESPONSE
-        // ==================================================
 
         const answer =
             completion
@@ -317,7 +924,9 @@ ${limitedText}
                 ?.content;
 
 
-        if (!answer) {
+        if (
+            !answer
+        ) {
 
             throw new Error(
                 "AI returned an empty response"
@@ -327,14 +936,16 @@ ${limitedText}
 
 
         console.log(
-            "✅ Text PDF AI analysis completed"
+            "✅ Text PDF analysis completed"
         );
 
 
         return answer;
 
+    }
 
-    } catch (error) {
+
+    catch (error) {
 
         console.error(
             "❌ TEXT PDF AI ERROR:",
@@ -347,7 +958,6 @@ ${limitedText}
     }
 
 }
-
 
 // ======================================================
 // ANALYZE SCANNED PDF
@@ -1000,8 +1610,7 @@ Rules:
 
                 max_completion_tokens: 4000,
 
-                // GPT-OSS reasoning ko low rakhna
-                reasoning_effort: "low",
+                reasoning_effort: "none",
 
             });
 

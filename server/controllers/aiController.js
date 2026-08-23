@@ -357,7 +357,7 @@ export const chatWithAI = async (
 
 
                 // ==========================================
-                // TEXT PDF
+                // TEXT PDF + VISUAL PAGES
                 // ==========================================
 
                 if (
@@ -369,6 +369,46 @@ export const chatWithAI = async (
                     );
 
 
+                    // ==========================================
+                    // CONVERT PDF PAGES TO IMAGES
+                    // ==========================================
+
+                    console.log(
+                        `🖼️ Converting ${pages} text-PDF pages to images...`
+                    );
+
+
+                    const pageImages =
+                        await convertPDFToImages(
+
+                            req.file.buffer,
+
+                            pages
+
+                        );
+
+
+                    console.log(
+                        `🖼️ Converted ${pageImages.length}/${pages} text-PDF pages to images`
+                    );
+
+
+                    if (
+                        !pageImages ||
+                        pageImages.length === 0
+                    ) {
+
+                        throw new Error(
+                            "Unable to generate images from text-based PDF."
+                        );
+
+                    }
+
+
+                    // ==========================================
+                    // CURRENT TEXT ANALYSIS
+                    // ==========================================
+
                     console.log(
                         "🤖 Analyzing PDF text with AI..."
                     );
@@ -376,16 +416,31 @@ export const chatWithAI = async (
 
                     pdfAnswer =
                         await analyzePDF(
-
                             cleanedPDFText,
-
+                            pageImages, 
                             message
-
                         );
 
 
                     console.log(
                         "✅ Text PDF analyzed successfully"
+                    );
+
+
+                    // ==========================================
+                    // TEMPORARY
+                    // ==========================================
+                    //
+                    // pageImages will be passed to the AI
+                    // in STEP 2.
+                    //
+                    // For now we are only confirming that
+                    // text PDFs can also be converted into
+                    // page images successfully.
+                    //
+
+                    console.log(
+                        `✅ Text PDF visual pages ready: ${pageImages.length}`
                     );
 
                 }
@@ -642,10 +697,10 @@ export const chatWithAI = async (
             })
 
                 .sort({
-                    createdAt: 1,
+                    createdAt: -1,
                 })
 
-                .limit(10);
+                .limit(4);
 
 
         // ==================================================
@@ -655,32 +710,33 @@ export const chatWithAI = async (
         const history = [];
 
 
-        previousChats.forEach(
-            (chat) => {
+        previousChats.forEach((chat) => {
 
-                history.push({
+            const question =
+                (chat.question || "")
+                    .substring(0, 1000);
 
-                    role:
-                        "user",
+            const answer =
+                (chat.answer || "")
+                    .substring(0, 2500);
 
-                    content:
-                        chat.question,
+            history.push({
 
-                });
+                role: "user",
 
+                content: question,
 
-                history.push({
+            });
 
-                    role:
-                        "assistant",
+            history.push({
 
-                    content:
-                        chat.answer,
+                role: "assistant",
 
-                });
+                content: answer,
 
-            }
-        );
+            });
+
+        });
 
 
         history.push({
