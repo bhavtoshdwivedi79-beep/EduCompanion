@@ -334,10 +334,12 @@ export const chatWithAI = async (
                         )
                         .trim();
 
+
                 const meaningfulText =
                     cleanedPDFText
                         .replace(/\s+/g, "")
                         .trim();
+
 
                 const hasMeaningfulText =
                     meaningfulText.length >= 30;
@@ -406,7 +408,7 @@ export const chatWithAI = async (
 
 
                     // ==========================================
-                    // CURRENT TEXT ANALYSIS
+                    // ANALYZE PDF
                     // ==========================================
 
                     console.log(
@@ -416,9 +418,13 @@ export const chatWithAI = async (
 
                     pdfAnswer =
                         await analyzePDF(
+
                             cleanedPDFText,
-                            pageImages, 
+
+                            pageImages,
+
                             message
+
                         );
 
 
@@ -426,18 +432,6 @@ export const chatWithAI = async (
                         "✅ Text PDF analyzed successfully"
                     );
 
-
-                    // ==========================================
-                    // TEMPORARY
-                    // ==========================================
-                    //
-                    // pageImages will be passed to the AI
-                    // in STEP 2.
-                    //
-                    // For now we are only confirming that
-                    // text PDFs can also be converted into
-                    // page images successfully.
-                    //
 
                     console.log(
                         `✅ Text PDF visual pages ready: ${pageImages.length}`
@@ -559,7 +553,7 @@ export const chatWithAI = async (
 
 
                 // ==========================================
-                // SAVE CHAT
+                // SAVE PDF CHAT
                 // ==========================================
 
                 const chat =
@@ -592,11 +586,24 @@ export const chatWithAI = async (
                         fileType:
                             req.file.mimetype,
 
+                        // ==================================
+                        // IMPORTANT:
+                        // STORE PDF TEXT FOR FUTURE CHAT
+                        // ==================================
+
+                        extractedText:
+                            cleanedPDFText || "",
+
                     });
 
 
                 console.log(
                     "✅ PDF chat saved successfully"
+                );
+
+
+                console.log(
+                    `💾 Stored PDF context: ${cleanedPDFText.length} characters`
                 );
 
 
@@ -682,7 +689,7 @@ export const chatWithAI = async (
 
 
         // ==================================================
-        // PREVIOUS CHATS
+        // FIND PREVIOUS CHATS
         // ==================================================
 
         const previousChats =
@@ -695,49 +702,254 @@ export const chatWithAI = async (
                     conversation._id,
 
             })
-
                 .sort({
                     createdAt: -1,
                 })
-
                 .limit(4);
 
 
+        console.log(
+            `🧠 Previous chat records: ${previousChats.length}`
+        );
+
+
         // ==================================================
-        // AI HISTORY
+        // FIND LATEST PDF CONTEXT
+        // ==================================================
+
+        const latestPDF =
+            await Chat.findOne({
+
+                user:
+                    req.user._id,
+
+                conversation:
+                    conversation._id,
+
+                fileType:
+                    "application/pdf",
+
+                extractedText:
+                {
+                    $exists: true,
+
+                    $ne: "",
+                },
+
+            })
+                .sort({
+                    createdAt: -1,
+                });
+
+
+        // ==================================================
+        // PDF CONTEXT
+        // ==================================================
+
+        let pdfContext = "";
+
+        let pdfFileName = "";
+
+
+        if (latestPDF) {
+
+            pdfContext =
+                latestPDF.extractedText || "";
+
+            pdfFileName =
+                latestPDF.fileName || "Uploaded PDF";
+
+
+            // ------------------------------------------------
+            // IMPORTANT:
+            // Keep PDF context reasonably small.
+            // ------------------------------------------------
+
+            const MAX_PDF_CONTEXT = 6000;
+
+
+            if (
+                pdfContext.length >
+                MAX_PDF_CONTEXT
+            ) {
+
+                pdfContext =
+                    pdfContext.substring(
+                        0,
+                        MAX_PDF_CONTEXT
+                    );
+
+            }
+
+
+            console.log(
+                "📄 Previous PDF context found"
+            );
+
+
+            console.log(
+                `📄 PDF context characters: ${pdfContext.length}`
+            );
+
+
+            console.log(
+                `📄 PDF file: ${pdfFileName}`
+            );
+
+        } else {
+
+            console.log(
+                "📄 No previous PDF context found"
+            );
+
+        }
+
+
+        // ==================================================
+        // CREATE AI HISTORY
         // ==================================================
 
         const history = [];
 
 
-        previousChats.forEach((chat) => {
+        // ==================================================
+        // ADD PDF CONTEXT
+        // ==================================================
 
-            const question =
-                (chat.question || "")
-                    .substring(0, 1000);
-
-            const answer =
-                (chat.answer || "")
-                    .substring(0, 2500);
+        if (pdfContext) {
 
             history.push({
 
-                role: "user",
+                role:
+                    "user",
 
-                content: question,
+                content:
+                    `
+PDF CONTEXT
+
+The student uploaded this PDF earlier
+in the current conversation.
+
+Use this PDF as the primary source when
+the student's question is related to it.
+
+PDF filename:
+${pdfFileName}
+
+Extracted PDF text:
+${pdfContext}
+
+IMPORTANT:
+- Do not invent information.
+- If the answer is not present in the PDF,
+  say that clearly.
+- The PDF context is persistent conversation
+  context and should be used for follow-up
+  questions.
+            `.trim(),
 
             });
+
 
             history.push({
 
-                role: "assistant",
+                role:
+                    "assistant",
 
-                content: answer,
+                content:
+                    "I have the uploaded PDF context available and will use it for relevant follow-up questions.",
 
             });
 
-        });
+        }
 
+
+        // ==================================================
+        // ADD PREVIOUS CHAT HISTORY
+        // ==================================================
+
+        // We only keep a SMALL amount of previous history.
+        // This prevents the request from becoming too large.
+
+        const MAX_QUESTION_CHARS = 500;
+
+        const MAX_ANSWER_CHARS = 1000;
+
+
+        // Oldest → newest
+        previousChats
+            .reverse()
+            .forEach((chat) => {
+
+                // ------------------------------------------
+                // Do not add the original PDF upload again.
+                // PDF content is already added above.
+                // ------------------------------------------
+
+                if (
+                    chat._id?.toString() ===
+                    latestPDF?._id?.toString()
+                ) {
+
+                    return;
+
+                }
+
+
+                const question =
+                    (chat.question || "")
+                        .substring(
+                            0,
+                            MAX_QUESTION_CHARS
+                        );
+
+
+                const answer =
+                    (chat.answer || "")
+                        .substring(
+                            0,
+                            MAX_ANSWER_CHARS
+                        );
+
+
+                if (!question) {
+
+                    return;
+
+                }
+
+
+                history.push({
+
+                    role:
+                        "user",
+
+                    content:
+                        question,
+
+                });
+
+
+                if (answer) {
+
+                    history.push({
+
+                        role:
+                            "assistant",
+
+                        content:
+                            answer,
+
+                    });
+
+                }
+
+            });
+
+
+        // ==================================================
+        // CURRENT USER QUESTION
+        // ==================================================
 
         history.push({
 
@@ -751,6 +963,38 @@ export const chatWithAI = async (
 
 
         // ==================================================
+        // DEBUG HISTORY SIZE
+        // ==================================================
+
+        console.log(
+            `🧠 Final AI history messages: ${history.length}`
+        );
+
+
+        const historyCharacters =
+            history.reduce(
+
+                (
+                    total,
+                    item
+                ) =>
+                    total +
+                    (
+                        item.content?.length ||
+                        0
+                    ),
+
+                0
+
+            );
+
+
+        console.log(
+            `📝 Final AI history characters: ${historyCharacters}`
+        );
+
+
+        // ==================================================
         // ASK AI
         // ==================================================
 
@@ -758,6 +1002,8 @@ export const chatWithAI = async (
             await askAI(
                 history
             );
+
+
 
 
         // ==================================================
@@ -819,6 +1065,10 @@ export const chatWithAI = async (
         );
 
 
+        // ==================================================
+        // RESPONSE
+        // ==================================================
+
         return res.status(200).json({
 
             success: true,
@@ -852,6 +1102,8 @@ export const chatWithAI = async (
     }
 
 };
+
+
 
 
 

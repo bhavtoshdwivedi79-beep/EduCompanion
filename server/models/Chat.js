@@ -66,6 +66,11 @@ const chatSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+
+        extractedText: {
+            type: String,
+            default: "",
+        },
     },
 
     {

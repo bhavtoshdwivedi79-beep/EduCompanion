@@ -367,10 +367,9 @@ export async function analyzePDF(
 
 
     console.log(
-        `🧠 Question type: ${
-            isVisualQuestion
-                ? "VISUAL"
-                : "TEXT"
+        `🧠 Question type: ${isVisualQuestion
+            ? "VISUAL"
+            : "TEXT"
         }`
     );
 
@@ -409,6 +408,10 @@ export async function analyzePDF(
         );
 
 
+        // ==================================================
+        // VALIDATE PAGE IMAGES
+        // ==================================================
+
         if (
             !pageImages ||
             !Array.isArray(pageImages) ||
@@ -423,15 +426,158 @@ export async function analyzePDF(
 
 
         // ==================================================
-        // IMPORTANT
-        // ONLY SEND NECESSARY TEXT
+        // DETECT VISUAL QUESTION CATEGORY
+        // ==================================================
+
+        const personKeywords = [
+            "person",
+            "image",
+            "photo",
+            "photograph",
+            "picture",
+            "face",
+            "appearance",
+            "look like",
+            "shown",
+            "wearing",
+            "attire",
+            "dress",
+            "clothing"
+        ];
+
+
+        const structuredVisualKeywords = [
+            "chart",
+            "graph",
+            "diagram",
+            "table",
+            "figure",
+            "screenshot",
+            "illustration",
+            "logo",
+            "qr code",
+            "qr"
+        ];
+
+
+        const isPersonQuestion =
+            personKeywords.some(
+                keyword =>
+                    lowerQuestion.includes(
+                        keyword
+                    )
+            );
+
+
+        const isStructuredVisualQuestion =
+            structuredVisualKeywords.some(
+                keyword =>
+                    lowerQuestion.includes(
+                        keyword
+                    )
+            );
+
+
+        console.log(
+            `🧠 Person visual question: ${isPersonQuestion}`
+        );
+
+
+        console.log(
+            `📊 Structured visual question: ${isStructuredVisualQuestion}`
+        );
+
+
+        // ==================================================
+        // SELECT PAGES
+        // ==================================================
+
+        let selectedPageImages = [];
+
+
+        // --------------------------------------------------
+        // PERSON / IMAGE QUESTIONS
+        // --------------------------------------------------
+
+        if (
+            isPersonQuestion
+        ) {
+
+            console.log(
+                "👤 Person/image question detected"
+            );
+
+
+            // For person/image questions, first page
+            // is usually the most relevant resume/profile page.
+
+            selectedPageImages =
+                pageImages.slice(
+                    0,
+                    1
+                );
+
+        }
+
+
+        // --------------------------------------------------
+        // CHART / GRAPH / TABLE / DIAGRAM QUESTIONS
+        // --------------------------------------------------
+
+        else if (
+            isStructuredVisualQuestion
+        ) {
+
+            console.log(
+                "📊 Structured visual question detected"
+            );
+
+
+            // Limit pages to avoid exceeding Groq TPM.
+
+            selectedPageImages =
+                pageImages.slice(
+                    0,
+                    2
+                );
+
+        }
+
+
+        // --------------------------------------------------
+        // OTHER VISUAL QUESTIONS
+        // --------------------------------------------------
+
+        else {
+
+            console.log(
+                "🖼️ General visual question detected"
+            );
+
+
+            selectedPageImages =
+                pageImages.slice(
+                    0,
+                    1
+                );
+
+        }
+
+
+        console.log(
+            `🖼️ Selected ${selectedPageImages.length}/${pageImages.length} PDF page(s) for visual analysis`
+        );
+
+
+        // ==================================================
+        // LIMIT SUPPORTING PDF TEXT
         // ==================================================
 
         const visualContext =
-            limitedText.length > 4000
+            limitedText.length > 1500
                 ? limitedText.substring(
                     0,
-                    4000
+                    1500
                 )
                 : limitedText;
 
@@ -455,51 +601,48 @@ export async function analyzePDF(
             text: `
 You are EduCompanion, an AI Study Assistant.
 
-The student is asking a VISUAL question about a PDF.
-
-You must carefully inspect the provided PDF page images.
+The student is asking a visual question about a PDF.
 
 Student question:
 ${cleanQuestion || "Describe the visual content of this PDF."}
 
-Use the extracted PDF text only as supporting context.
+Use the PDF page image as the PRIMARY source.
+
+The extracted PDF text is only supporting context.
 
 IMPORTANT RULES:
 
-- Focus primarily on what is VISIBLY present in the PDF images.
-- Do not assume that information exists visually just because it appears in extracted text.
-- If the student asks about a person, describe only visible characteristics.
-- If the student asks about clothing, describe visible clothing.
-- If the student asks about a photograph, describe the photograph.
-- If the student asks about a chart, graph, table, or diagram, inspect it visually.
-- If the requested visual information is unclear, say that clearly.
-- Do not invent details.
+- Carefully inspect the provided page image.
+- Answer the student's exact question.
+- Describe only information that is visibly present.
+- Do not invent visual details.
+- If the question asks about a person, describe visible characteristics only.
 - Do not identify a real person by name from facial appearance alone.
-- The PDF text may be used to understand the context of the image.
-- Answer the student's exact question directly.
-- Keep the answer concise but useful.
+- If the requested information is unclear or not visible, say so.
+- Use the extracted text only to understand document context.
+- Keep the answer concise and useful.
 - Use Markdown when helpful.
 
-Extracted PDF context:
+Supporting PDF text:
 
 ${visualContext}
-            `
+        `.trim()
 
         });
 
 
         // ==================================================
-        // ADD PDF PAGE IMAGES
+        // ADD SELECTED PAGE IMAGES
         // ==================================================
 
         for (
             let index = 0;
-            index < pageImages.length;
+            index < selectedPageImages.length;
             index++
         ) {
 
             const imageBuffer =
-                pageImages[index];
+                selectedPageImages[index];
 
 
             if (
@@ -525,9 +668,7 @@ ${visualContext}
 
 
             console.log(
-                `🖼️ Preparing visual page ${
-                    index + 1
-                }...`
+                `🖼️ Preparing selected visual page ${index + 1}...`
             );
 
 
@@ -558,7 +699,7 @@ ${visualContext}
 
 
         // ==================================================
-        // VALIDATE IMAGES
+        // VALIDATE CONTENT
         // ==================================================
 
         if (
@@ -579,7 +720,7 @@ ${visualContext}
         try {
 
             console.log(
-                "🤖 Sending visual PDF question to Vision AI..."
+                "🤖 Sending optimized visual PDF question to Vision AI..."
             );
 
 
@@ -614,7 +755,7 @@ ${visualContext}
 
                     temperature: 0.2,
 
-                    max_completion_tokens: 800,
+                    max_completion_tokens: 600,
 
                     reasoning_effort:
                         "none"
@@ -625,8 +766,7 @@ ${visualContext}
             const answer =
                 completion
                     ?.choices?.[0]
-                    ?.message
-                    ?.content;
+                    ?.message?.content;
 
 
             if (
@@ -641,7 +781,7 @@ ${visualContext}
 
 
             console.log(
-                "✅ Visual PDF analysis completed"
+                "✅ Optimized visual PDF analysis completed"
             );
 
 
@@ -665,7 +805,7 @@ ${visualContext}
             if (
                 error?.status === 413 ||
                 error?.error?.code ===
-                    "rate_limit_exceeded"
+                "rate_limit_exceeded"
             ) {
 
                 console.warn(
@@ -674,7 +814,7 @@ ${visualContext}
 
 
                 console.log(
-                    "🔄 Retrying with first PDF page only..."
+                    "🔄 Retrying with minimal visual request..."
                 );
 
 
@@ -709,15 +849,16 @@ ${visualContext}
                             type: "text",
 
                             text: `
-Describe the visual content relevant to this question:
+Answer this visual question about the PDF:
 
 ${cleanQuestion}
 
-Inspect the PDF page image carefully.
+Carefully inspect the page image.
 
-Only describe information that is visibly present.
+Only describe information that is clearly visible.
 Do not invent details.
-                            `
+If the requested information is not visible, say so.
+                        `.trim()
 
                         },
 
@@ -748,7 +889,8 @@ Do not invent details.
 
                                 {
 
-                                    role: "user",
+                                    role:
+                                        "user",
 
                                     content:
                                         fallbackContent
@@ -758,9 +900,11 @@ Do not invent details.
                             ],
 
 
-                            temperature: 0.2,
+                            temperature:
+                                0.2,
 
-                            max_completion_tokens: 600,
+                            max_completion_tokens:
+                                400,
 
                             reasoning_effort:
                                 "none"
@@ -771,8 +915,7 @@ Do not invent details.
                     const fallbackAnswer =
                         fallbackCompletion
                             ?.choices?.[0]
-                            ?.message
-                            ?.content;
+                            ?.message?.content;
 
 
                     if (
@@ -785,7 +928,7 @@ Do not invent details.
 
 
                     console.log(
-                        "✅ Visual fallback completed"
+                        "✅ Minimal visual fallback completed"
                     );
 
 
@@ -794,11 +937,11 @@ Do not invent details.
                 }
 
                 catch (
-                    fallbackError
+                fallbackError
                 ) {
 
                     console.error(
-                        "❌ Visual fallback failed:",
+                        "❌ Minimal visual fallback failed:",
                         fallbackError
                     );
 
@@ -813,147 +956,6 @@ Do not invent details.
             throw error;
 
         }
-
-    }
-
-
-    // ==================================================
-    // TEXT QUESTION
-    // ==================================================
-
-    console.log(
-        "📝 Text question detected"
-    );
-
-
-    console.log(
-        "📄 Using extracted PDF text only"
-    );
-
-
-    // ==================================================
-    // TEXT-ONLY PROMPT
-    // ==================================================
-
-    const textPrompt = `
-
-You are EduCompanion, an AI Study Assistant.
-
-The student is asking a TEXT question about a PDF.
-
-Answer the question using the extracted PDF text below.
-
-Student question:
-${cleanQuestion || "What is this PDF about?"}
-
-IMPORTANT RULES:
-
-- Answer the student's exact question.
-- Use only information supported by the PDF text.
-- Do not invent information.
-- Do not describe visual elements unless the text explicitly provides that information.
-- If the requested information is not present, clearly say so.
-- Give a direct and useful answer.
-- Use simple English.
-- Use Markdown formatting when useful.
-- Use headings or bullet points when appropriate.
-- Keep the answer reasonably concise.
-
-Extracted PDF text:
-
-${limitedText}
-
-`;
-
-
-    // ==================================================
-    // TEXT AI REQUEST
-    // ==================================================
-
-    try {
-
-        console.log(
-            "🤖 Sending text-only PDF question to AI..."
-        );
-
-
-        const completion =
-            await groq.chat.completions.create({
-
-                model:
-                    "qwen/qwen3.6-27b",
-
-
-                messages: [
-
-                    {
-
-                        role: "system",
-
-                        content:
-                            "You are EduCompanion, an AI Study Assistant."
-
-                    },
-
-                    {
-
-                        role: "user",
-
-                        content:
-                            textPrompt
-
-                    }
-
-                ],
-
-
-                temperature: 0.3,
-
-                max_completion_tokens: 1000,
-
-                reasoning_effort:
-                    "none"
-
-            });
-
-
-        const answer =
-            completion
-                ?.choices?.[0]
-                ?.message
-                ?.content;
-
-
-        if (
-            !answer
-        ) {
-
-            throw new Error(
-                "AI returned an empty response"
-            );
-
-        }
-
-
-        console.log(
-            "✅ Text PDF analysis completed"
-        );
-
-
-        return answer;
-
-    }
-
-
-    catch (error) {
-
-        console.error(
-            "❌ TEXT PDF AI ERROR:",
-            error
-        );
-
-
-        throw error;
 
     }
 
