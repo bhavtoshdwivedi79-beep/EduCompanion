@@ -1016,3 +1016,40 @@
     }
 
 }
+
+/* ==========================================
+   PREVENT AI MESSAGE HORIZONTAL OVERFLOW
+========================================== */
+
+.ai-chat-box {
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.ai-bot-msg,
+.ai-user-msg {
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+/* Normal markdown code */
+.ai-bot-msg code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+/* Code blocks */
+.ai-bot-msg pre {
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* SyntaxHighlighter container */
+.ai-bot-msg pre > div {
+    max-width: 100%;
+    overflow-x: auto !important;
+}

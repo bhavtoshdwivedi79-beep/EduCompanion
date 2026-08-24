@@ -64,7 +64,10 @@ function AIChat() {
 
     const chatEndRef = useRef(null);
 
+    const currentConversationRef = useRef(null);
+
     const navigate = useNavigate();
+
 
 
     // ================================
@@ -139,12 +142,29 @@ function AIChat() {
 
             if (res.data.success) {
 
-                setConversations(res.data.conversations);
+                const conversationList =
+                    res.data.conversations;
 
-                if (res.data.conversations.length > 0) {
+                setConversations(conversationList);
+
+
+                // ==========================================
+                // INITIAL CHAT SELECTION
+                // ==========================================
+
+                if (
+                    conversationList.length > 0 &&
+                    !currentConversationRef.current
+                ) {
+
+                    const firstConversation =
+                        conversationList[0]._id;
+
+                    currentConversationRef.current =
+                        firstConversation;
 
                     setCurrentConversation(
-                        res.data.conversations[0]._id
+                        firstConversation
                     );
 
                 }
@@ -745,6 +765,9 @@ function AIChat() {
 
                 await loadConversations();
 
+                currentConversationRef.current =
+                    res.data.conversation._id;
+
                 setCurrentConversation(
                     res.data.conversation._id
                 );
@@ -781,6 +804,10 @@ function AIChat() {
 
             setDeleteConversationId(null);
 
+            currentConversationRef.current = null;
+
+            setCurrentConversation(null);
+
             await loadConversations();
 
             setMessages([
@@ -789,8 +816,6 @@ function AIChat() {
                     text: "Hello 👋 Ask me anything about your studies.",
                 },
             ]);
-
-            setCurrentConversation(null);
 
             toast.success("Conversation deleted!");
 
@@ -972,11 +997,16 @@ function AIChat() {
 
                                             className="conversation-title"
 
-                                            onClick={() =>
+                                            onClick={() => {
+
+                                                currentConversationRef.current =
+                                                    conv._id;
+
                                                 setCurrentConversation(
                                                     conv._id
-                                                )
-                                            }
+                                                );
+
+                                            }}
 
                                         >
 
@@ -1202,15 +1232,9 @@ function AIChat() {
                                                 return match ? (
 
                                                     <SyntaxHighlighter
-
-                                                        language={
-                                                            match[1]
-                                                        }
-
-                                                        style={
-                                                            oneDark
-                                                        }
-
+                                                        language={match[1]}
+                                                        style={oneDark}
+                                                        wrapLongLines={true}
                                                     >
 
                                                         {
