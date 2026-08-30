@@ -1,3 +1,7 @@
+/* =========================================
+   SIDEBAR
+========================================= */
+
 .sidebar {
     position: fixed;
 
@@ -12,38 +16,132 @@
 
     padding: 24px 18px;
 
-    border-right: 1px solid rgba(255, 255, 255, .08);
+    border-right: 1px solid var(--border);
 
     display: flex;
     flex-direction: column;
 
-    transition: width .35s ease, padding .35s ease;
-
     box-sizing: border-box;
 
     overflow-y: auto;
-
     scrollbar-width: none;
 
-    border: 1px solid var(--border);
     box-shadow: 0 15px 35px rgba(0, 0, 0, .15);
+
+    /*
+       Important:
+       Sidebar width smoothly goes to 0
+    */
+    transition:
+        width .35s ease,
+        padding .35s ease,
+        transform .35s ease;
+
+    z-index: 1000;
 }
+
+
+/* Hide scrollbar */
+
+.sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+
+/* =========================================
+   COLLAPSED SIDEBAR
+========================================= */
 
 .sidebar.collapsed {
 
-    width: 70px;
+    width: 0;
 
-    padding: 24px 10px;
+    padding-left: 0;
+    padding-right: 0;
 
+    border-right: none;
+
+    overflow: visible;
 }
+
+
+/*
+   Hide sidebar content when collapsed
+   but keep collapse button visible
+*/
+
+.sidebar.collapsed > *:not(.collapse-wrapper) {
+    opacity: 0;
+    visibility: hidden;
+}
+
+
+/* =========================================
+   LOGO
+========================================= */
 
 .sidebar-logo {
+
     color: var(--primary);
+
     font-size: 28px;
+
     margin-bottom: 20px;
+
     text-align: center;
+
     transition: .3s;
 }
+
+
+/* =========================================
+   USER
+========================================= */
+
+.sidebar-user {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    margin-bottom: 30px;
+
+    transition: .3s;
+}
+
+
+.sidebar-avatar {
+
+    width: 70px;
+    height: 70px;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+
+    border: 3px solid var(--primary);
+
+    margin-bottom: 10px;
+}
+
+
+.sidebar-user h4 {
+
+    color: var(--text);
+
+    font-size: 16px;
+
+    text-align: center;
+
+    margin: 0;
+}
+
+
+/* =========================================
+   SIDEBAR LINKS
+========================================= */
 
 .sidebar a {
 
@@ -52,123 +150,8 @@
     color: inherit;
 
     display: block;
-
 }
 
-.collapse-wrapper {
-
-    display: flex;
-
-    justify-content: center;
-
-    margin-bottom: 25px;
-
-}
-
-.sidebar.collapsed .collapse-wrapper{
-    justify-content:flex-end;
-    padding:0;
-}
-
-.collapse-btn {
-
-    width: 42px;
-
-    height: 42px;
-
-    border: none;
-
-    border-radius: 12px;
-
-    background: var(--secondary);
-
-    color: var(--text);
-
-    display: flex;
-
-    justify-content: center;
-
-    align-items: center;
-
-    cursor: pointer;
-
-    transition: .3s;
-
-}
-
-.collapse-btn svg {
-
-    font-size: 24px;
-
-}
-
-.collapse-btn.rotate{
-
-    transform:rotate(180deg);
-
-}
-
-.collapse-btn:hover {
-
-    background: var(--primary);
-
-    color: #fff;
-
-    transform: scale(1.08);
-
-}
-
-.sidebar-user{
-
-    display:flex;
-
-    flex-direction:column;
-
-    align-items:center;
-
-    margin-bottom:30px;
-
-}
-
-.sidebar-avatar{
-
-    width:70px;
-
-    height:70px;
-
-    border-radius:50%;
-
-    object-fit:cover;
-
-    border:3px solid var(--primary);
-
-    margin-bottom:10px;
-
-}
-
-.sidebar-user h4{
-
-    color:var(--text);
-
-    font-size:16px;
-
-    text-align:center;
-
-}
-
-.active-link li {
-
-    background: var(--primary);
-
-    color: white;
-
-    transform: translateX(6px);
-
-    font-weight: 600;
-
-    box-shadow: 0 6px 15px rgba(37, 99, 235, .35);
-
-}
 
 .sidebar ul {
 
@@ -180,8 +163,10 @@
 
     flex: 1;
 
-
+    padding: 0;
+    margin: 0;
 }
+
 
 .sidebar ul li {
 
@@ -204,85 +189,154 @@
     transition: .3s;
 
     font-size: 17px;
-
 }
 
-.sidebar.collapsed ul li {
-
-    justify-content: center;
-
-    padding: 14px 8px;
-
-}
-
-.sidebar.collapsed .logout-btn {
-
-    justify-content: center;
-
-    padding: 14px;
-
-}
 
 .sidebar ul li:hover {
+
     background: var(--primary);
+
     transform: translateX(6px);
-}
-
-@media(max-width:900px) {
-
-    .sidebar {
-
-        position: fixed;
-
-        left: -280px;
-
-        top: 0;
-
-        transition: .35s;
-
-        z-index: 999;
-
-    }
-
-    .sidebar a {
-
-        text-decoration: none;
-
-        color: inherit;
-
-        display: block;
-
-    }
-
-    .sidebar.active {
-
-        left: 0;
-
-    }
 
 }
 
-.logout-item {
 
-    list-style: none;
+/* =========================================
+   ACTIVE LINK
+========================================= */
 
-    padding: 14px 18px;
+.active-link li {
 
-    border-radius: 10px;
+    background: var(--primary);
 
-    background: #dc2626;
+    color: white;
+
+    transform: translateX(6px);
+
+    font-weight: 600;
+
+    box-shadow:
+        0 6px 15px rgba(37, 99, 235, .35);
+}
+
+
+/* =========================================
+   COLLAPSE / EXPAND BUTTON
+========================================= */
+
+.collapse-wrapper {
+
+    position: absolute;
+
+    top: 80px;
+
+    right: -18px;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    z-index: 2000;
+
+    margin: 0;
+
+    transition: .35s ease;
+}
+
+
+/*
+   When sidebar collapses,
+   move arrow to the left edge of screen
+*/
+
+.sidebar.collapsed .collapse-wrapper {
+
+    right: -18px;
+
+}
+
+
+.collapse-btn {
+
+    width: 36px;
+    height: 36px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 50%;
+
+    background: var(--card);
+
+    color: var(--text);
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
 
     cursor: pointer;
 
-    transition: .3s;
+    font-size: 22px;
+
+    box-shadow:
+        0 5px 15px rgba(0, 0, 0, .18);
+
+    transition:
+        background .25s ease,
+        color .25s ease,
+        transform .25s ease,
+        box-shadow .25s ease;
+}
+
+
+.collapse-btn svg {
+
+    font-size: 22px;
 
 }
 
-.logout-item:hover {
 
-    background: #ef4444;
+/* Hover */
+
+.collapse-btn:hover {
+
+    background: var(--primary);
+
+    color: #fff;
+
+    transform: scale(1.08);
+
+    box-shadow:
+        0 8px 20px rgba(37, 99, 235, .3);
 
 }
+
+
+/* Active */
+
+.collapse-btn:active {
+
+    transform: scale(.94);
+
+}
+
+
+/* =========================================
+   LOGOUT
+========================================= */
+
+.sidebar-bottom {
+
+    margin-top: auto;
+
+    padding-top: 20px;
+
+    border-top: 1px solid var(--border);
+}
+
 
 .logout-btn {
 
@@ -292,7 +346,7 @@
 
     border-radius: 14px;
 
-    border: 1px solid rgba(255, 255, 255, .08);
+    border: 1px solid var(--border);
 
     background: var(--secondary);
 
@@ -309,8 +363,8 @@
     cursor: pointer;
 
     transition: .3s;
-
 }
+
 
 .logout-btn:hover {
 
@@ -322,18 +376,130 @@
 
 }
 
+
 .logout-btn:active {
 
     transform: scale(.97);
 
 }
 
-.sidebar-bottom {
 
-    margin-top: auto;
+/* =========================================
+   LOGOUT ITEM
+========================================= */
 
-    padding-top: 20px;
+.logout-item {
 
-    border-top: 1px solid rgba(255, 255, 255, .08);
+    list-style: none;
+
+    padding: 14px 18px;
+
+    border-radius: 10px;
+
+    background: #dc2626;
+
+    cursor: pointer;
+
+    transition: .3s;
+}
+
+
+.logout-item:hover {
+
+    background: #ef4444;
+
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 900px) {
+
+    .sidebar {
+
+        width: 240px;
+
+        left: -280px;
+
+        padding: 24px 18px;
+
+        transition:
+            left .35s ease,
+            width .35s ease;
+
+        z-index: 9999;
+    }
+
+
+    .sidebar.active {
+
+        left: 0;
+
+    }
+
+
+    /*
+       On mobile, collapsed state should
+       behave like closed sidebar.
+    */
+
+    .sidebar.collapsed {
+
+        width: 0;
+
+        left: 0;
+
+        padding: 0;
+
+    }
+
+
+    .collapse-wrapper {
+
+        top: 80px;
+
+    }
+
+
+    .sidebar.collapsed .collapse-wrapper {
+
+        right: -18px;
+
+    }
+
+}
+
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+
+    .sidebar {
+
+        width: 230px;
+
+    }
+
+
+    .sidebar ul li {
+
+        font-size: 16px;
+
+        padding: 13px 15px;
+
+    }
+
+
+    .sidebar-avatar {
+
+        width: 62px;
+
+        height: 62px;
+
+    }
 
 }

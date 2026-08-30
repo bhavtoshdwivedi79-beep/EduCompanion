@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import LogoutModal from "../LogoutModal/LogoutModal";
-import { HiOutlineBars3 } from "react-icons/hi2";
+import { HiChevronLeft, HiChevronRight } from "react-icons/hi2";
 import { useUser } from "../../context/UserContext";
 
 function Sidebar({
@@ -36,7 +36,7 @@ function Sidebar({
         >
 
             <h2 className="sidebar-logo">
-                {collapsed ? "🎓" : ""}
+                🎓
             </h2>
 
             <div className="sidebar-user">
@@ -59,10 +59,15 @@ function Sidebar({
             <div className="collapse-wrapper">
 
                 <button
-                    className={`collapse-btn ${collapsed ? "rotate" : ""}`}
+                    className="collapse-btn"
                     onClick={() => setCollapsed(!collapsed)}
+                    aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
                 >
-                    <HiOutlineBars3 />
+                    {collapsed ? (
+                        <HiChevronRight />
+                    ) : (
+                        <HiChevronLeft />
+                    )}
                 </button>
 
             </div>
