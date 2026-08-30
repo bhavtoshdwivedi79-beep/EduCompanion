@@ -1,8 +1,18 @@
+/* =========================================================
+   AI CHAT LAYOUT
+========================================================= */
+
 .ai-chat-layout {
     display: flex;
     min-height: 100vh;
     background: var(--bg);
+    color: var(--text);
 }
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
 
 .ai-sidebar {
     position: fixed;
@@ -20,207 +30,256 @@
 
     padding: 20px;
 
-    border-right: 1px solid rgba(255, 255, 255, .08);
+    border-right: 1px solid var(--border);
 
     z-index: 1000;
 }
 
 .ai-sidebar h2 {
-
     margin-bottom: 20px;
-
+    color: var(--text);
 }
 
-.ai-new-chat-btn {
 
+/* New Chat */
+
+.ai-new-chat-btn {
+    width: 100%;
     padding: 12px;
 
     border: none;
-
-    background: var(--primary);
-
-    color: white;
-
     border-radius: 10px;
 
-    cursor: pointer;
+    background: var(--primary);
+    color: white;
 
+    cursor: pointer;
     margin-bottom: 25px;
 
+    font-size: 15px;
+    font-weight: 600;
+
+    transition: .25s ease;
 }
 
+.ai-new-chat-btn:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   CHAT HISTORY
+========================================================= */
+
 .ai-history-list {
-
     flex: 1;
-
     overflow-y: auto;
+    min-height: 0;
+}
 
+.ai-history-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ai-history-list::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
 }
 
 .ai-history-item {
-
     padding: 12px;
 
-    border-radius: 8px;
+    border-radius: 10px;
+
     display: flex;
     justify-content: space-between;
     align-items: center;
 
-    margin-bottom: 10px;
+    gap: 8px;
+    margin-bottom: 8px;
 
     cursor: pointer;
 
     background: var(--secondary);
+    color: var(--text);
 
-    transition: .2s;
+    border: 1px solid transparent;
 
+    transition: .25s ease;
 }
 
 .ai-history-item:hover {
-
     background: rgba(37, 99, 235, .12);
-
+    border-color: rgba(37, 99, 235, .25);
 }
 
-.ai-history-item.active {
-    background: #2563eb;
+.ai-history-item.active,
+.active-chat {
+    background: var(--primary);
     color: white;
+    border-color: var(--primary);
 }
+
+
+/* Conversation title */
 
 .conversation-title {
-
     flex: 1;
 
     cursor: pointer;
 
     overflow: hidden;
-
     text-overflow: ellipsis;
-
     white-space: nowrap;
 
+    font-size: 14px;
 }
 
+
+/* Conversation actions */
+
+.conversation-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+
+/* Delete */
+
 .conversation-delete {
+    width: 28px;
+    height: 28px;
 
     border: none;
-    width: 20px;
-    background: #ae0f0f00;
-    background-color: red;
-    color: white;
-    cursor: pointer;
-    font-size: 15px;
-    opacity: .65;
-    transition: .25s;
+    border-radius: 7px;
 
+    background: var(--text);
+    color: #ef4444;
+
+    cursor: pointer;
+
+    font-size: 14px;
+
+    opacity: .7;
+
+    transition: .2s ease;
 }
 
 .conversation-delete:hover {
-
     opacity: 1;
-
-    transform: scale(1.15);
-
+    background: rgba(211, 61, 61, 0.15);
+    transform: scale(1.05);
 }
 
-.conversation-actions {
 
-    display: flex;
-
-    gap: 8px;
-
-}
+/* Edit */
 
 .conversation-edit {
+    width: 28px;
+    height: 28px;
 
     border: none;
+    border-radius: 7px;
 
-    background: transparent;
-    background-color: wheat;
+    background: var(--text);
+    color: var(--text);
 
     cursor: pointer;
 
-    font-size: 15px;
+    font-size: 14px;
 
-    opacity: .65;
+    opacity: .7;
 
-    transition: .25s;
-
+    transition: .2s ease;
 }
 
 .conversation-edit:hover {
-
     opacity: 1;
-
-    transform: scale(1.15);
-
+    background: rgba(37, 99, 235, .15);
+    transform: scale(1.05);
 }
 
-.rename-input {
 
+/* Rename input */
+
+.rename-input {
     flex: 1;
 
-    border: none;
+    min-width: 0;
 
+    border: 1px solid var(--border);
     outline: none;
 
     padding: 7px 10px;
 
     border-radius: 8px;
 
-    background: var(--card);
-
+    background: var(--bg);
     color: var(--text);
 
     font-size: 14px;
-
 }
 
-.save-btn {
+.rename-input:focus {
+    border-color: var(--primary);
+}
 
+
+/* Save */
+
+.save-btn {
     border: none;
 
     background: #22c55e;
-
     color: white;
 
     border-radius: 8px;
 
-    padding: 6px 10px;
+    padding: 7px 10px;
 
     cursor: pointer;
 
+    font-weight: 600;
+
+    transition: .2s ease;
 }
 
 .save-btn:hover {
-
     background: #16a34a;
-
+    transform: translateY(-1px);
 }
 
-.active-chat {
 
-    background: #2563eb;
-    color: white;
-
-}
-
+/* Logout */
 
 .ai-logout-btn {
+    width: 100%;
 
     padding: 12px;
 
     border: none;
-
     border-radius: 10px;
 
     background: #dc2626;
-
     color: white;
 
     cursor: pointer;
 
+    font-weight: 600;
+
+    transition: .25s ease;
 }
+
+.ai-logout-btn:hover {
+    background: #b91c1c;
+}
+
+
+/* =========================================================
+   MAIN CHAT PAGE
+========================================================= */
 
 .ai-chat-page {
     margin-left: 280px;
@@ -233,24 +292,50 @@
     min-height: 100vh;
 
     background: var(--bg);
+
+    min-width: 0;
 }
+
+
+/* Header */
 
 .ai-chat-header {
     padding: 18px 30px;
+
     background: var(--card);
     color: var(--text);
-    border-bottom: 1px solid rgba(255, 255, 255, .08);
+
+    border-bottom: 1px solid var(--border);
+
     font-size: 22px;
     font-weight: 700;
+
     letter-spacing: .5px;
+
+    position: sticky;
+    top: 0;
+
+    z-index: 50;
 }
+
+
+/* =========================================================
+   CHAT MESSAGES AREA
+========================================================= */
 
 .ai-chat-box {
     flex: 1;
+
+    min-width: 0;
+
     overflow-y: auto;
+    overflow-x: hidden;
+
     padding: 30px;
+
     display: flex;
     flex-direction: column;
+
     gap: 16px;
 }
 
@@ -259,69 +344,132 @@
 }
 
 .ai-chat-box::-webkit-scrollbar-thumb {
-    background: #475569;
+    background: var(--border);
     border-radius: 20px;
 }
 
 .ai-chat-box::-webkit-scrollbar-track {
-
     background: transparent;
-
 }
+
+
+/* =========================================================
+   MESSAGES
+========================================================= */
 
 .ai-bot-msg,
 .ai-user-msg {
     max-width: 75%;
+
+    min-width: 0;
+
     padding: 16px 20px;
+
     border-radius: 18px;
+
     line-height: 1.7;
+
     font-size: 15px;
-    word-wrap: break-word;
+
+    overflow-wrap: anywhere;
+    word-break: break-word;
+
     animation: fadeIn .25s ease;
 }
 
-.ai-chat-page .ai-bot-msg {
+
+/* AI Message */
+
+.ai-bot-msg {
     align-self: flex-start;
+
     background: var(--secondary);
-    border: 1px solid rgba(255, 255, 255, .08);
+
+    border: 1px solid var(--border);
+
     color: var(--text);
+
     position: relative;
+
+    box-shadow: 0 5px 15px rgba(0, 0, 0, .06);
 }
+
+
+/* User Message */
 
 .ai-user-msg {
     align-self: flex-end;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+
+    background: linear-gradient(
+        135deg,
+        #2563eb,
+        #1d4ed8
+    );
+
+    color: white;
+
+    box-shadow: 0 5px 15px rgba(37, 99, 235, .18);
 }
+
 
 .ai-bot-msg p,
 .ai-user-msg p {
     margin: .6rem 0;
 }
 
+
+/* =========================================================
+   MARKDOWN / CODE
+========================================================= */
+
 .ai-bot-msg pre {
+    max-width: 100%;
+
     overflow-x: auto;
+
     border-radius: 12px;
+
     margin-top: 12px;
+
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .ai-bot-msg code {
     font-family: Consolas, monospace;
+
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
+
+.ai-bot-msg pre > div {
+    max-width: 100%;
+
+    overflow-x: auto !important;
+}
+
+
+/* =========================================================
+   COPY BUTTON
+========================================================= */
 
 .ai-chat-page .ai-copy-btn {
     display: flex;
+
     align-items: center;
     justify-content: center;
 
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
 
     margin-left: auto;
     margin-bottom: 8px;
 
     background: var(--card);
     color: var(--text);
-    border: 1px solid #334155;
+
+    border: 1px solid var(--border);
+
     border-radius: 8px;
 
     cursor: pointer;
@@ -331,14 +479,21 @@
     transition: all .2s ease;
 }
 
-.ai-copy-btn:hover {
+.ai-chat-page .ai-copy-btn:hover {
     background: var(--primary);
     color: white;
+
+    border-color: var(--primary);
+
     transform: scale(1.05);
 }
 
-.loading {
 
+/* =========================================================
+   LOADING ANIMATION
+========================================================= */
+
+.loading {
     display: flex;
 
     gap: 6px;
@@ -346,13 +501,10 @@
     align-items: center;
 
     width: 80px;
-
 }
 
 .loading span {
-
     width: 10px;
-
     height: 10px;
 
     border-radius: 50%;
@@ -360,57 +512,60 @@
     background: var(--primary);
 
     animation: bounce .7s infinite alternate;
-
 }
 
 .loading span:nth-child(2) {
-
     animation-delay: .2s;
-
 }
 
 .loading span:nth-child(3) {
-
     animation-delay: .4s;
-
 }
 
 @keyframes bounce {
-
     from {
-
         transform: translateY(0);
-
         opacity: .4;
-
     }
 
     to {
-
         transform: translateY(-8px);
-
         opacity: 1;
-
     }
+}
 
+
+/* =========================================================
+   CHAT INPUT AREA
+========================================================= */
+
+.ai-chat-input {
+    position: relative;
 }
 
 .ai-chat-page .ai-chat-input {
     display: flex;
-    gap: 15px;
-    padding: 20px;
+
+    gap: 12px;
+
+    padding: 18px 20px;
+
     background: var(--card);
-    border-top: 1px solid #374151;
+
+    border-top: 1px solid var(--border);
 }
 
-.ai-chat-input textarea {
 
+/* Textarea */
+
+.ai-chat-input textarea {
     flex: 1;
+
+    min-width: 0;
 
     resize: none;
 
     max-height: 150px;
-
     min-height: 55px;
 
     padding: 15px;
@@ -419,83 +574,83 @@
 
     outline: none;
 
-    border: none;
+    border: 1px solid var(--border);
 
     background: var(--secondary);
+
     color: var(--text);
 
     font-size: 16px;
 
     overflow-y: auto;
 
+    transition: .2s ease;
 }
 
 .ai-chat-input textarea:focus {
+    border-color: var(--primary);
 
-    outline: none;
-    border: 1px solid #3b82f6;
-
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .1);
 }
 
 .ai-chat-input textarea::placeholder {
-    color: gray;
+    color: var(--text-secondary);
 }
+
+
+/* Send button */
 
 .ai-chat-input button {
     padding: 0 28px;
+
     border: none;
+
     border-radius: 14px;
-    background: #2563eb;
+
+    background: var(--primary);
+
     margin-top: 6px;
+
     color: white;
+
     cursor: pointer;
+
     font-weight: 600;
-    transition: .25s;
+
+    transition: .25s ease;
 }
 
 .ai-chat-input button:hover {
     background: #1d4ed8;
+
     transform: scale(1.03);
 }
 
 .ai-chat-input button:active {
-
     transform: scale(.96);
-
 }
 
 .ai-chat-input button:disabled {
     opacity: .6;
+
     cursor: not-allowed;
 }
 
-@keyframes fadeIn {
 
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-}
-
-/* ==========================================
+/* =========================================================
    ATTACHMENT PLUS BUTTON
-========================================== */
+========================================================= */
 
 .attachment-plus-btn {
     width: 42px;
     height: 42px;
 
-    border: none;
+    border: 1px solid var(--border);
+
     border-radius: 50%;
 
-    background: #1e293b;
-    color: white;
+    background: var(--secondary);
+    color: var(--text);
 
     font-size: 28px;
     font-weight: 300;
@@ -508,18 +663,23 @@
 
     flex-shrink: 0;
 
-    transition: 0.2s;
+    transition: .2s ease;
 }
 
 .attachment-plus-btn:hover {
-    background: #2563eb;
+    background: var(--primary);
+
+    color: white;
+
+    border-color: var(--primary);
+
     transform: scale(1.05);
 }
 
 
-/* ==========================================
+/* =========================================================
    ATTACHMENT MENU
-========================================== */
+========================================================= */
 
 .attachment-menu {
     position: absolute;
@@ -529,25 +689,22 @@
 
     width: 280px;
 
-    background: var(--bg);
+    background: var(--card);
 
-    border: 1px solid var(--primary);
+    border: 1px solid var(--border);
 
     border-radius: 14px;
 
     padding: 8px;
 
-    box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .2);
 
     z-index: 1000;
 
-    animation: attachmentMenuIn 0.15s ease;
+    animation: attachmentMenuIn .15s ease;
 }
 
-
 @keyframes attachmentMenuIn {
-
     from {
         opacity: 0;
         transform: translateY(8px);
@@ -557,14 +714,13 @@
         opacity: 1;
         transform: translateY(0);
     }
-
 }
-
 
 .attachment-menu button {
     width: 100%;
 
     display: flex;
+
     align-items: center;
 
     gap: 12px;
@@ -575,7 +731,7 @@
 
     background: transparent;
 
-    color: white;
+    color: var(--text);
 
     border-radius: 10px;
 
@@ -584,30 +740,29 @@
     text-align: left;
 }
 
-
 .attachment-menu button:hover {
     background: var(--secondary);
 }
 
-
-.attachment-menu button>span {
+.attachment-menu button > span {
     width: 38px;
     height: 38px;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
-    background: #0f172a;
+    background: var(--secondary);
 
     border-radius: 10px;
 
     font-size: 20px;
 }
 
-
 .attachment-menu button div {
     display: flex;
+
     color: var(--text);
 
     flex-direction: column;
@@ -615,40 +770,28 @@
     gap: 3px;
 }
 
-
 .attachment-menu button strong {
     font-size: 14px;
 }
 
-
 .attachment-menu button small {
-    color: #94a3b8;
+    color: var(--text-secondary);
 
     font-size: 12px;
 }
 
 
-/* ==========================================
-   INPUT CONTAINER
-========================================== */
-
-.ai-chat-input {
-    position: relative;
-}
-
-
-/* ==========================================
-   ATTACHMENT PREVIEW BAR
-========================================== */
+/* =========================================================
+   ATTACHMENT PREVIEW
+========================================================= */
 
 .attachment-preview-bar {
     padding: 8px 15px;
 
     background: var(--bg);
 
-    border-top: 1px solid var(--card);
+    border-top: 1px solid var(--border);
 }
-
 
 .attachment-preview-content {
     display: flex;
@@ -658,10 +801,9 @@
     gap: 10px;
 
     width: fit-content;
-
     max-width: 400px;
 
-    background: var(--bg);
+    background: var(--card);
 
     border: 1px solid var(--primary);
 
@@ -669,7 +811,6 @@
 
     padding: 8px 10px;
 }
-
 
 .attachment-preview-image {
     width: 48px;
@@ -680,22 +821,21 @@
     border-radius: 7px;
 }
 
-
 .attachment-file-icon {
     width: 48px;
     height: 48px;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
-    background: #0f172a;
+    background: var(--secondary);
 
     border-radius: 7px;
 
     font-size: 22px;
 }
-
 
 .attachment-file-info {
     display: flex;
@@ -704,7 +844,6 @@
 
     min-width: 0;
 }
-
 
 .attachment-file-info strong {
     color: var(--text);
@@ -720,15 +859,13 @@
     text-overflow: ellipsis;
 }
 
-
 .attachment-file-info small {
-    color: #94a3b8;
+    color: var(--text-secondary);
 
     font-size: 11px;
 
     margin-top: 3px;
 }
-
 
 .remove-attachment-btn {
     width: 28px;
@@ -738,33 +875,33 @@
 
     border-radius: 50%;
 
-    background: #334155;
+    background: var(--secondary);
 
-    color: white;
+    color: var(--text);
 
     cursor: pointer;
 
     margin-left: 5px;
-}
 
+    transition: .2s ease;
+}
 
 .remove-attachment-btn:hover {
     background: #ef4444;
+    color: white;
 }
 
 
-/* ==========================================
-   MESSAGE IMAGE
-========================================== */
+/* =========================================================
+   MESSAGE ATTACHMENTS
+========================================================= */
 
 .message-attachment {
     margin-bottom: 8px;
 }
 
-
 .message-image-preview {
     max-width: 280px;
-
     max-height: 280px;
 
     object-fit: contain;
@@ -774,10 +911,11 @@
     display: block;
 }
 
-
 .message-file-preview {
     display: flex;
+
     align-items: center;
+
     gap: 12px;
 
     width: fit-content;
@@ -795,13 +933,13 @@
 
     cursor: pointer;
 
-    transition: 0.2s ease;
+    transition: .2s ease;
 }
 
 .message-file-preview:hover {
     transform: translateY(-2px);
 
-    background: rgb(102, 125, 175);
+    background: var(--secondary);
 }
 
 .file-icon {
@@ -814,6 +952,8 @@
     flex-direction: column;
 
     gap: 3px;
+
+    min-width: 0;
 }
 
 .file-info strong {
@@ -825,25 +965,24 @@
 .file-info small {
     font-size: 11px;
 
-    opacity: 0.65;
+    color: var(--text-secondary);
 }
 
 
-/* ==========================================
+/* =========================================================
    CAMERA OVERLAY
-========================================== */
+========================================================= */
 
 .camera-overlay {
     position: fixed;
 
     inset: 0;
 
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, .75);
 
     display: flex;
 
     align-items: center;
-
     justify-content: center;
 
     z-index: 5000;
@@ -851,42 +990,36 @@
     padding: 20px;
 }
 
-
 .camera-modal {
     width: min(700px, 100%);
 
-    background: #1e293b;
+    background: var(--card);
 
     border-radius: 18px;
 
     overflow: hidden;
 
-    box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
 }
-
 
 .camera-header {
     display: flex;
 
     align-items: center;
-
     justify-content: space-between;
 
     padding: 15px 18px;
 
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid var(--border);
 }
-
 
 .camera-header h2 {
     margin: 0;
 
-    color: white;
+    color: var(--text);
 
     font-size: 18px;
 }
-
 
 .camera-header button {
     width: 34px;
@@ -896,20 +1029,21 @@
 
     border-radius: 50%;
 
-    background: #334155;
+    background: var(--secondary);
 
-    color: white;
+    color: var(--text);
 
     cursor: pointer;
 
     font-size: 16px;
-}
 
+    transition: .2s ease;
+}
 
 .camera-header button:hover {
     background: #ef4444;
+    color: white;
 }
-
 
 .camera-view {
     width: 100%;
@@ -921,34 +1055,28 @@
     display: flex;
 
     align-items: center;
-
     justify-content: center;
 
     overflow: hidden;
 }
 
-
 .camera-view video {
     width: 100%;
-
     height: 100%;
 
     object-fit: cover;
 }
 
-
 .camera-actions {
     display: flex;
 
     justify-content: center;
-
     align-items: center;
 
     gap: 15px;
 
     padding: 18px;
 }
-
 
 .camera-cancel-btn,
 .camera-capture-btn {
@@ -961,95 +1089,112 @@
     cursor: pointer;
 
     font-weight: 600;
-}
 
+    transition: .2s ease;
+}
 
 .camera-cancel-btn {
-    background: #334155;
-
-    color: white;
+    background: var(--secondary);
+    color: var(--text);
 }
 
+.camera-cancel-btn:hover {
+    background: #475569;
+    color: white;
+}
 
 .camera-capture-btn {
-    background: #2563eb;
-
+    background: var(--primary);
     color: white;
 }
-
 
 .camera-capture-btn:hover {
     background: #1d4ed8;
 }
 
 
-.camera-cancel-btn:hover {
-    background: #475569;
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .ai-sidebar {
+        width: 230px;
+    }
+
+    .ai-chat-page {
+        margin-left: 230px;
+    }
+
+    .ai-chat-box {
+        padding: 20px 15px;
+    }
+
+    .ai-bot-msg,
+    .ai-user-msg {
+        max-width: 90%;
+    }
+
+    .ai-chat-header {
+        padding: 15px 20px;
+        font-size: 19px;
+    }
 }
 
 
-/* ==========================================
-   MOBILE
-========================================== */
-
 @media (max-width: 600px) {
+
+    .ai-sidebar {
+        width: 100%;
+        height: auto;
+
+        position: relative;
+
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .ai-chat-page {
+        margin-left: 0;
+    }
+
+    .ai-chat-layout {
+        flex-direction: column;
+    }
+
+    .ai-history-list {
+        max-height: 180px;
+    }
+
+    .ai-bot-msg,
+    .ai-user-msg {
+        max-width: 100%;
+    }
 
     .attachment-menu {
         left: 5px;
-
         width: 260px;
     }
-
 
     .attachment-preview-content {
         max-width: 90%;
     }
 
-
     .camera-modal {
         width: 100%;
     }
-
 
     .camera-view {
         aspect-ratio: 4 / 3;
     }
 
-}
+    .ai-chat-input {
+        padding: 12px !important;
+        gap: 8px !important;
+    }
 
-/* ==========================================
-   PREVENT AI MESSAGE HORIZONTAL OVERFLOW
-========================================== */
-
-.ai-chat-box {
-    min-width: 0;
-    overflow-x: hidden;
-}
-
-.ai-bot-msg,
-.ai-user-msg {
-    max-width: 100%;
-    min-width: 0;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-/* Normal markdown code */
-.ai-bot-msg code {
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-
-/* Code blocks */
-.ai-bot-msg pre {
-    max-width: 100%;
-    overflow-x: auto;
-    white-space: pre-wrap;
-    word-break: break-word;
-}
-
-/* SyntaxHighlighter container */
-.ai-bot-msg pre > div {
-    max-width: 100%;
-    overflow-x: auto !important;
+    .ai-chat-input button {
+        padding: 0 18px;
+    }
 }

@@ -1,227 +1,296 @@
-.quiz-history-page{
+/* =========================================
+   QUIZ HISTORY PAGE
+========================================= */
+
+.quiz-history-page {
     min-height: 100vh;
-    padding: 10px 2% 50px;
-    background: var(--secondary);
+    width: 100%;
+    padding: 40px 5% 60px;
+
+    background: var(--bg);
     color: var(--text);
 }
 
-.quiz-history h1 {
-    display: block;
-    font-size: 2.7rem;
-    font-weight: 700;
-    margin-bottom: 35px;
-
-    color: var(--text) !important;
-    position: relative;
-    z-index: 2;
-}
+/* =========================================
+   TITLE
+========================================= */
 
 .quiz-history-title {
     font-size: 2.8rem;
     font-weight: 700;
-    margin-bottom: 20px;
-    /* margin-top: 20px; */
-    padding-left: 0;
-    /* background-color: var(--border); */
-    display: block;
+    margin-bottom: 35px;
+
+    color: var(--text);
 }
+
+/* =========================================
+   LOADING
+========================================= */
+
+.history-loading {
+    min-height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--bg);
+    color: var(--text);
+
+    font-size: 22px;
+    font-weight: 600;
+}
+
+/* =========================================
+   HISTORY GRID
+========================================= */
 
 .history-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-    gap: 30px;
-    margin-top: 35px;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(340px, 1fr));
+
+    gap: 28px;
+
+    margin-top: 20px;
 }
 
+/* =========================================
+   HISTORY CARD
+========================================= */
+
 .history-card {
+    position: relative;
+
     background: var(--card);
+
     border: 1px solid var(--border);
-    border-radius: 22px;
-    padding: 24px;
-    margin: 0;
-    margin-left: 5px;
-    margin-right: 5px;
-    transition: .35s ease;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, .12);
+
+    border-radius: 20px;
+
+    padding: 25px;
+
+    min-height: 250px;
 
     display: flex;
     flex-direction: column;
     justify-content: space-between;
 
-    min-height: 240px;
-    position: relative;
     overflow: hidden;
+
+    box-shadow:
+        0 8px 25px rgba(0, 0, 0, 0.08);
+
+    transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease,
+        border-color 0.3s ease;
 }
+
+/* Top blue line */
 
 .history-card::before {
     content: "";
+
     position: absolute;
+
     top: 0;
     left: 0;
+
     width: 100%;
-    height: 5px;
-    background: linear-gradient(90deg, #2563eb, #60a5fa);
+    height: 4px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #2563eb,
+            #60a5fa
+        );
 }
 
+/* Hover */
+
 .history-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(23, 63, 184, 0.18);
+    transform: translateY(-7px);
+
+    box-shadow:
+        0 18px 40px rgba(37, 99, 235, 0.14);
+
+    border-color: rgba(37, 99, 235, 0.25);
 }
+
+/* =========================================
+   CARD TITLE
+========================================= */
 
 .history-card h2 {
     color: var(--primary);
-    font-size: 1.6rem;
+
+    font-size: 1.5rem;
     font-weight: 700;
+
     margin-bottom: 20px;
-    line-height: 1.3;
+
+    line-height: 1.35;
 }
 
-.history-card p {
+/* =========================================
+   HISTORY INFORMATION
+========================================= */
+
+.history-info {
+    margin: 10px 0 20px;
+}
+
+.info-row {
     display: flex;
+
     align-items: center;
-    justify-content: space-between;
 
-    padding: 10px 0;
+    gap: 12px;
 
-    border-bottom: 1px solid var(--border);
+    padding: 13px 0;
 
-    color: var(--text);
-
-    font-size: 1rem;
+    border-bottom:
+        1px solid var(--border);
 }
 
-.history-card p:last-of-type {
+.info-row:last-child {
     border-bottom: none;
 }
 
-.history-card strong {
-    font-size: 1.05rem;
-    font-weight: 700;
-}
+/* Icons */
 
-.score {
-    color: #16a34a;
-    font-weight: 700;
-}
+.info-icon {
+    font-size: 20px;
 
-.accuracy {
-    color: #0ea5e9;
-    font-weight: 700;
-}
+    width: 28px;
 
-.date {
-    color: var(--text-secondary);
-    font-size: .9rem;
-}
-
-.empty-history {
     text-align: center;
-    padding: 80px 20px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
 }
 
-.empty-history h2 {
-    margin-top: 20px;
-    margin-bottom: 10px;
+/* Labels */
+
+.info-label {
+    flex: 1;
+
     color: var(--text);
+
+    font-size: 15px;
+
+    font-weight: 500;
 }
 
-.empty-history p {
+/* Values */
+
+.info-value {
+    color: var(--text);
+
+    font-size: 17px;
+
+    font-weight: 700;
+
+    text-align: right;
+}
+
+/* Date */
+
+.date-value {
+    font-size: 14px;
+
+    font-weight: 600;
+
     color: var(--text-secondary);
 }
 
-/* =========================
-   Light Theme Support
-========================= */
-
-body.light-theme .quiz-history,
-[data-theme="light"] .quiz-history {
-    background: var(--secondary);
-    color: var(--text);
-}
-
-body.light-theme .history-card,
-[data-theme="light"] .history-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-}
-
-body.light-theme .history-card h2,
-[data-theme="light"] .history-card h2 {
-    color: var(--primary);
-}
-
-body.light-theme .history-card p,
-[data-theme="light"] .history-card p,
-body.light-theme .quiz-history h1,
-body.light-theme .history-title,
-body.light-theme .empty-history h2,
-[data-theme="light"] .history-card p,
-[data-theme="light"] .quiz-history h1,
-[data-theme="light"] .history-title,
-[data-theme="light"] .empty-history h2 {
-    color: var(--text);
-}
-
-body.light-theme .date,
-body.light-theme .empty-history p,
-[data-theme="light"] .date,
-[data-theme="light"] .empty-history p {
-    color: var(--text-secondary);
-}
-
-@media (max-width:768px) {
-
-    .quiz-history {
-        padding: 100px 20px;
-    }
-
-    .quiz-history h1 {
-        font-size: 2rem;
-    }
-
-    .history-grid {
-        grid-template-columns: 1fr;
-    }
-
-}
+/* =========================================
+   DELETE BUTTON AREA
+========================================= */
 
 .history-buttons {
-    margin-top: 22px;
+    margin-top: 18px;
 }
+
+/* =========================================
+   DELETE BUTTON
+========================================= */
 
 .delete-btn {
     width: 100%;
-    padding: 13px;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
 
-    font-weight: 600;
-    font-size: 15px;
+    padding: 13px 18px;
+
+    border: none;
+
+    border-radius: 11px;
 
     background: #ef4444;
+
     color: white;
 
-    transition: .3s;
+    cursor: pointer;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    transition:
+        background 0.25s ease,
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
 }
 
 .delete-btn:hover {
-    transform: translateY(-2px);
     background: #dc2626;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 18px rgba(239, 68, 68, 0.25);
 }
 
-/* Delete Modal */
+.delete-btn:active {
+    transform: scale(0.98);
+}
+
+/* =========================================
+   EMPTY HISTORY
+========================================= */
+
+.history-empty {
+    text-align: center;
+
+    margin-top: 60px;
+
+    padding: 70px 20px;
+
+    background: var(--card);
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 20px;
+
+    color: var(--text-secondary);
+
+    font-size: 22px;
+
+    box-shadow:
+        0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+/* =========================================
+   DELETE MODAL OVERLAY
+========================================= */
 
 .delete-overlay {
-
     position: fixed;
 
     inset: 0;
 
-    background: rgba(0, 0, 0, .65);
+    background:
+        rgba(0, 0, 0, 0.65);
 
     display: flex;
 
@@ -229,61 +298,77 @@ body.light-theme .empty-history p,
 
     align-items: center;
 
+    padding: 20px;
+
     z-index: 1000;
 
+    animation:
+        fadeIn 0.25s ease;
 }
 
-.delete-modal {
+/* =========================================
+   DELETE MODAL
+========================================= */
 
+.delete-modal {
     width: 420px;
 
-    max-width: 90%;
+    max-width: 100%;
 
     background: var(--card);
 
-    border: 1px solid var(--border);
+    border:
+        1px solid var(--border);
 
     border-radius: 18px;
 
-    padding: 30px;
+    padding: 32px;
 
     text-align: center;
 
     color: var(--text);
 
-    box-shadow: 0 20px 45px rgba(0, 0, 0, .35);
+    box-shadow:
+        0 25px 60px rgba(0, 0, 0, 0.3);
 
+    animation:
+        modalPop 0.25s ease;
 }
+
+/* Modal heading */
 
 .delete-modal h2 {
-
     margin-bottom: 15px;
 
+    font-size: 24px;
 }
 
-.delete-modal p {
+/* Modal text */
 
+.delete-modal p {
     color: var(--text-secondary);
 
-    margin-bottom: 30px;
+    margin-bottom: 28px;
 
     line-height: 1.7;
 
+    font-size: 15px;
 }
 
-.delete-actions {
+/* =========================================
+   MODAL BUTTONS
+========================================= */
 
+.delete-actions {
     display: flex;
 
     justify-content: center;
 
     gap: 15px;
-
 }
 
 .cancel-btn,
 .confirm-btn {
-
     border: none;
 
     padding: 12px 26px;
@@ -296,80 +381,163 @@ body.light-theme .empty-history p,
 
     font-weight: 600;
 
-    transition: .25s;
-
+    transition:
+        transform 0.25s ease,
+        background 0.25s ease;
 }
 
-.cancel-btn {
+/* Cancel */
 
+.cancel-btn {
     background: #64748b;
 
     color: white;
-
 }
 
 .cancel-btn:hover {
-
     background: #475569;
 
+    transform: translateY(-2px);
 }
 
-.confirm-btn {
+/* Confirm */
 
+.confirm-btn {
     background: #ef4444;
 
     color: white;
-
 }
 
 .confirm-btn:hover {
-
     background: #dc2626;
 
+    transform: translateY(-2px);
 }
 
-.history-info {
-    margin: 25px 0 18px;
+/* =========================================
+   ANIMATIONS
+========================================= */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
-.info-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+@keyframes modalPop {
+    from {
+        opacity: 0;
 
-    gap: 15px;
+        transform:
+            scale(0.9)
+            translateY(10px);
+    }
 
-    padding: 14px 0;
+    to {
+        opacity: 1;
 
-    border-bottom: 1px solid var(--border);
+        transform:
+            scale(1)
+            translateY(0);
+    }
 }
 
-.info-row:last-child {
-    border-bottom: none;
+/* =========================================
+   LIGHT THEME
+========================================= */
+
+body[data-theme="light"] .quiz-history-page {
+    background: #f8fafc;
 }
 
-.info-icon {
-    font-size: 20px;
+body[data-theme="light"] .history-card,
+body[data-theme="light"] .history-empty,
+body[data-theme="light"] .delete-modal {
+    background: #ffffff;
+
+    border-color: #e5e7eb;
+
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.07);
 }
 
-.info-label {
-    flex: 1;
-    margin-left: 8px;
-
-    color: var(--text);
-
-    font-weight: 500;
+body[data-theme="light"] .history-card:hover {
+    box-shadow:
+        0 18px 40px rgba(37, 99, 235, 0.12);
 }
 
-.info-value {
-    font-size: 18px;
-
-    font-weight: 700;
-
-    color: var(--text);
+body[data-theme="light"] .info-row {
+    border-color: #e5e7eb;
 }
 
-.date-value {
-    font-size: 15px;
-    font-weight: 600;
+body[data-theme="light"] .info-label,
+body[data-theme="light"] .info-value {
+    color: #111827;
+}
+
+body[data-theme="light"] .date-value {
+    color: #64748b;
+}
+
+body[data-theme="light"] .history-empty {
+    color: #64748b;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+
+    .quiz-history-page {
+        padding: 30px 20px 50px;
+    }
+
+    .quiz-history-title {
+        font-size: 2.2rem;
+    }
+
+    .history-grid {
+        grid-template-columns: 1fr;
+
+        gap: 20px;
+    }
+
+    .history-card {
+        padding: 22px;
+    }
+
+    .info-value {
+        font-size: 15px;
+    }
+
+    .date-value {
+        font-size: 13px;
+    }
+
+}
+
+@media (max-width: 480px) {
+
+    .quiz-history-title {
+        font-size: 1.9rem;
+    }
+
+    .history-card h2 {
+        font-size: 1.3rem;
+    }
+
+    .delete-actions {
+        flex-direction: column;
+    }
+
+    .cancel-btn,
+    .confirm-btn {
+        width: 100%;
+    }
+
 }
