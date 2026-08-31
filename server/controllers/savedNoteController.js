@@ -25,7 +25,7 @@ export const saveNote = async (req, res) => {
         await updateStreak(req.user._id);
 
         res.status(201).json({
-            
+
             success: true,
 
             note: saved,
@@ -54,6 +54,7 @@ export const getSavedNotes = async (req, res) => {
 
         const notes = await SavedNote.find({
             user: req.user._id,
+            deletedAt: null,
         }).sort({
             createdAt: -1,
         });
@@ -86,19 +87,39 @@ export const deleteSavedNote = async (req, res) => {
 
     try {
 
-        await SavedNote.findOneAndDelete({
+        const note = await SavedNote.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                user: req.user._id,
+                deletedAt: null,
+            },
+            {
+                deletedAt: new Date(),
+            },
+            {
+                new: true,
+            }
+        );
 
-            _id: req.params.id,
+        if (!note) {
 
-            user: req.user._id,
+            return res.status(404).json({
 
-        });
+                success: false,
+
+                message: "Note not found",
+
+            });
+
+        }
 
         res.status(200).json({
 
             success: true,
 
-            message: "Note deleted successfully",
+            message: "Note moved to recycle bin",
+
+            note,
 
         });
 
@@ -110,7 +131,7 @@ export const deleteSavedNote = async (req, res) => {
 
             success: false,
 
-            message: "Failed to delete note",
+            message: "Failed to move note to recycle bin",
 
         });
 

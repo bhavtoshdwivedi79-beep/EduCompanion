@@ -27,12 +27,37 @@ const flashcardSchema = new mongoose.Schema(
                 },
             },
         ],
+
+        // ♻️ Recycle Bin
+        deletedAt: {
+            type: Date,
+            default: null,
+        },
     },
     {
         timestamps: true,
     }
 );
 
-const Flashcard = mongoose.model("Flashcard", flashcardSchema);
+
+// Automatically permanently delete the flashcard
+// 30 days after it enters the recycle bin.
+
+flashcardSchema.index(
+    { deletedAt: 1 },
+    {
+        expireAfterSeconds: 30 * 24 * 60 * 60,
+
+        partialFilterExpression: {
+            deletedAt: { $type: "date" },
+        },
+    }
+);
+
+
+const Flashcard = mongoose.model(
+    "Flashcard",
+    flashcardSchema
+);
 
 export default Flashcard;

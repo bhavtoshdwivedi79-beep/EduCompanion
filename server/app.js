@@ -11,6 +11,7 @@ import studyPlannerRoutes from "./routes/studyPlannerRoutes.js";
 import flashcardRoutes from "./routes/flashcardRoutes.js";
 import conversationRoutes from "./routes/conversationRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import recycleBinRoutes from "./routes/recycleBinRoutes.js";
 
 const app = express();
 
@@ -45,6 +46,8 @@ app.use("/api/flashcards", flashcardRoutes);
 app.use("/api/conversations", conversationRoutes);
 
 app.use("/api/notifications", notificationRoutes);
+
+app.use("/api/recycle-bin", recycleBinRoutes);
 
 // Home
 app.get("/", (req, res) => {

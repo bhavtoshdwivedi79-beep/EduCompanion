@@ -58,6 +58,7 @@ export const getQuizHistory = async (req, res) => {
 
         const quizzes = await Quiz.find({
             user: req.user._id,
+            deletedAt: null,
         }).sort({ createdAt: -1 });
 
         res.status(200).json({
@@ -88,13 +89,19 @@ export const deleteQuiz = async (req, res) => {
 
     try {
 
-        const quiz = await Quiz.findOneAndDelete({
-
-            _id: req.params.id,
-
-            user: req.user._id,
-
-        });
+        const quiz = await Quiz.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                user: req.user._id,
+                deletedAt: null,
+            },
+            {
+                deletedAt: new Date(),
+            },
+            {
+                new: true,
+            }
+        );
 
         if (!quiz) {
 
@@ -112,7 +119,9 @@ export const deleteQuiz = async (req, res) => {
 
             success: true,
 
-            message: "Quiz deleted successfully.",
+            message: "Quiz moved to recycle bin.",
+
+            quiz,
 
         });
 
@@ -124,7 +133,7 @@ export const deleteQuiz = async (req, res) => {
 
             success: false,
 
-            message: "Failed to delete quiz.",
+            message: "Failed to move quiz to recycle bin.",
 
         });
 

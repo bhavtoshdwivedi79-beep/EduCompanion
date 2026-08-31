@@ -20,7 +20,7 @@
 /* Topbar position */
 
 .dashboard-main .topbar {
-    left: 240px;
+    left: 220px;
     transition: left .35s ease;
 }
 

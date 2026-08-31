@@ -15,6 +15,7 @@ import Profile from "./pages/Profile";
 import StudyPlanner from "./pages/StudyPlanner";
 import Flashcards from "./pages/Flashcards";
 import FlashcardHistory from "./pages/FlashcardHistory";
+import RecycleBin from "./pages/RecycleBin";
 
 function App() {
 
@@ -57,6 +58,11 @@ function App() {
           <Route path="/flashcards" element={<Flashcards />} />
 
           <Route path="/flashcard-history" element={<FlashcardHistory />} />
+
+          <Route
+            path="/recycle-bin"
+            element={<RecycleBin />}
+          />
 
         </Route>
 

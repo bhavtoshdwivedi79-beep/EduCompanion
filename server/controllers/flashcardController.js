@@ -1,25 +1,34 @@
 import Flashcard from "../models/Flashcard.js";
 import { generateFlashcards } from "../services/geminiService.js";
 
-// Generate AI Flashcards
-// Generate AI Flashcards (Only Generate)
+
+// ==================================================
+// GENERATE AI FLASHCARDS
+// ==================================================
+
 export const createFlashcards = async (req, res) => {
+
     try {
 
         const { topic } = req.body;
 
         if (!topic) {
+
             return res.status(400).json({
                 success: false,
                 message: "Topic is required",
             });
+
         }
 
         const cards = await generateFlashcards(topic);
 
         res.json({
+
             success: true,
+
             flashcards: cards,
+
         });
 
     } catch (error) {
@@ -27,14 +36,22 @@ export const createFlashcards = async (req, res) => {
         console.error(error);
 
         res.status(500).json({
+
             success: false,
+
             message: "Failed to generate flashcards",
+
         });
 
     }
+
 };
 
-// Save Flashcards
+
+// ==================================================
+// SAVE FLASHCARDS
+// ==================================================
+
 export const saveFlashcards = async (req, res) => {
 
     try {
@@ -44,8 +61,11 @@ export const saveFlashcards = async (req, res) => {
         if (!topic || !flashcards) {
 
             return res.status(400).json({
+
                 success: false,
+
                 message: "Missing Data",
+
             });
 
         }
@@ -53,7 +73,9 @@ export const saveFlashcards = async (req, res) => {
         const saved = await Flashcard.create({
 
             user: req.user._id,
+
             topic,
+
             flashcards,
 
         });
@@ -61,6 +83,7 @@ export const saveFlashcards = async (req, res) => {
         res.status(201).json({
 
             success: true,
+
             flashcard: saved,
 
         });
@@ -72,6 +95,7 @@ export const saveFlashcards = async (req, res) => {
         res.status(500).json({
 
             success: false,
+
             message: "Failed to save flashcards",
 
         });
@@ -80,56 +104,128 @@ export const saveFlashcards = async (req, res) => {
 
 };
 
-// Get All Flashcards
+
+// ==================================================
+// GET ALL ACTIVE FLASHCARDS
+// ==================================================
+
 export const getFlashcards = async (req, res) => {
+
     try {
+
         const flashcards = await Flashcard.find({
+
             user: req.user.id,
+
+            deletedAt: null,
+
         }).sort({
+
             createdAt: -1,
+
         });
 
         res.json({
+
             success: true,
+
             flashcards,
+
         });
+
     } catch (error) {
+
+        console.error(error);
+
         res.status(500).json({
+
             success: false,
+
             message: "Server Error",
+
         });
+
     }
+
 };
 
-// Delete Flashcard
+
+// ==================================================
+// DELETE FLASHCARD → RECYCLE BIN
+// ==================================================
+
 export const deleteFlashcard = async (req, res) => {
+
     try {
-        const flashcard = await Flashcard.findById(req.params.id);
+
+        const flashcard = await Flashcard.findById(
+            req.params.id
+        );
 
         if (!flashcard) {
+
             return res.status(404).json({
+
                 success: false,
+
                 message: "Flashcard not found",
+
             });
+
         }
 
-        if (flashcard.user.toString() !== req.user.id) {
+
+        // ------------------------------------------
+        // Check ownership
+        // ------------------------------------------
+
+        if (
+            flashcard.user.toString() !==
+            req.user.id
+        ) {
+
             return res.status(401).json({
+
                 success: false,
+
                 message: "Unauthorized",
+
             });
+
         }
 
-        await flashcard.deleteOne();
+
+        // ------------------------------------------
+        // Move to Recycle Bin
+        // ------------------------------------------
+
+        flashcard.deletedAt = new Date();
+
+        await flashcard.save();
+
 
         res.json({
+
             success: true,
-            message: "Flashcard deleted",
+
+            message: "Flashcard moved to recycle bin",
+
+            flashcard,
+
         });
+
     } catch (error) {
+
+        console.error(error);
+
         res.status(500).json({
+
             success: false,
+
             message: "Server Error",
+
         });
+
     }
+
 };

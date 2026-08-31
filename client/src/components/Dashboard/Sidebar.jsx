@@ -143,11 +143,14 @@ function Sidebar({
                 </NavLink>
 
                 <NavLink
-                    to="/chat-history"
-                    className={({ isActive }) => isActive ? "active-link" : ""}>
+                    to="/recycle-bin"
+                    className={({ isActive }) =>
+                        isActive ? "active-link" : ""
+                    }
+                >
                     <li>
-                        <span>💬</span>
-                        {!collapsed && <span>Chat History</span>}
+                        <span>🗑️</span>
+                        {!collapsed && <span>Recycle Bin</span>}
                     </li>
                 </NavLink>
 

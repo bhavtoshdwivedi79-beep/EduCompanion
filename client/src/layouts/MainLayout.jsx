@@ -6,18 +6,19 @@ function MainLayout() {
     const location = useLocation();
 
     const dashboardRoutes = [
-    "/dashboard",
-    "/chat",
-    "/notes",
-    "/quiz",
-    "/saved-notes",
-    "/quiz-history",
-    "/chat-history",
-    "/study-planner",
-    "/flashcards",
-    "/flashcard-history",
-    "/profile",
-];
+        "/dashboard",
+        "/chat",
+        "/notes",
+        "/quiz",
+        "/saved-notes",
+        "/quiz-history",
+        "/chat-history",
+        "/study-planner",
+        "/flashcards",
+        "/flashcard-history",
+        "/profile",
+        "/recycle-bin",
+    ];
 
     const hideNavbar = dashboardRoutes.includes(location.pathname);
 
