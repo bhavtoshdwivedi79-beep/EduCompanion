@@ -7,6 +7,7 @@ import {
     getFlashcards,
     deleteFlashcard,
 } from "../services/flashcardService";
+import toast from "react-hot-toast";
 
 function FlashcardHistory() {
 
@@ -16,6 +17,7 @@ function FlashcardHistory() {
     const [selectedHistory, setSelectedHistory] = useState(null);
 
     const [loading, setLoading] = useState(true);
+    const [confirmDelete, setConfirmDelete] = useState(null);
 
     const fetchHistory = async () => {
 
@@ -49,11 +51,24 @@ function FlashcardHistory() {
 
     const handleDelete = async (id) => {
 
-        if (!window.confirm("Delete this Flashcard Set?")) return;
+        try {
 
-        await deleteFlashcard(id);
+            await deleteFlashcard(id);
 
-        fetchHistory();
+            toast.success("🗑️ Flashcard moved to Recycle Bin");
+
+            setConfirmDelete(null);
+
+            await fetchHistory();
+
+        } catch (err) {
+
+            toast.error(
+                err.response?.data?.message ||
+                "Failed to move flashcard to Recycle Bin"
+            );
+
+        }
 
     };
 
@@ -143,11 +158,9 @@ function FlashcardHistory() {
 
                                 <button
                                     className="delete-btn"
-                                    onClick={() => handleDelete(item._id)}
+                                    onClick={() => setConfirmDelete(item)}
                                 >
-
                                     Delete
-
                                 </button>
 
                             </div>
@@ -171,6 +184,59 @@ function FlashcardHistory() {
                 }}
                 flashcardSet={selectedHistory}
             />
+
+            {confirmDelete && (
+
+                <div className="delete-confirm-overlay">
+
+                    <div className="delete-confirm-modal">
+
+                        <div className="delete-confirm-icon">
+                            🗑️
+                        </div>
+
+                        <h2>
+                            Move to Recycle Bin?
+                        </h2>
+
+                        <p>
+                            Are you sure you want to delete{" "}
+                            <strong>
+                                "{confirmDelete.topic}"
+                            </strong>
+                            ?
+                        </p>
+
+                        <span className="delete-confirm-info">
+                            This flashcard set will be kept in the Recycle Bin
+                            for 30 days before being permanently deleted.
+                        </span>
+
+                        <div className="delete-confirm-actions">
+
+                            <button
+                                className="cancel-delete-btn"
+                                onClick={() => setConfirmDelete(null)}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                className="confirm-delete-btn"
+                                onClick={() =>
+                                    handleDelete(confirmDelete._id)
+                                }
+                            >
+                                🗑️ Move to Recycle Bin
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            )}
 
         </div>
 

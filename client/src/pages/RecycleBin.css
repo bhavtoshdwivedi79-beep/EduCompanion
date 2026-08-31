@@ -104,7 +104,7 @@
 }
 
 
-.recycle-info > span {
+.recycle-info>span {
 
     font-size: 28px;
 
@@ -190,11 +190,9 @@
     height: 4px;
 
     background:
-        linear-gradient(
-            90deg,
+        linear-gradient(90deg,
             #2563eb,
-            #60a5fa
-        );
+            #60a5fa);
 
 }
 
@@ -328,6 +326,45 @@
     color: var(--text);
 
     font-size: 14px;
+
+}
+
+/* ==================================================
+   DAYS REMAINING
+================================================== */
+
+.days-remaining {
+
+    display: inline-block;
+
+    width: fit-content;
+
+    padding: 6px 10px;
+
+    margin-top: 4px;
+
+    border-radius: 8px;
+
+    background: rgba(37, 99, 235, 0.10);
+
+    color: var(--primary);
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+}
+
+
+/* ==================================================
+   URGENT - 3 DAYS OR LESS
+================================================== */
+
+.days-remaining.urgent {
+
+    background: rgba(239, 68, 68, 0.12);
+
+    color: #ef4444;
 
 }
 
@@ -553,6 +590,225 @@
 
 
     .recycle-actions {
+
+        grid-template-columns: 1fr;
+
+    }
+
+}
+
+/* ==================================================
+   DELETE CONFIRMATION MODAL
+================================================== */
+
+.delete-modal-overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 20px;
+
+    background: rgba(0, 0, 0, .55);
+
+    backdrop-filter: blur(6px);
+
+    z-index: 9999;
+
+}
+
+
+.delete-modal {
+
+    width: 100%;
+
+    max-width: 430px;
+
+    padding: 30px;
+
+    background: var(--card);
+
+    color: var(--text);
+
+    border: 1px solid var(--border);
+
+    border-radius: 20px;
+
+    text-align: center;
+
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, .3);
+
+    animation: deleteModalIn .2s ease;
+
+}
+
+
+@keyframes deleteModalIn {
+
+    from {
+
+        opacity: 0;
+
+        transform: scale(.92);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: scale(1);
+
+    }
+
+}
+
+
+.delete-modal-icon {
+
+    width: 65px;
+
+    height: 65px;
+
+    margin: 0 auto 18px;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    border-radius: 50%;
+
+    background: rgba(239, 68, 68, .12);
+
+    font-size: 30px;
+
+}
+
+
+.delete-modal h2 {
+
+    margin: 0 0 12px;
+
+    color: var(--text);
+
+    font-size: 1.5rem;
+
+}
+
+
+.delete-modal p {
+
+    margin: 0 auto 12px;
+
+    max-width: 350px;
+
+    color: var(--text-secondary);
+
+    font-size: 14px;
+
+    line-height: 1.6;
+
+}
+
+
+.delete-modal p strong {
+
+    color: var(--text);
+
+}
+
+
+.delete-warning {
+
+    display: block;
+
+    margin-bottom: 25px;
+
+    color: #ef4444;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+}
+
+
+.delete-modal-actions {
+
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 10px;
+
+}
+
+
+.delete-modal-actions button {
+
+    padding: 12px 15px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    font-size: 13px;
+
+    font-weight: 650;
+
+    cursor: pointer;
+
+    transition: .25s;
+
+}
+
+
+.cancel-delete-btn {
+
+    background: var(--secondary);
+
+    color: var(--text);
+
+    border: 1px solid var(--border) !important;
+
+}
+
+
+.confirm-delete-btn {
+
+    background: #ef4444;
+
+    color: white;
+
+}
+
+
+.delete-modal-actions button:hover {
+
+    transform: translateY(-2px);
+
+}
+
+
+@media (max-width: 500px) {
+
+    .delete-modal {
+
+        padding: 25px 20px;
+
+    }
+
+
+    .delete-modal-actions {
 
         grid-template-columns: 1fr;
 

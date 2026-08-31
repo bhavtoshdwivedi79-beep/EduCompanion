@@ -73,7 +73,7 @@ function Flashcards() {
 
         } catch (err) {
 
-            console.log(err);
+            toast.error("Failed to generate flashcards");
 
             setError("Failed to generate flashcards.");
 
@@ -145,7 +145,7 @@ function Flashcards() {
 
         } catch (err) {
 
-            console.log(err);
+            toast.error("Failed to load flashcards");
 
         }
 

@@ -4,12 +4,19 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
+import {
+    getRecycleBin,
+    restoreRecycleBinItem,
+    permanentlyDeleteRecycleBinItem,
+} from "../services/recycleBinService";
+
 function RecycleBin() {
 
     const navigate = useNavigate();
 
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [deleteItem, setDeleteItem] = useState(null);
 
 
     // ==================================================
@@ -69,6 +76,77 @@ function RecycleBin() {
 
     };
 
+    // ==================================================
+    // RESTORE ITEM
+    // ==================================================
+
+    const handleRestore = async (type, id) => {
+
+        try {
+
+            await restoreRecycleBinItem(type, id);
+
+            toast.success(
+                `♻️ ${type} restored successfully`
+            );
+
+            await fetchRecycleBin();
+
+        } catch (error) {
+
+            console.error(
+                "Restore Error:",
+                error
+            );
+
+            toast.error(
+                error.response?.data?.message ||
+                "Failed to restore item"
+            );
+
+        }
+
+    };
+
+    // ==================================================
+    // PERMANENTLY DELETE ITEM
+    // ==================================================
+
+    const handlePermanentDelete = async () => {
+
+        if (!deleteItem) return;
+
+        try {
+
+            await permanentlyDeleteRecycleBinItem(
+                deleteItem.type,
+                deleteItem.id
+            );
+
+            toast.success(
+                `❌ ${deleteItem.type} permanently deleted`
+            );
+
+            setDeleteItem(null);
+
+            await fetchRecycleBin();
+
+        } catch (error) {
+
+            console.error(
+                "Permanent Delete Error:",
+                error
+            );
+
+            toast.error(
+                error.response?.data?.message ||
+                "Failed to permanently delete item"
+            );
+
+        }
+
+    };
+
 
     // ==================================================
     // LOAD ON PAGE OPEN
@@ -97,6 +175,32 @@ function RecycleBin() {
 
     };
 
+    // ==================================================
+    // DAYS REMAINING
+    // ==================================================
+
+    const getDaysRemaining = (deletedAt) => {
+
+        const deletedDate = new Date(deletedAt);
+
+        const expiryDate = new Date(deletedDate);
+
+        expiryDate.setDate(
+            expiryDate.getDate() + 30
+        );
+
+        const now = new Date();
+
+        const difference =
+            expiryDate.getTime() - now.getTime();
+
+        const daysRemaining = Math.ceil(
+            difference / (1000 * 60 * 60 * 24)
+        );
+
+        return Math.max(0, daysRemaining);
+
+    };
 
     // ==================================================
     // EMPTY / LOADING
@@ -295,12 +399,20 @@ function RecycleBin() {
                                 🗓️ Deleted on:
 
                                 <strong>
-
-                                    {formatDate(
-                                        item.deletedAt
-                                    )}
-
+                                    {formatDate(item.deletedAt)}
                                 </strong>
+
+                                <span
+                                    className={
+                                        getDaysRemaining(item.deletedAt) <= 3
+                                            ? "days-remaining urgent"
+                                            : "days-remaining"
+                                    }
+                                >
+                                    {getDaysRemaining(item.deletedAt) <= 3
+                                        ? `⚠️ ${getDaysRemaining(item.deletedAt)} days remaining`
+                                        : `⏳ ${getDaysRemaining(item.deletedAt)} days remaining`}
+                                </span>
 
                             </div>
 
@@ -311,14 +423,28 @@ function RecycleBin() {
 
                                 <button
                                     className="restore-btn"
-                                    disabled
+                                    onClick={() =>
+                                        handleRestore(
+                                            item.type,
+                                            item._id
+                                        )
+                                    }
                                 >
                                     ♻️ Restore
                                 </button>
 
                                 <button
                                     className="permanent-delete-btn"
-                                    disabled
+                                    onClick={() =>
+                                        setDeleteItem({
+                                            type: item.type,
+                                            id: item._id,
+                                            title:
+                                                item.topic ||
+                                                item.title ||
+                                                "Untitled Item"
+                                        })
+                                    }
                                 >
                                     ❌ Delete Permanently
                                 </button>
@@ -329,6 +455,53 @@ function RecycleBin() {
                         </div>
 
                     ))}
+
+                </div>
+
+            )}
+
+            {deleteItem && (
+
+                <div className="delete-modal-overlay">
+
+                    <div className="delete-modal">
+
+                        <div className="delete-modal-icon">
+                            🗑️
+                        </div>
+
+                        <h2>
+                            Permanently Delete?
+                        </h2>
+
+                        <p>
+                            Are you sure you want to permanently delete
+                            <strong> "{deleteItem.title}" </strong>?
+                        </p>
+
+                        <span className="delete-warning">
+                            This action cannot be undone.
+                        </span>
+
+                        <div className="delete-modal-actions">
+
+                            <button
+                                className="cancel-delete-btn"
+                                onClick={() => setDeleteItem(null)}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                className="confirm-delete-btn"
+                                onClick={handlePermanentDelete}
+                            >
+                                Delete Permanently
+                            </button>
+
+                        </div>
+
+                    </div>
 
                 </div>
 

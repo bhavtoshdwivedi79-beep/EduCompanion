@@ -142,17 +142,6 @@ function Sidebar({
                     </li>
                 </NavLink>
 
-                <NavLink
-                    to="/recycle-bin"
-                    className={({ isActive }) =>
-                        isActive ? "active-link" : ""
-                    }
-                >
-                    <li>
-                        <span>🗑️</span>
-                        {!collapsed && <span>Recycle Bin</span>}
-                    </li>
-                </NavLink>
 
                 <NavLink to="/quiz-history" className={({ isActive }) => isActive ? "active-link" : ""}>
                     <li>
@@ -174,6 +163,18 @@ function Sidebar({
                                 Flashcard History
                             </span>
                         }
+                    </li>
+                </NavLink>
+                
+                <NavLink
+                    to="/recycle-bin"
+                    className={({ isActive }) =>
+                        isActive ? "active-link" : ""
+                    }
+                >
+                    <li>
+                        <span>🗑️</span>
+                        {!collapsed && <span>Recycle Bin</span>}
                     </li>
                 </NavLink>
 
