@@ -17,6 +17,7 @@ function RecycleBin() {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [deleteItem, setDeleteItem] = useState(null);
+    const [actionLoading, setActionLoading] = useState(false);
 
 
     // ==================================================
@@ -27,36 +28,13 @@ function RecycleBin() {
 
         try {
 
-            const token = localStorage.getItem("token");
+            setLoading(true);
 
-            const response = await fetch(
-                "http://localhost:5000/api/recycle-bin",
-                {
-                    method: "GET",
-
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-
-
-            const data = await response.json();
-
-
-            if (!response.ok) {
-
-                throw new Error(
-                    data.message || "Failed to fetch recycle bin"
-                );
-
-            }
-
+            const data = await getRecycleBin();
 
             setItems(data.items || []);
 
-        }
-        catch (error) {
+        } catch (error) {
 
             console.error(
                 "Recycle Bin Error:",
@@ -64,17 +42,18 @@ function RecycleBin() {
             );
 
             toast.error(
+                error.response?.data?.message ||
                 "Failed to load recycle bin"
             );
 
-        }
-        finally {
+        } finally {
 
             setLoading(false);
 
         }
 
     };
+
 
     // ==================================================
     // RESTORE ITEM
@@ -83,6 +62,8 @@ function RecycleBin() {
     const handleRestore = async (type, id) => {
 
         try {
+
+            setActionLoading(true);
 
             await restoreRecycleBinItem(type, id);
 
@@ -104,12 +85,17 @@ function RecycleBin() {
                 "Failed to restore item"
             );
 
+        } finally {
+
+            setActionLoading(false);
+
         }
 
     };
 
+
     // ==================================================
-    // PERMANENTLY DELETE ITEM
+    // PERMANENT DELETE
     // ==================================================
 
     const handlePermanentDelete = async () => {
@@ -117,6 +103,8 @@ function RecycleBin() {
         if (!deleteItem) return;
 
         try {
+
+            setActionLoading(true);
 
             await permanentlyDeleteRecycleBinItem(
                 deleteItem.type,
@@ -142,6 +130,10 @@ function RecycleBin() {
                 error.response?.data?.message ||
                 "Failed to permanently delete item"
             );
+
+        } finally {
+
+            setActionLoading(false);
 
         }
 
@@ -175,6 +167,7 @@ function RecycleBin() {
 
     };
 
+
     // ==================================================
     // DAYS REMAINING
     // ==================================================
@@ -195,15 +188,44 @@ function RecycleBin() {
             expiryDate.getTime() - now.getTime();
 
         const daysRemaining = Math.ceil(
-            difference / (1000 * 60 * 60 * 24)
+            difference /
+            (1000 * 60 * 60 * 24)
         );
 
         return Math.max(0, daysRemaining);
 
     };
 
+
     // ==================================================
-    // EMPTY / LOADING
+    // ITEM ICON
+    // ==================================================
+
+    const getItemIcon = (type) => {
+
+        if (type === "note") {
+            return "📝";
+        }
+
+        if (type === "quiz") {
+            return "❓";
+        }
+
+        if (type === "flashcard") {
+            return "🃏";
+        }
+
+        if (type === "study-plan") {
+            return "📅";
+        }
+
+        return "📄";
+
+    };
+
+
+    // ==================================================
+    // LOADING
     // ==================================================
 
     if (loading) {
@@ -269,7 +291,9 @@ function RecycleBin() {
 
             <div className="recycle-info">
 
-                <span>⏳</span>
+                <span>
+                    ⏳
+                </span>
 
                 <div>
 
@@ -320,186 +344,284 @@ function RecycleBin() {
 
             ) : (
 
-
                 /* ==================================================
                    ITEMS
                 ================================================== */
 
                 <div className="recycle-grid">
 
-                    {items.map((item) => (
+                    {items.map((item) => {
 
-                        <div
-                            className="recycle-card"
-                            key={`${item.type}-${item._id}`}
-                        >
+                        const daysRemaining =
+                            getDaysRemaining(
+                                item.deletedAt
+                            );
 
+                        return (
 
-                            {/* TYPE */}
-
-                            <div className="recycle-card-top">
-
-                                <span className="recycle-type">
-
-                                    {item.type === "note" && "📝"}
-
-                                    {item.type === "quiz" && "❓"}
-
-                                    {item.type === "flashcard" && "🃏"}
-
-                                    {" "}
-
-                                    {item.type}
-
-                                </span>
+                            <div
+                                className="recycle-card"
+                                key={`${item.type}-${item._id}`}
+                            >
 
 
-                                <span className="deleted-badge">
+                                {/* TYPE */}
 
-                                    Deleted
+                                <div className="recycle-card-top">
 
-                                </span>
+                                    <span className="recycle-type">
+
+                                        {getItemIcon(item.type)}
+
+                                        {" "}
+
+                                        {item.type}
+
+                                    </span>
+
+
+                                    <span className="deleted-badge">
+
+                                        Deleted
+
+                                    </span>
+
+                                </div>
+
+
+                                {/* TITLE */}
+
+                                <h2>
+
+                                    {item.topic ||
+                                        item.title ||
+                                        "Untitled Item"}
+
+                                </h2>
+
+
+                                {/* NOTE PREVIEW */}
+
+                                {item.notes && (
+
+                                    <p className="recycle-preview">
+
+                                        {item.notes.length > 180
+
+                                            ? item.notes.substring(
+                                                0,
+                                                180
+                                            ) + "..."
+
+                                            : item.notes}
+
+                                    </p>
+
+                                )}
+
+
+                                {/* QUIZ PREVIEW */}
+
+                                {item.questions &&
+                                    !item.notes && (
+
+                                        <p className="recycle-preview">
+
+                                            {item.questions.length} Questions
+
+                                        </p>
+
+                                    )}
+
+
+                                {/* FLASHCARD PREVIEW */}
+
+                                {item.flashcards &&
+                                    !item.notes &&
+                                    !item.questions && (
+
+                                        <p className="recycle-preview">
+
+                                            {item.flashcards.length} Flashcards
+
+                                        </p>
+
+                                    )}
+
+
+                                {/* DELETE DATE */}
+
+                                <div className="recycle-date">
+
+                                    <span>
+                                        🗓️ Deleted on:
+                                    </span>
+
+                                    <strong>
+
+                                        {formatDate(
+                                            item.deletedAt
+                                        )}
+
+                                    </strong>
+
+
+                                    <span
+                                        className={
+                                            daysRemaining <= 3
+                                                ? "days-remaining urgent"
+                                                : "days-remaining"
+                                        }
+                                    >
+
+                                        {daysRemaining <= 3
+
+                                            ? `⚠️ ${daysRemaining} days remaining`
+
+                                            : `⏳ ${daysRemaining} days remaining`
+
+                                        }
+
+                                    </span>
+
+                                </div>
+
+
+                                {/* ACTIONS */}
+
+                                <div className="recycle-actions">
+
+                                    <button
+                                        className="restore-btn"
+                                        onClick={() =>
+                                            handleRestore(
+                                                item.type,
+                                                item._id
+                                            )
+                                        }
+                                        disabled={actionLoading}
+                                    >
+                                        ♻️ Restore
+                                    </button>
+
+
+                                    <button
+                                        className="permanent-delete-btn"
+                                        onClick={() =>
+                                            setDeleteItem({
+                                                type: item.type,
+                                                id: item._id,
+                                                title:
+                                                    item.topic ||
+                                                    item.title ||
+                                                    "Untitled Item"
+                                            })
+                                        }
+                                        disabled={actionLoading}
+                                    >
+                                        ❌ Delete Permanently
+                                    </button>
+
+                                </div>
+
 
                             </div>
 
+                        );
 
-                            {/* TITLE */}
-
-                            <h2>
-
-                                {item.topic ||
-                                    item.title ||
-                                    "Untitled Item"}
-
-                            </h2>
-
-
-                            {/* PREVIEW */}
-
-                            {item.notes && (
-
-                                <p className="recycle-preview">
-
-                                    {item.notes.length > 180
-                                        ? item.notes.substring(
-                                            0,
-                                            180
-                                        ) + "..."
-                                        : item.notes}
-
-                                </p>
-
-                            )}
-
-
-                            {/* DELETE DATE */}
-
-                            <div className="recycle-date">
-
-                                🗓️ Deleted on:
-
-                                <strong>
-                                    {formatDate(item.deletedAt)}
-                                </strong>
-
-                                <span
-                                    className={
-                                        getDaysRemaining(item.deletedAt) <= 3
-                                            ? "days-remaining urgent"
-                                            : "days-remaining"
-                                    }
-                                >
-                                    {getDaysRemaining(item.deletedAt) <= 3
-                                        ? `⚠️ ${getDaysRemaining(item.deletedAt)} days remaining`
-                                        : `⏳ ${getDaysRemaining(item.deletedAt)} days remaining`}
-                                </span>
-
-                            </div>
-
-
-                            {/* ACTIONS */}
-
-                            <div className="recycle-actions">
-
-                                <button
-                                    className="restore-btn"
-                                    onClick={() =>
-                                        handleRestore(
-                                            item.type,
-                                            item._id
-                                        )
-                                    }
-                                >
-                                    ♻️ Restore
-                                </button>
-
-                                <button
-                                    className="permanent-delete-btn"
-                                    onClick={() =>
-                                        setDeleteItem({
-                                            type: item.type,
-                                            id: item._id,
-                                            title:
-                                                item.topic ||
-                                                item.title ||
-                                                "Untitled Item"
-                                        })
-                                    }
-                                >
-                                    ❌ Delete Permanently
-                                </button>
-
-                            </div>
-
-
-                        </div>
-
-                    ))}
+                    })}
 
                 </div>
 
             )}
 
+
+            {/* ==================================================
+                PERMANENT DELETE MODAL
+            ================================================== */}
+
             {deleteItem && (
 
-                <div className="delete-modal-overlay">
+                <div
+                    className="delete-modal-overlay"
+                    onClick={() => {
 
-                    <div className="delete-modal">
+                        if (!actionLoading) {
+                            setDeleteItem(null);
+                        }
+
+                    }}
+                >
+
+                    <div
+                        className="delete-modal"
+                        onClick={(e) =>
+                            e.stopPropagation()
+                        }
+                    >
 
                         <div className="delete-modal-icon">
+
                             🗑️
+
                         </div>
 
+
                         <h2>
+
                             Permanently Delete?
+
                         </h2>
 
+
                         <p>
-                            Are you sure you want to permanently delete
-                            <strong> "{deleteItem.title}" </strong>?
+
+                            Are you sure you want to permanently
+                            delete
+
+                            <strong>
+                                {" "}
+                                "{deleteItem.title}"
+                            </strong>
+                            ?
+
                         </p>
 
+
                         <span className="delete-warning">
-                            This action cannot be undone.
+
+                            ⚠️ This action cannot be undone.
+
                         </span>
+
 
                         <div className="delete-modal-actions">
 
                             <button
                                 className="cancel-delete-btn"
-                                onClick={() => setDeleteItem(null)}
+                                onClick={() =>
+                                    setDeleteItem(null)
+                                }
+                                disabled={actionLoading}
                             >
                                 Cancel
                             </button>
 
+
                             <button
                                 className="confirm-delete-btn"
                                 onClick={handlePermanentDelete}
+                                disabled={actionLoading}
                             >
-                                Delete Permanently
+
+                                {actionLoading
+                                    ? "Deleting..."
+                                    : "Delete Permanently"}
+
                             </button>
 
                         </div>
+
 
                     </div>
 
@@ -512,6 +634,5 @@ function RecycleBin() {
     );
 
 }
-
 
 export default RecycleBin;

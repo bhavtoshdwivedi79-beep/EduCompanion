@@ -64,6 +64,7 @@ export const getTasks = async (req, res) => {
     try {
         const tasks = await StudyPlan.find({
             user: req.user._id,
+            deletedAt: null,
         }).sort({
             studyDate: 1,
             studyTime: 1,
@@ -120,32 +121,63 @@ export const toggleTask = async (req, res) => {
 };
 
 
-// Delete Task
+// Delete Task → Recycle Bin
 export const deleteTask = async (req, res) => {
+
     try {
-        const task = await StudyPlan.findOneAndDelete({
-            _id: req.params.id,
-            user: req.user._id,
-        });
+
+        const task = await StudyPlan.findOneAndUpdate(
+
+            {
+                _id: req.params.id,
+                user: req.user._id,
+                deletedAt: null,
+            },
+
+            {
+                deletedAt: new Date(),
+            },
+
+            {
+                new: true,
+            }
+
+        );
 
         if (!task) {
+
             return res.status(404).json({
+
                 success: false,
+
                 message: "Task not found.",
+
             });
+
         }
 
         res.status(200).json({
+
             success: true,
-            message: "Task deleted successfully.",
+
+            message: "Study task moved to recycle bin.",
+
+            task,
+
         });
 
     } catch (error) {
+
         console.log(error);
 
         res.status(500).json({
+
             success: false,
-            message: "Failed to delete task.",
+
+            message: "Failed to move task to recycle bin.",
+
         });
+
     }
+
 };

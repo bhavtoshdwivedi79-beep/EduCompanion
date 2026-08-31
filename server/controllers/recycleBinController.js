@@ -1,7 +1,7 @@
 import SavedNote from "../models/SavedNote.js";
 import Quiz from "../models/Quiz.js";
 import Flashcard from "../models/Flashcard.js";
-
+import StudyPlan from "../models/StudyPlan.js";
 
 // ==================================================
 // GET RECYCLE BIN
@@ -42,6 +42,15 @@ export const getRecycleBin = async (req, res) => {
             deletedAt: { $ne: null }
         }).lean();
 
+        // ------------------------------------------
+        // Get deleted study planner tasks
+        // ------------------------------------------
+
+        const studyPlans = await StudyPlan.find({
+            user: userId,
+            deletedAt: { $ne: null }
+        }).lean();
+
 
         // ------------------------------------------
         // Add item type
@@ -64,6 +73,11 @@ export const getRecycleBin = async (req, res) => {
             type: "flashcard"
         }));
 
+        const formattedStudyPlans = studyPlans.map(item => ({
+            ...item,
+            type: "study"
+        }));
+
 
         // ------------------------------------------
         // Combine everything
@@ -72,7 +86,8 @@ export const getRecycleBin = async (req, res) => {
         const recycleBin = [
             ...formattedNotes,
             ...formattedQuizzes,
-            ...formattedFlashcards
+            ...formattedFlashcards,
+            ...formattedStudyPlans
         ];
 
 
@@ -150,6 +165,10 @@ export const restoreRecycleBinItem = async (req, res) => {
         } else if (type === "flashcard") {
 
             Model = Flashcard;
+
+        } else if (type === "study") {
+
+            Model = StudyPlan;
 
         } else {
 
@@ -265,6 +284,10 @@ export const permanentlyDeleteRecycleBinItem =
             } else if (type === "flashcard") {
 
                 Model = Flashcard;
+
+            } else if (type === "study") {
+
+                Model = StudyPlan;
 
             } else {
 

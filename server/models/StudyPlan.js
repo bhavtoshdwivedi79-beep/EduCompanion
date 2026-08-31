@@ -53,9 +53,29 @@ const studyPlanSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+
+        // ♻️ Recycle Bin
+        deletedAt: {
+            type: Date,
+            default: null,
+        },
     },
     {
         timestamps: true,
+    }
+);
+
+// Automatically permanently delete the task
+// 30 days after it enters the recycle bin.
+
+studyPlanSchema.index(
+    { deletedAt: 1 },
+    {
+        expireAfterSeconds: 30 * 24 * 60 * 60,
+
+        partialFilterExpression: {
+            deletedAt: { $type: "date" },
+        },
     }
 );
 

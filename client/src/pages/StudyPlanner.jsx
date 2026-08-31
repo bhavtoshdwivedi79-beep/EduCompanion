@@ -21,6 +21,11 @@ function StudyPlanner() {
     const navigate = useNavigate();
     const { addNotification } = useNotifications();
 
+
+    // ==================================================
+    // FETCH TASKS
+    // ==================================================
+
     const fetchTasks = async () => {
 
         try {
@@ -44,11 +49,21 @@ function StudyPlanner() {
 
     };
 
+
+    // ==================================================
+    // LOAD TASKS
+    // ==================================================
+
     useEffect(() => {
 
         fetchTasks();
 
     }, []);
+
+
+    // ==================================================
+    // HANDLE INPUT CHANGE
+    // ==================================================
 
     const handleChange = (e) => {
 
@@ -61,6 +76,11 @@ function StudyPlanner() {
         });
 
     };
+
+
+    // ==================================================
+    // ADD TASK
+    // ==================================================
 
     const handleSubmit = async (e) => {
 
@@ -106,6 +126,11 @@ function StudyPlanner() {
 
     };
 
+
+    // ==================================================
+    // TOGGLE TASK
+    // ==================================================
+
     const toggleTask = async (id) => {
 
         try {
@@ -136,6 +161,11 @@ function StudyPlanner() {
 
     };
 
+
+    // ==================================================
+    // DELETE TASK
+    // ==================================================
+
     const deleteTask = async (id) => {
 
         try {
@@ -153,6 +183,7 @@ function StudyPlanner() {
             );
 
             toast.success("🗑 Task deleted");
+
             addNotification("🗑 Study task deleted");
 
             fetchTasks();
@@ -165,43 +196,165 @@ function StudyPlanner() {
 
     };
 
-    const completedTasks = tasks.filter(task => task.completed).length;
+
+    // ==================================================
+    // GET LOCAL DATE
+    // ==================================================
+
+    const getLocalDate = (date) => {
+
+        const d = new Date(date);
+
+        return `${d.getFullYear()}-${String(
+            d.getMonth() + 1
+        ).padStart(2, "0")}-${String(
+            d.getDate()
+        ).padStart(2, "0")}`;
+
+    };
+
+
+    // ==================================================
+    // TODAY'S DATE
+    // ==================================================
+
+    const [today, setToday] = useState(
+        getLocalDate(new Date())
+    );
+
+
+    // ==================================================
+    // AUTOMATICALLY DETECT NEW DAY
+    // ==================================================
+
+    useEffect(() => {
+
+        const checkNewDay = () => {
+
+            const currentDate = getLocalDate(new Date());
+
+            setToday((previousDate) => {
+
+                if (previousDate !== currentDate) {
+
+                    return currentDate;
+
+                }
+
+                return previousDate;
+
+            });
+
+        };
+
+
+        // Check every minute
+
+        const interval = setInterval(
+            checkNewDay,
+            60 * 1000
+        );
+
+
+        return () => clearInterval(interval);
+
+    }, []);
+
+
+    // ==================================================
+    // TODAY'S TASKS
+    // ==================================================
+
+    const todayTasks = tasks.filter(
+
+        (task) =>
+            getLocalDate(task.studyDate) === today
+
+    );
+
+
+    // ==================================================
+    // TODAY'S COMPLETED TASKS
+    // ==================================================
+
+    const completedTasks = todayTasks.filter(
+
+        (task) => task.completed
+
+    ).length;
+
+
+    // ==================================================
+    // TODAY'S PROGRESS
+    // ==================================================
 
     const progress =
-        tasks.length === 0
+
+        todayTasks.length === 0
+
             ? 0
-            : Math.round((completedTasks / tasks.length) * 100);
+
+            : Math.round(
+                (completedTasks / todayTasks.length) * 100
+            );
+
+
+    // ==================================================
+    // UI
+    // ==================================================
 
     return (
 
         <div className="planner-page">
 
-            <h1>📅 Study Planner</h1>
+
+            {/* ==================================================
+                HEADER
+            ================================================== */}
+
+            <h1>
+                📅 Study Planner
+            </h1>
+
+
+            {/* ==================================================
+                TODAY'S PROGRESS
+            ================================================== */}
 
             <div className="planner-progress">
 
                 <div className="progress-info">
 
-                    <h3>Today's Progress</h3>
+                    <h3>
+                        Today's Progress
+                    </h3>
 
                     <span>
 
-                        {completedTasks} / {tasks.length} Tasks Completed
+                        {completedTasks} / {todayTasks.length} Tasks Completed
 
                     </span>
 
                 </div>
 
+
                 <div className="progress-bar">
 
                     <div
                         className="progress-fill"
-                        style={{ width: `${progress}%` }}
+                        style={{
+                            width: `${progress}%`
+                        }}
                     ></div>
 
                 </div>
 
             </div>
+
+
+            {/* ==================================================
+                ADD TASK FORM
+            ================================================== */}
 
             <form
                 className="planner-form"
@@ -214,7 +367,9 @@ function StudyPlanner() {
                     placeholder="Subject"
                     value={formData.subject}
                     onChange={handleChange}
+                    required
                 />
+
 
                 <input
                     type="text"
@@ -222,21 +377,27 @@ function StudyPlanner() {
                     placeholder="Topic"
                     value={formData.topic}
                     onChange={handleChange}
+                    required
                 />
+
 
                 <input
                     type="date"
                     name="studyDate"
                     value={formData.studyDate}
                     onChange={handleChange}
+                    required
                 />
+
 
                 <input
                     type="time"
                     name="studyTime"
                     value={formData.studyTime}
                     onChange={handleChange}
+                    required
                 />
+
 
                 <select
                     name="priority"
@@ -244,13 +405,20 @@ function StudyPlanner() {
                     onChange={handleChange}
                 >
 
-                    <option value="High">🔴 High Priority</option>
+                    <option value="High">
+                        🔴 High Priority
+                    </option>
 
-                    <option value="Medium">🟡 Medium Priority</option>
+                    <option value="Medium">
+                        🟡 Medium Priority
+                    </option>
 
-                    <option value="Low">🟢 Low Priority</option>
+                    <option value="Low">
+                        🟢 Low Priority
+                    </option>
 
                 </select>
+
 
                 <button type="submit">
 
@@ -260,108 +428,150 @@ function StudyPlanner() {
 
             </form>
 
+
+            {/* ==================================================
+                TASK LIST
+            ================================================== */}
+
             <div className="task-list">
 
-                {
+                {tasks.length === 0 ? (
 
-                    tasks.length === 0 ?
+                    <p className="empty">
 
-                        (
+                        No study tasks yet.
 
-                            <p className="empty">
+                    </p>
 
-                                No study tasks yet.
+                ) : (
 
-                            </p>
+                    tasks.map((task) => (
 
-                        )
+                        <div
+                            key={task._id}
+                            className={`task-card ${
+                                task.completed
+                                    ? "completed"
+                                    : ""
+                            }`}
+                        >
 
-                        :
 
-                        (
+                            {/* TASK INFORMATION */}
 
-                            tasks.map((task) => (
+                            <div>
 
-                                <div
-                                    key={task._id}
-                                    className={`task-card ${task.completed ? "completed" : ""}`}
-                                >
+                                <div className="task-header">
 
-                                    <div>
+                                    <h3>
+                                        {task.subject}
+                                    </h3>
 
-                                        <div className="task-header">
-
-                                            <h3>{task.subject}</h3>
-
-                                            <span
-                                                className={`priority ${task.priority.toLowerCase()}`}
-                                            >
-                                                {task.priority}
-                                            </span>
-
-                                        </div>
-
-                                        <p>{task.topic}</p>
-
-                                        <small>
-
-                                            📅 {new Date(task.studyDate).toLocaleDateString()}
-
-                                        </small>
-
-                                        <br />
-
-                                        <small>
-
-                                            🕒 {task.studyTime}
-
-                                        </small>
-
-                                    </div>
-
-                                    <div className="task-actions">
-
-                                        <button
-                                            onClick={() => toggleTask(task._id)}
-                                        >
-
-                                            {
-                                                task.completed
-                                                    ? "↩ Mark Pending"
-                                                    : "✔ Mark Complete"
-                                            }
-
-                                        </button>
-
-                                        <button
-                                            onClick={() =>
-                                                navigate("/notes", {
-                                                    state: {
-                                                        topic: task.topic,
-                                                    },
-                                                })
-                                            }
-                                        >
-                                            📝 Generate Notes
-                                        </button>
-
-                                        <button
-                                            onClick={() => deleteTask(task._id)}
-                                        >
-
-                                            🗑 Delete
-
-                                        </button>
-
-                                    </div>
+                                    <span
+                                        className={`priority ${task.priority.toLowerCase()}`}
+                                    >
+                                        {task.priority}
+                                    </span>
 
                                 </div>
 
-                            ))
 
-                        )
+                                <p>
+                                    {task.topic}
+                                </p>
 
-                }
+
+                                <small>
+
+                                    📅{" "}
+
+                                    {new Date(
+                                        task.studyDate
+                                    ).toLocaleDateString()}
+
+                                </small>
+
+
+                                <br />
+
+
+                                <small>
+
+                                    🕒 {task.studyTime}
+
+                                </small>
+
+                            </div>
+
+
+                            {/* TASK ACTIONS */}
+
+                            <div className="task-actions">
+
+
+                                {/* COMPLETE */}
+
+                                <button
+                                    onClick={() =>
+                                        toggleTask(
+                                            task._id
+                                        )
+                                    }
+                                >
+
+                                    {task.completed
+
+                                        ? "↩ Mark Pending"
+
+                                        : "✔ Mark Complete"
+
+                                    }
+
+                                </button>
+
+
+                                {/* GENERATE NOTES */}
+
+                                <button
+                                    onClick={() =>
+                                        navigate(
+                                            "/notes",
+                                            {
+                                                state: {
+                                                    topic: task.topic,
+                                                },
+                                            }
+                                        )
+                                    }
+                                >
+
+                                    📝 Generate Notes
+
+                                </button>
+
+
+                                {/* DELETE */}
+
+                                <button
+                                    onClick={() =>
+                                        deleteTask(
+                                            task._id
+                                        )
+                                    }
+                                >
+
+                                    🗑 Delete
+
+                                </button>
+
+
+                            </div>
+
+                        </div>
+
+                    ))
+
+                )}
 
             </div>
 
@@ -370,5 +580,6 @@ function StudyPlanner() {
     );
 
 }
+
 
 export default StudyPlanner;
