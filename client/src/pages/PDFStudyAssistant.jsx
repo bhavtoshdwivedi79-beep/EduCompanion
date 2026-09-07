@@ -5,6 +5,11 @@ import { useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import pdfMake from "pdfmake/build/pdfmake";
+import pdfFonts from "pdfmake/build/vfs_fonts";
+
+pdfMake.vfs = pdfFonts.vfs;
+
 import toast from "react-hot-toast";
 
 import {
@@ -131,6 +136,258 @@ function PDFStudyAssistant() {
         }
 
         return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+
+    };
+
+    /* ================= DOWNLOAD NOTES PDF ================= */
+
+    const handleDownloadNotes = () => {
+
+        if (!notes) {
+            toast.error("No notes available to download.");
+            return;
+        }
+
+        try {
+
+            const content = [];
+
+            const lines = notes.split("\n");
+
+            lines.forEach((line) => {
+
+                const trimmed = line.trim();
+
+                if (!trimmed) {
+                    content.push({
+                        text: " ",
+                        margin: [0, 3, 0, 3],
+                    });
+                    return;
+                }
+
+                /* H1 */
+                if (trimmed.startsWith("# ")) {
+
+                    content.push({
+                        text: trimmed.replace(/^# /, ""),
+                        style: "heading1",
+                        margin: [0, 8, 0, 5],
+                    });
+
+                    return;
+                }
+
+                /* H2 */
+                if (trimmed.startsWith("## ")) {
+
+                    content.push({
+                        text: trimmed.replace(/^## /, ""),
+                        style: "heading2",
+                        margin: [0, 7, 0, 4],
+                    });
+
+                    return;
+                }
+
+                /* H3 */
+                if (trimmed.startsWith("### ")) {
+
+                    content.push({
+                        text: trimmed.replace(/^### /, ""),
+                        style: "heading3",
+                        margin: [0, 6, 0, 3],
+                    });
+
+                    return;
+                }
+
+                /* Bullet */
+                if (
+                    trimmed.startsWith("- ") ||
+                    trimmed.startsWith("* ")
+                ) {
+
+                    content.push({
+                        text: trimmed.substring(2),
+                        style: "bullet",
+                        margin: [12, 2, 0, 2],
+                    });
+
+                    return;
+                }
+
+                /* Numbered list */
+                if (/^\d+\.\s/.test(trimmed)) {
+
+                    content.push({
+                        text: trimmed,
+                        style: "numbered",
+                        margin: [12, 2, 0, 2],
+                    });
+
+                    return;
+                }
+
+                /* Horizontal line */
+                if (
+                    trimmed === "---" ||
+                    trimmed === "***"
+                ) {
+
+                    content.push({
+                        canvas: [
+                            {
+                                type: "line",
+                                x1: 0,
+                                y1: 0,
+                                x2: 515,
+                                y2: 0,
+                                lineWidth: 1,
+                            },
+                        ],
+                        margin: [0, 8, 0, 8],
+                    });
+
+                    return;
+                }
+
+                /* Normal paragraph */
+
+                content.push({
+                    text: trimmed
+                        .replace(/\*\*(.*?)\*\*/g, "$1")
+                        .replace(/\*(.*?)\*/g, "$1")
+                        .replace(/`(.*?)`/g, "$1"),
+                    style: "paragraph",
+                    margin: [0, 2, 0, 4],
+                });
+
+            });
+
+
+            const documentDefinition = {
+
+                pageSize: "A4",
+
+                pageMargins: [45, 50, 45, 50],
+
+                content: [
+
+                    {
+                        text: "PDF Study Assistant",
+                        style: "title",
+                        alignment: "center",
+                        margin: [0, 0, 0, 5],
+                    },
+
+                    {
+                        text: "Study Notes",
+                        style: "subtitle",
+                        alignment: "center",
+                        margin: [0, 0, 0, 15],
+                    },
+
+                    {
+                        text: pdfFile
+                            ? `Source: ${pdfFile.name}`
+                            : "",
+                        style: "source",
+                        alignment: "center",
+                        margin: [0, 0, 0, 18],
+                    },
+
+                    ...content,
+
+                ],
+
+                styles: {
+
+                    title: {
+                        fontSize: 20,
+                        bold: true,
+                    },
+
+                    subtitle: {
+                        fontSize: 14,
+                        bold: true,
+                    },
+
+                    source: {
+                        fontSize: 9,
+                        italics: true,
+                    },
+
+                    heading1: {
+                        fontSize: 16,
+                        bold: true,
+                    },
+
+                    heading2: {
+                        fontSize: 14,
+                        bold: true,
+                    },
+
+                    heading3: {
+                        fontSize: 12,
+                        bold: true,
+                    },
+
+                    paragraph: {
+                        fontSize: 10,
+                        lineHeight: 1.35,
+                    },
+
+                    bullet: {
+                        fontSize: 10,
+                        lineHeight: 1.3,
+                    },
+
+                    numbered: {
+                        fontSize: 10,
+                        lineHeight: 1.3,
+                    },
+
+                },
+
+                defaultStyle: {
+                    fontSize: 10,
+                },
+
+            };
+
+
+            const fileName = pdfFile
+                ? pdfFile.name
+                    .replace(/\.pdf$/i, "")
+                    .replace(/\s+/g, "_")
+                    .substring(0, 80)
+                : "PDF_Study_Notes";
+
+
+            pdfMake
+                .createPdf(documentDefinition)
+                .download(`${fileName}_Study_Notes.pdf`);
+
+
+            toast.success("📥 Notes PDF downloaded!");
+
+            addNotification(
+                `📥 PDF notes downloaded from "${pdfFile?.name || "PDF"}"`
+            );
+
+        } catch (err) {
+
+            console.error(
+                "PDF Download Error:",
+                err
+            );
+
+            toast.error(
+                "Failed to download notes PDF."
+            );
+
+        }
 
     };
 
@@ -643,14 +900,25 @@ function PDFStudyAssistant() {
 
                         </div>
 
-                        <button
-                            className="clear-result-btn"
-                            onClick={() =>
-                                setNotes("")
-                            }
-                        >
-                            ✕
-                        </button>
+                        <div className="notes-header-actions">
+
+                            <button
+                                className="download-notes-btn"
+                                onClick={handleDownloadNotes}
+                            >
+                                📥 Download PDF
+                            </button>
+
+                            <button
+                                className="clear-result-btn"
+                                onClick={() =>
+                                    setNotes("")
+                                }
+                            >
+                                ✕
+                            </button>
+
+                        </div>
 
                     </div>
 
@@ -746,14 +1014,14 @@ function PDFStudyAssistant() {
                                     <p
                                         className={
                                             answers[index] ===
-                                            q.answer
+                                                q.answer
                                                 ? "pdf-answer-status correct"
                                                 : "pdf-answer-status wrong"
                                         }
                                     >
 
                                         {answers[index] ===
-                                        q.answer
+                                            q.answer
 
                                             ? "✅ Correct"
 
@@ -773,27 +1041,24 @@ function PDFStudyAssistant() {
                                                 key={optionIndex}
                                                 className={`
                                                     pdf-option-btn
-                                                    ${
-                                                        answers[index] ===
+                                                    ${answers[index] ===
                                                         option
-                                                            ? "selected"
-                                                            : ""
+                                                        ? "selected"
+                                                        : ""
                                                     }
-                                                    ${
-                                                        submitted &&
+                                                    ${submitted &&
                                                         option ===
                                                         q.answer
-                                                            ? "correct"
-                                                            : ""
+                                                        ? "correct"
+                                                        : ""
                                                     }
-                                                    ${
-                                                        submitted &&
+                                                    ${submitted &&
                                                         answers[index] ===
                                                         option &&
                                                         option !==
                                                         q.answer
-                                                            ? "wrong"
-                                                            : ""
+                                                        ? "wrong"
+                                                        : ""
                                                     }
                                                 `}
                                                 onClick={() =>

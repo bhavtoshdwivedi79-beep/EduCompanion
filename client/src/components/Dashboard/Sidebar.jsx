@@ -114,6 +114,16 @@ function Sidebar({
                 </NavLink>
 
                 <NavLink
+                    to="/pdf-study-assistant"
+                    className={({ isActive }) => isActive ? "active-link" : ""}
+                >
+                    <li>
+                        <span>📄</span>
+                        {!collapsed && <span>PDF Study Assistant</span>}
+                    </li>
+                </NavLink>
+
+                <NavLink
                     to="/flashcards"
                     className={({ isActive }) => isActive ? "active-link" : ""}
                 >
@@ -165,7 +175,7 @@ function Sidebar({
                         }
                     </li>
                 </NavLink>
-                
+
                 <NavLink
                     to="/recycle-bin"
                     className={({ isActive }) =>

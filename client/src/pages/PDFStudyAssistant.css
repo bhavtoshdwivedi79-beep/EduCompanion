@@ -307,7 +307,7 @@
     cursor: not-allowed;
 }
 
-.pdf-action-btn > span {
+.pdf-action-btn>span {
     font-size: 30px;
 }
 
@@ -658,7 +658,7 @@
     transition: width 0.25s ease;
 }
 
-.pdf-progress-container > span {
+.pdf-progress-container>span {
     display: block;
 
     margin-top: 7px;
@@ -1033,6 +1033,54 @@
 
     .selected-pdf {
         padding: 15px;
+    }
+
+}
+
+/* ================= NOTES HEADER ACTIONS ================= */
+
+.notes-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+/* ================= DOWNLOAD NOTES BUTTON ================= */
+
+.download-notes-btn {
+    border: none;
+    background: var(--primary);
+    color: #ffffff;
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.download-notes-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.download-notes-btn:active {
+    transform: translateY(0);
+}
+
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 600px) {
+
+    .notes-header-actions {
+        gap: 6px;
+    }
+
+    .download-notes-btn {
+        padding: 8px 10px;
+        font-size: 12px;
     }
 
 }
