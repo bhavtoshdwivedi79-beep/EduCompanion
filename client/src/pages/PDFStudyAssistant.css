@@ -86,7 +86,7 @@
 
     box-sizing: border-box;
 
-    background: var(--card);
+    background: var(--secondary);
 
     border: 2px dashed var(--border);
     border-radius: 22px;

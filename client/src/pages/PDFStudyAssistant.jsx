@@ -139,6 +139,736 @@ function PDFStudyAssistant() {
 
     };
 
+    /* ================= PDF CONTENT FORMATTER ================= */
+
+    const cleanPDFText = (text = "") => {
+        return text
+            .replace(/<br\s*\/?>/gi, "\n")
+            .replace(/&nbsp;/gi, " ")
+            .replace(/&amp;/gi, "&")
+            .replace(/&lt;/gi, "<")
+            .replace(/&gt;/gi, ">")
+            .trim();
+    };
+
+    /* ================= INLINE MARKDOWN ================= */
+
+    const parseInlineMarkdown = (text = "") => {
+
+        text = cleanPDFText(text);
+
+        if (!text) {
+            return "";
+        }
+
+        const parts = [];
+
+        /*
+         * Handles:
+         * **bold**
+         * __bold__
+         * *italic*
+         * _italic_
+         * `code`
+         */
+
+        const regex =
+            /(\*\*[\s\S]*?\*\*|__[\s\S]*?__|\*[\s\S]*?\*|_[\s\S]*?_|`[\s\S]*?`)/g;
+
+        let lastIndex = 0;
+
+        const matches = [...text.matchAll(regex)];
+
+        matches.forEach((match) => {
+
+            const index = match.index;
+
+            /* Normal text before Markdown */
+
+            if (index > lastIndex) {
+
+                const normalText =
+                    text.substring(
+                        lastIndex,
+                        index
+                    );
+
+                if (normalText) {
+                    parts.push(normalText);
+                }
+
+            }
+
+            const value = match[0];
+
+
+            /* ================= BOLD ================= */
+
+            if (
+                value.startsWith("**") &&
+                value.endsWith("**")
+            ) {
+
+                parts.push({
+
+                    text: value.slice(2, -2),
+
+                    bold: true,
+
+                });
+
+            }
+
+            else if (
+                value.startsWith("__") &&
+                value.endsWith("__")
+            ) {
+
+                parts.push({
+
+                    text: value.slice(2, -2),
+
+                    bold: true,
+
+                });
+
+            }
+
+
+            /* ================= ITALIC ================= */
+
+            else if (
+                value.startsWith("*") &&
+                value.endsWith("*")
+            ) {
+
+                parts.push({
+
+                    text: value.slice(1, -1),
+
+                    italics: true,
+
+                });
+
+            }
+
+            else if (
+                value.startsWith("_") &&
+                value.endsWith("_")
+            ) {
+
+                parts.push({
+
+                    text: value.slice(1, -1),
+
+                    italics: true,
+
+                });
+
+            }
+
+
+            /* ================= INLINE CODE ================= */
+
+            else if (
+                value.startsWith("`") &&
+                value.endsWith("`")
+            ) {
+
+                parts.push({
+
+                    text: value.slice(1, -1),
+
+                });
+
+            }
+
+
+            lastIndex =
+                index + value.length;
+
+        });
+
+
+        /* Remaining normal text */
+
+        if (lastIndex < text.length) {
+
+            const remaining =
+                text.substring(lastIndex);
+
+            if (remaining) {
+                parts.push(remaining);
+            }
+
+        }
+
+
+        /*
+         * Safety cleanup:
+         * If any Markdown markers somehow remain,
+         * remove them from the final PDF text.
+         */
+
+        return parts.map((part) => {
+
+            if (typeof part === "string") {
+
+                return part
+                    .replace(/\*\*(.*?)\*\*/g, "$1")
+                    .replace(/__(.*?)__/g, "$1")
+                    .replace(/\*(.*?)\*/g, "$1")
+                    .replace(/_(.*?)_/g, "$1")
+                    .replace(/`(.*?)`/g, "$1");
+
+            }
+
+            if (part?.text) {
+
+                return {
+                    ...part,
+                    text: String(part.text)
+                        .replace(/\*\*(.*?)\*\*/g, "$1")
+                        .replace(/__(.*?)__/g, "$1")
+                        .replace(/\*(.*?)\*/g, "$1")
+                        .replace(/_(.*?)_/g, "$1")
+                        .replace(/`(.*?)`/g, "$1"),
+                };
+
+            }
+
+            return part;
+
+        });
+
+    };
+
+
+    /* ================= TABLE HELPERS ================= */
+
+    const isMarkdownTableSeparator = (line = "") => {
+
+        const cells = line
+            .trim()
+            .replace(/^\|/, "")
+            .replace(/\|$/, "")
+            .split("|")
+            .map((cell) => cell.trim());
+
+        if (cells.length < 2) {
+            return false;
+        }
+
+        return cells.every((cell) =>
+            /^:?-{3,}:?$/.test(cell)
+        );
+
+    };
+
+
+    const splitMarkdownTableRow = (line = "") => {
+
+        let cleaned = line.trim();
+
+        if (cleaned.startsWith("|")) {
+            cleaned = cleaned.substring(1);
+        }
+
+        if (cleaned.endsWith("|")) {
+            cleaned = cleaned.substring(
+                0,
+                cleaned.length - 1
+            );
+        }
+
+        return cleaned
+            .split("|")
+            .map((cell) => cleanPDFText(cell));
+    };
+
+
+    /* ================= CREATE PDF TABLE ================= */
+
+    const createPDFTable = (
+        headerLine,
+        separatorLine,
+        bodyLines
+    ) => {
+
+        const headerCells =
+            splitMarkdownTableRow(headerLine);
+
+        const rows = bodyLines
+            .map(splitMarkdownTableRow)
+            .filter((row) => row.length > 0);
+
+
+        const columnCount =
+            Math.max(
+                headerCells.length,
+                ...rows.map((row) => row.length)
+            );
+
+
+        if (!columnCount || columnCount < 2) {
+            return null;
+        }
+
+
+        const normalizeRow = (row) => {
+
+            const normalized = [...row];
+
+            while (normalized.length < columnCount) {
+                normalized.push("");
+            }
+
+            return normalized.slice(0, columnCount);
+
+        };
+
+
+        const tableBody = [
+
+            normalizeRow(headerCells).map((cell) => ({
+                text: parseInlineMarkdown(cell),
+                bold: true,
+                fillColor: "#e8eef7",
+                margin: [5, 5, 5, 5],
+            })),
+
+            ...rows.map((row) =>
+                normalizeRow(row).map((cell) => ({
+                    text: parseInlineMarkdown(cell),
+                    margin: [5, 5, 5, 5],
+                }))
+            ),
+
+        ];
+
+
+        return {
+
+            table: {
+
+                headerRows: 1,
+
+                widths: Array(columnCount).fill("*"),
+
+                body: tableBody,
+
+            },
+
+            layout: {
+
+                hLineWidth: () => 0.7,
+
+                vLineWidth: () => 0.7,
+
+                hLineColor: () => "#b8c2cc",
+
+                vLineColor: () => "#b8c2cc",
+
+                paddingLeft: () => 5,
+
+                paddingRight: () => 5,
+
+                paddingTop: () => 5,
+
+                paddingBottom: () => 5,
+
+            },
+
+            margin: [0, 5, 0, 10],
+
+        };
+
+    };
+
+
+    /* ================= MARKDOWN → PDF ================= */
+
+    const convertMarkdownToPDF = (markdown = "") => {
+
+        const lines = markdown
+            .replace(/\r\n/g, "\n")
+            .replace(/\r/g, "\n")
+            .split("\n");
+
+        const content = [];
+
+        let i = 0;
+
+
+        while (i < lines.length) {
+
+            const originalLine = lines[i];
+
+            const line = originalLine.trim();
+
+
+            /* Empty line */
+
+            if (!line) {
+
+                content.push({
+                    text: " ",
+                    margin: [0, 2, 0, 2],
+                });
+
+                i++;
+                continue;
+
+            }
+
+
+            /* ================= CODE BLOCK ================= */
+
+            if (line.startsWith("```")) {
+
+                const codeLines = [];
+
+                i++;
+
+                while (
+                    i < lines.length &&
+                    !lines[i].trim().startsWith("```")
+                ) {
+
+                    codeLines.push(
+                        lines[i]
+                    );
+
+                    i++;
+
+                }
+
+                if (
+                    i < lines.length &&
+                    lines[i].trim().startsWith("```")
+                ) {
+                    i++;
+                }
+
+
+                content.push({
+
+                    text: codeLines.join("\n"),
+
+                    fontSize: 8.5,
+
+                    lineHeight: 1.2,
+
+                    background: "#f3f4f6",
+
+                    margin: [5, 5, 5, 10],
+
+                    preserveLeadingSpaces: true,
+
+                });
+
+                continue;
+
+            }
+
+
+            /* ================= TABLE ================= */
+
+            if (
+                line.includes("|") &&
+                i + 1 < lines.length &&
+                isMarkdownTableSeparator(
+                    lines[i + 1]
+                )
+            ) {
+
+                const headerLine = line;
+
+                const separatorLine =
+                    lines[i + 1];
+
+                const bodyLines = [];
+
+                i += 2;
+
+
+                while (
+                    i < lines.length &&
+                    lines[i].trim() &&
+                    lines[i].includes("|") &&
+                    !lines[i].trim().startsWith("# ")
+                ) {
+
+                    bodyLines.push(
+                        lines[i]
+                    );
+
+                    i++;
+
+                }
+
+
+                const table =
+                    createPDFTable(
+                        headerLine,
+                        separatorLine,
+                        bodyLines
+                    );
+
+
+                if (table) {
+
+                    content.push(table);
+
+                    continue;
+
+                }
+
+            }
+
+
+            /* ================= H1 ================= */
+
+            if (line.startsWith("# ")) {
+
+                content.push({
+
+                    text: parseInlineMarkdown(
+                        line.replace(/^#\s+/, "")
+                    ),
+
+                    style: "heading1",
+
+                    margin: [0, 10, 0, 5],
+
+                });
+
+                i++;
+
+                continue;
+
+            }
+
+
+            /* ================= H2 ================= */
+
+            if (line.startsWith("## ")) {
+
+                content.push({
+
+                    text: parseInlineMarkdown(
+                        line.replace(/^##\s+/, "")
+                    ),
+
+                    style: "heading2",
+
+                    margin: [0, 8, 0, 5],
+
+                });
+
+                i++;
+
+                continue;
+
+            }
+
+
+            /* ================= H3 ================= */
+
+            if (line.startsWith("### ")) {
+
+                content.push({
+
+                    text: parseInlineMarkdown(
+                        line.replace(/^###\s+/, "")
+                    ),
+
+                    style: "heading3",
+
+                    margin: [0, 7, 0, 4],
+
+                });
+
+                i++;
+
+                continue;
+
+            }
+
+
+            /* ================= HORIZONTAL LINE ================= */
+
+            if (
+                line === "---" ||
+                line === "***" ||
+                line === "___"
+            ) {
+
+                content.push({
+
+                    canvas: [
+                        {
+                            type: "line",
+
+                            x1: 0,
+                            y1: 0,
+
+                            x2: 515,
+                            y2: 0,
+
+                            lineWidth: 0.8,
+
+                        },
+                    ],
+
+                    margin: [0, 7, 0, 7],
+
+                });
+
+                i++;
+
+                continue;
+
+            }
+
+
+            /* ================= BULLET ================= */
+
+            if (
+                /^[-*+]\s+/.test(line)
+            ) {
+
+                const bulletText =
+                    line.replace(
+                        /^[-*+]\s+/,
+                        ""
+                    );
+
+                content.push({
+
+                    text: [
+                        {
+                            text: "• ",
+                            bold: true,
+                        },
+
+                        ...parseInlineMarkdown(
+                            bulletText
+                        ),
+
+                    ],
+
+                    style: "bullet",
+
+                    margin: [10, 2, 0, 3],
+
+                });
+
+                i++;
+
+                continue;
+
+            }
+
+
+            /* ================= NUMBERED LIST ================= */
+
+            if (
+                /^\d+\.\s+/.test(line)
+            ) {
+
+                const match =
+                    line.match(
+                        /^(\d+)\.\s+(.*)$/
+                    );
+
+                const number =
+                    match?.[1] || "";
+
+                const text =
+                    match?.[2] || "";
+
+
+                content.push({
+
+                    text: [
+
+                        {
+                            text: `${number}. `,
+                            bold: true,
+                        },
+
+                        ...parseInlineMarkdown(
+                            text
+                        ),
+
+                    ],
+
+                    style: "numbered",
+
+                    margin: [10, 2, 0, 3],
+
+                });
+
+                i++;
+
+                continue;
+
+            }
+
+
+            /* ================= BLOCKQUOTE ================= */
+
+            if (line.startsWith(">")) {
+
+                const quote =
+                    line
+                        .replace(/^>\s?/, "")
+                        .trim();
+
+
+                content.push({
+
+                    text: parseInlineMarkdown(
+                        quote
+                    ),
+
+                    italics: true,
+
+                    color: "#64748b",
+
+                    margin: [10, 4, 0, 6],
+
+                });
+
+                i++;
+
+                continue;
+
+            }
+
+
+            /* ================= NORMAL PARAGRAPH ================= */
+
+            content.push({
+
+                text: parseInlineMarkdown(line),
+
+                style: "paragraph",
+
+                margin: [0, 2, 0, 5],
+
+            });
+
+            i++;
+
+        }
+
+
+        return content;
+
+    };
+
     /* ================= DOWNLOAD NOTES PDF ================= */
 
     const handleDownloadNotes = () => {
@@ -150,121 +880,13 @@ function PDFStudyAssistant() {
 
         try {
 
-            const content = [];
+            /* ONLY CONTENT FORMATTING IS CHANGED */
 
-            const lines = notes.split("\n");
+            const content =
+                convertMarkdownToPDF(notes);
 
-            lines.forEach((line) => {
 
-                const trimmed = line.trim();
-
-                if (!trimmed) {
-                    content.push({
-                        text: " ",
-                        margin: [0, 3, 0, 3],
-                    });
-                    return;
-                }
-
-                /* H1 */
-                if (trimmed.startsWith("# ")) {
-
-                    content.push({
-                        text: trimmed.replace(/^# /, ""),
-                        style: "heading1",
-                        margin: [0, 8, 0, 5],
-                    });
-
-                    return;
-                }
-
-                /* H2 */
-                if (trimmed.startsWith("## ")) {
-
-                    content.push({
-                        text: trimmed.replace(/^## /, ""),
-                        style: "heading2",
-                        margin: [0, 7, 0, 4],
-                    });
-
-                    return;
-                }
-
-                /* H3 */
-                if (trimmed.startsWith("### ")) {
-
-                    content.push({
-                        text: trimmed.replace(/^### /, ""),
-                        style: "heading3",
-                        margin: [0, 6, 0, 3],
-                    });
-
-                    return;
-                }
-
-                /* Bullet */
-                if (
-                    trimmed.startsWith("- ") ||
-                    trimmed.startsWith("* ")
-                ) {
-
-                    content.push({
-                        text: trimmed.substring(2),
-                        style: "bullet",
-                        margin: [12, 2, 0, 2],
-                    });
-
-                    return;
-                }
-
-                /* Numbered list */
-                if (/^\d+\.\s/.test(trimmed)) {
-
-                    content.push({
-                        text: trimmed,
-                        style: "numbered",
-                        margin: [12, 2, 0, 2],
-                    });
-
-                    return;
-                }
-
-                /* Horizontal line */
-                if (
-                    trimmed === "---" ||
-                    trimmed === "***"
-                ) {
-
-                    content.push({
-                        canvas: [
-                            {
-                                type: "line",
-                                x1: 0,
-                                y1: 0,
-                                x2: 515,
-                                y2: 0,
-                                lineWidth: 1,
-                            },
-                        ],
-                        margin: [0, 8, 0, 8],
-                    });
-
-                    return;
-                }
-
-                /* Normal paragraph */
-
-                content.push({
-                    text: trimmed
-                        .replace(/\*\*(.*?)\*\*/g, "$1")
-                        .replace(/\*(.*?)\*/g, "$1")
-                        .replace(/`(.*?)`/g, "$1"),
-                    style: "paragraph",
-                    margin: [0, 2, 0, 4],
-                });
-
-            });
-
+            /* ================= DOCUMENT ================= */
 
             const documentDefinition = {
 
@@ -292,8 +914,11 @@ function PDFStudyAssistant() {
                         text: pdfFile
                             ? `Source: ${pdfFile.name}`
                             : "",
+
                         style: "source",
+
                         alignment: "center",
+
                         margin: [0, 0, 0, 18],
                     },
 
@@ -357,6 +982,8 @@ function PDFStudyAssistant() {
             };
 
 
+            /* ================= FILE NAME ================= */
+
             const fileName = pdfFile
                 ? pdfFile.name
                     .replace(/\.pdf$/i, "")
@@ -365,12 +992,20 @@ function PDFStudyAssistant() {
                 : "PDF_Study_Notes";
 
 
+            /* ================= DOWNLOAD ================= */
+
             pdfMake
                 .createPdf(documentDefinition)
-                .download(`${fileName}_Study_Notes.pdf`);
+                .download(
+                    `${fileName}_Study_Notes.pdf`
+                );
 
 
-            toast.success("📥 Notes PDF downloaded!");
+            /* ================= NOTIFICATIONS ================= */
+
+            toast.success(
+                "📥 Notes PDF downloaded!"
+            );
 
             addNotification(
                 `📥 PDF notes downloaded from "${pdfFile?.name || "PDF"}"`
