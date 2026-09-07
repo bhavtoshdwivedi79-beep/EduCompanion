@@ -8,7 +8,9 @@ import {
     askAI,
     generateNotes as generateNotesAI,
     generateQuizAI,
-    generateFlashcards
+    generateFlashcards,
+    generateNotesFromPDF,
+    generateQuizFromPDF
 } from "../services/geminiService.js";
 
 import {
@@ -427,6 +429,8 @@ export const chatWithAI = async (
 
                         );
 
+                    console.log("🤖 PDF AI RESPONSE:", pdfAnswer);
+                    console.log("🤖 PDF AI RESPONSE TYPE:", typeof pdfAnswer);
 
                     console.log(
                         "✅ Text PDF analyzed successfully"
@@ -499,13 +503,25 @@ export const chatWithAI = async (
 
                     pdfAnswer =
                         await analyzePDFImages(
-
                             pageImages,
-
                             message
-
                         );
 
+                    console.log(
+                        "🤖 SCANNED PDF AI RESPONSE:",
+                        pdfAnswer
+                    );
+
+                    console.log(
+                        "🤖 SCANNED PDF AI RESPONSE TYPE:",
+                        typeof pdfAnswer
+                    );
+
+                    if (!pdfAnswer) {
+                        throw new Error(
+                            "AI did not return an answer for the scanned PDF."
+                        );
+                    }
 
                     console.log(
                         "✅ Scanned PDF analyzed successfully"
@@ -1104,9 +1120,6 @@ IMPORTANT:
 };
 
 
-
-
-
 // ======================================================
 // GET CHAT HISTORY
 // ======================================================
@@ -1461,6 +1474,249 @@ export const generateQuiz = async (
 
             message:
                 "Failed to generate quiz",
+
+        });
+
+    }
+
+};
+
+// ======================================================
+// GENERATE NOTES FROM UPLOADED PDF
+// ======================================================
+
+export const generatePDFNotes = async (
+    req,
+    res
+) => {
+
+    try {
+
+        if (
+            !req.file ||
+            req.file.mimetype !== "application/pdf"
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Please upload a PDF file."
+
+            });
+
+        }
+
+
+        console.log(
+            "📄 PDF Notes request:",
+            req.file.originalname
+        );
+
+
+        const {
+            pdfText,
+            pages
+        } = await extractPDFText(req.file.buffer);
+
+
+        const cleanedPDFText =
+            (pdfText || "")
+                .replace(
+                    /--\s*\d+\s+of\s+\d+\s*--/gi,
+                    ""
+                )
+                .replace(
+                    /\n{3,}/g,
+                    "\n\n"
+                )
+                .trim();
+
+
+        if (
+            cleanedPDFText.length < 30
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Unable to extract readable text from this PDF."
+
+            });
+
+        }
+
+
+        const notes =
+            await generateNotesFromPDF(
+                cleanedPDFText
+            );
+
+
+        await updateStreak(
+            req.user._id
+        );
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            notes,
+
+            fileName:
+                req.file.originalname,
+
+            pages,
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "❌ generatePDFNotes ERROR:",
+            error
+        );
+
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                error.message ||
+                "Failed to generate PDF notes."
+
+        });
+
+    }
+
+};
+
+// ======================================================
+// GENERATE QUIZ FROM UPLOADED PDF
+// ======================================================
+
+export const generatePDFQuiz = async (
+    req,
+    res
+) => {
+
+    try {
+
+        if (
+            !req.file ||
+            req.file.mimetype !== "application/pdf"
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Please upload a PDF file."
+
+            });
+
+        }
+
+
+        const previousQuestions =
+            req.body.previousQuestions
+                ? JSON.parse(
+                    req.body.previousQuestions
+                )
+                : [];
+
+
+        console.log(
+            "🧠 Previous quiz questions:",
+            previousQuestions.length
+        );
+
+
+        const {
+            pdfText
+        } =
+            await extractPDFText(
+                req.file.buffer
+            );
+
+
+        const cleanedPDFText =
+            (pdfText || "")
+                .replace(
+                    /--\s*\d+\s+of\s+\d+\s*--/gi,
+                    ""
+                )
+                .replace(
+                    /\n{3,}/g,
+                    "\n\n"
+                )
+                .trim();
+
+
+        if (
+            cleanedPDFText.length < 30
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Unable to extract readable text from this PDF."
+
+            });
+
+        }
+
+
+        const quiz =
+            await generateQuizFromPDF(
+                cleanedPDFText,
+                previousQuestions
+            );
+
+
+        await updateStreak(
+            req.user._id
+        );
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            quiz,
+
+            fileName:
+                req.file.originalname,
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "❌ generatePDFQuiz ERROR:",
+            error
+        );
+
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                error.message ||
+                "Failed to generate quiz from PDF."
 
         });
 

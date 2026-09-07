@@ -1,51 +1,99 @@
 import { useState } from "react";
+
 import { useUser } from "../context/UserContext";
+
 import "./Profile.css";
+
 import toast from "react-hot-toast";
+
 import {
     uploadAvatar,
     removeAvatar,
 } from "../services/profileService";
 
+
 function Profile() {
 
-    const { user, setUser, fetchUser } = useUser();
+    const {
+        user,
+        fetchUser,
+        loading,
+    } = useUser();
 
-    const [selectedFile, setSelectedFile] = useState(null);
+
+    const [
+        selectedFile,
+        setSelectedFile
+    ] = useState(null);
+
+
+    // ======================================================
+    // UPLOAD AVATAR
+    // ======================================================
 
     const handleUpload = async () => {
 
         if (!selectedFile) {
 
-            toast.error("Please select an image.");
+            toast.error(
+                "Please select an image."
+            );
 
             return;
 
         }
 
-        const formData = new FormData();
 
-        formData.append("avatar", selectedFile);
+        const formData =
+            new FormData();
+
+
+        formData.append(
+            "avatar",
+            selectedFile
+        );
+
 
         try {
 
-            const { data } = await uploadAvatar(formData);
+            await uploadAvatar(
+                formData
+            );
+
 
             await fetchUser();
 
+
             setSelectedFile(null);
 
-            toast.success("Avatar updated successfully!");
+
+            toast.success(
+                "Avatar updated successfully!"
+            );
+
 
         } catch (error) {
 
-            console.log(error);
+            console.error(
+                "Avatar upload error:",
+                error?.response?.data ||
+                error.message
+            );
 
-            toast.error("Failed to upload avatar.");
+
+            toast.error(
+                error?.response?.data?.message ||
+                "Failed to upload avatar."
+            );
 
         }
 
     };
+
+
+    // ======================================================
+    // REMOVE AVATAR
+    // ======================================================
 
     const handleRemove = async () => {
 
@@ -53,31 +101,100 @@ function Profile() {
 
             await removeAvatar();
 
+
             await fetchUser();
 
-            toast.success("Avatar removed.");
+
+            toast.success(
+                "Avatar removed."
+            );
+
 
         } catch (error) {
 
-            console.log(error);
+            console.error(
+                "Avatar remove error:",
+                error?.response?.data ||
+                error.message
+            );
 
-            toast.error("Failed to remove avatar.");
+
+            toast.error(
+                error?.response?.data?.message ||
+                "Failed to remove avatar."
+            );
 
         }
 
     };
 
-    if (!user) {
 
-        return <h2 style={{ color: "white", padding: "30px" }}>Loading...</h2>;
+    // ======================================================
+    // LOADING
+    // ======================================================
+
+    if (loading) {
+
+        return (
+
+            <div
+                style={{
+                    color: "white",
+                    padding: "30px",
+                }}
+            >
+
+                <h2>
+                    Loading profile...
+                </h2>
+
+            </div>
+
+        );
 
     }
+
+
+    // ======================================================
+    // PROFILE NOT FOUND
+    // ======================================================
+
+    if (!user) {
+
+        return (
+
+            <div
+                style={{
+                    color: "white",
+                    padding: "30px",
+                }}
+            >
+
+                <h2>
+                    Unable to load profile
+                </h2>
+
+                <p>
+                    Please login again and try.
+                </p>
+
+            </div>
+
+        );
+
+    }
+
+
+    // ======================================================
+    // PROFILE PAGE
+    // ======================================================
 
     return (
 
         <div className="profile-page">
 
             <div className="profile-card">
+
 
                 <img
                     className="profile-avatar"
@@ -88,13 +205,19 @@ function Profile() {
                     alt="avatar"
                 />
 
+
                 <div className="avatar-actions">
 
                     <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => setSelectedFile(e.target.files[0])}
+                        onChange={(e) =>
+                            setSelectedFile(
+                                e.target.files?.[0] || null
+                            )
+                        }
                     />
+
 
                     <button
                         className="upload-btn"
@@ -102,6 +225,7 @@ function Profile() {
                     >
                         📷 Upload Avatar
                     </button>
+
 
                     {user.avatar && (
 
@@ -116,35 +240,65 @@ function Profile() {
 
                 </div>
 
-                <h1>{user.name}</h1>
 
-                <p>{user.email}</p>
+                <h1>
+                    {user.name || "User"}
+                </h1>
+
+
+                <p>
+                    {user.email || ""}
+                </p>
+
 
                 <div className="profile-info">
 
-                    <div>
-
-                        <h3>Role</h3>
-
-                        <p>{user.role}</p>
-
-                    </div>
 
                     <div>
 
-                        <h3>Streak</h3>
+                        <h3>
+                            Role
+                        </h3>
 
-                        <p>🔥 {user.streak} Days</p>
+                        <p>
+                            {user.role || "Student"}
+                        </p>
 
                     </div>
+
 
                     <div>
 
-                        <h3>Joined</h3>
+                        <h3>
+                            Streak
+                        </h3>
 
-                        <p>{new Date(user.createdAt).toLocaleDateString()}</p>
+                        <p>
+                            🔥 {user.streak || 0} Days
+                        </p>
 
                     </div>
+
+
+                    <div>
+
+                        <h3>
+                            Joined
+                        </h3>
+
+                        <p>
+
+                            {user.createdAt
+                                ? new Date(
+                                    user.createdAt
+                                ).toLocaleDateString()
+                                : "Not available"
+                            }
+
+                        </p>
+
+                    </div>
+
 
                 </div>
 
@@ -155,5 +309,6 @@ function Profile() {
     );
 
 }
+
 
 export default Profile;

@@ -39,6 +39,9 @@ function Quiz() {
             setSubmitted(false);
             setScore(0);
 
+            // 🔔 Notification
+            addNotification(`❓ Quiz generated on "${topic}"`);
+
         } catch (err) {
 
             setError("Failed to generate quiz.");

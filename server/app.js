@@ -12,6 +12,7 @@ import flashcardRoutes from "./routes/flashcardRoutes.js";
 import conversationRoutes from "./routes/conversationRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import recycleBinRoutes from "./routes/recycleBinRoutes.js";
+import pdfRoutes from "./routes/pdfRoutes.js";
 
 const app = express();
 
@@ -48,6 +49,11 @@ app.use("/api/conversations", conversationRoutes);
 app.use("/api/notifications", notificationRoutes);
 
 app.use("/api/recycle-bin", recycleBinRoutes);
+
+app.use(
+    "/api/pdf",
+    pdfRoutes
+);
 
 // Home
 app.get("/", (req, res) => {

@@ -87,6 +87,7 @@ function Notes() {
 
             await navigator.clipboard.writeText(notes);
             toast.success("📋 Notes copied successfully!");
+            addNotification(`📋 Notes copied on "${topic}"`);
 
         } catch (error) {
 
@@ -664,9 +665,8 @@ function Notes() {
                 );
 
 
-            toast.success(
-                "📄 Notes PDF downloaded successfully!"
-            );
+            toast.success("📄 Notes PDF downloaded successfully!");
+            addNotification(`📄 Notes PDF downloaded for "${topic}"`);
 
 
         } catch (error) {

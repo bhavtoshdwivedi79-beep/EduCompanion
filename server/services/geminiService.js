@@ -12,11 +12,7 @@ const groq = new Groq({
 // NORMAL AI CHAT
 // ======================================================
 
-export async function askAI(history) {
-
-    // ==================================================
-    // LIMIT CONVERSATION HISTORY
-    // ==================================================
+export async function askAI(history = []) {
 
     const MAX_HISTORY_CHARS = 12000;
 
@@ -24,8 +20,6 @@ export async function askAI(history) {
 
     const limitedHistory = [];
 
-    // Latest messages are more important,
-    // so process history from newest to oldest.
     for (
         let i = history.length - 1;
         i >= 0;
@@ -44,50 +38,33 @@ export async function askAI(history) {
         let content =
             String(message.content);
 
-        // Limit each individual message
         if (content.length > 2500) {
 
             content =
-                content.substring(
-                    0,
-                    2500
-                ) +
+                content.substring(0, 2500) +
                 "\n\n[Previous response shortened for context.]";
 
         }
 
-        // Check total history size
         if (
             totalChars + content.length >
             MAX_HISTORY_CHARS
         ) {
-
             break;
-
         }
 
         limitedHistory.unshift({
-
-            role:
-                message.role,
-
+            role: message.role,
             content,
-
         });
 
         totalChars += content.length;
-
     }
 
-
-    // ==================================================
-    // AI MESSAGES
-    // ==================================================
 
     const messages = [
 
         {
-
             role: "system",
 
             content: `
@@ -105,7 +82,6 @@ Rules:
 - Remember previous conversation and answer accordingly.
 - Be friendly and conversational.
             `,
-
         },
 
         ...limitedHistory,
@@ -122,10 +98,6 @@ Rules:
     );
 
 
-    // ==================================================
-    // ASK GROQ
-    // ==================================================
-
     const completion =
         await groq.chat.completions.create({
 
@@ -137,8 +109,11 @@ Rules:
             temperature:
                 0.7,
 
-            max_tokens:
+            max_completion_tokens:
                 1024,
+
+            reasoning_effort:
+                "low",
 
         });
 
@@ -162,6 +137,8 @@ Rules:
     return answer;
 
 }
+
+
 
 // ======================================================
 // ANALYZE NORMAL IMAGE
@@ -201,7 +178,8 @@ export async function analyzeImage(
     const completion =
         await groq.chat.completions.create({
 
-            model: "qwen/qwen3.6-27b",
+            model:
+                "qwen/qwen3.6-27b",
 
             messages: [
 
@@ -228,7 +206,6 @@ Rules:
 - Do not invent information that is not visible in the image.
 - Be student-friendly.
                     `,
-
                 },
 
                 {
@@ -266,33 +243,49 @@ Rules:
 
             ],
 
-            temperature: 0.7,
+            temperature:
+                0.7,
 
-            max_completion_tokens: 1500,
+            max_completion_tokens:
+                1500,
 
         });
 
 
-    return completion
-        .choices[0]
-        .message
-        .content;
+    const answer =
+        completion
+            ?.choices?.[0]
+            ?.message
+            ?.content;
+
+
+    if (!answer) {
+
+        throw new Error(
+            "Image AI returned an empty response"
+        );
+
+    }
+
+
+    return answer;
 
 }
 
+
+
 // ======================================================
-// ANALYZE TEXT-BASED PDF
-// QUESTION-AWARE PDF ANALYSIS
+// ANALYZE TEXT / VISUAL PDF
 // ======================================================
 
 export async function analyzePDF(
     pdfText,
-    pageImages,
-    question
+    pageImages = [],
+    question = ""
 ) {
 
     // ==================================================
-    // VALIDATE INPUT
+    // VALIDATE PDF TEXT
     // ==================================================
 
     if (
@@ -308,11 +301,20 @@ export async function analyzePDF(
 
 
     const cleanQuestion =
-        (question || "").trim();
+        String(question || "").trim();
+
+
+    const lowerQuestion =
+        cleanQuestion.toLowerCase();
+
+
+    console.log(
+        `🔎 PDF question: ${cleanQuestion}`
+    );
 
 
     // ==================================================
-    // DETECT QUESTION TYPE
+    // VISUAL KEYWORDS
     // ==================================================
 
     const visualKeywords = [
@@ -348,34 +350,24 @@ export async function analyzePDF(
     ];
 
 
-    const lowerQuestion =
-        cleanQuestion.toLowerCase();
-
-
     const isVisualQuestion =
         visualKeywords.some(
             keyword =>
-                lowerQuestion.includes(
-                    keyword
-                )
+                lowerQuestion.includes(keyword)
         );
 
 
     console.log(
-        `🔎 PDF question: ${cleanQuestion}`
-    );
-
-
-    console.log(
-        `🧠 Question type: ${isVisualQuestion
-            ? "VISUAL"
-            : "TEXT"
+        `🧠 Question type: ${
+            isVisualQuestion
+                ? "VISUAL"
+                : "TEXT"
         }`
     );
 
 
     // ==================================================
-    // LIMIT EXTRACTED TEXT
+    // LIMIT PDF TEXT
     // ==================================================
 
     const MAX_TEXT_CHARS = 12000;
@@ -383,10 +375,12 @@ export async function analyzePDF(
 
     const limitedText =
         pdfText.length > MAX_TEXT_CHARS
+
             ? pdfText.substring(
                 0,
                 MAX_TEXT_CHARS
             )
+
             : pdfText;
 
 
@@ -395,215 +389,294 @@ export async function analyzePDF(
     );
 
 
+
     // ==================================================
-    // VISUAL QUESTION
+    // TEXT PDF
     // ==================================================
 
-    if (
-        isVisualQuestion
-    ) {
+    if (!isVisualQuestion) {
 
         console.log(
-            "🖼️ Visual question detected"
+            "📝 Normal text PDF question detected"
         );
 
 
-        // ==================================================
-        // VALIDATE PAGE IMAGES
-        // ==================================================
+        try {
 
-        if (
-            !pageImages ||
-            !Array.isArray(pageImages) ||
-            pageImages.length === 0
-        ) {
+            const completion =
+                await groq.chat.completions.create({
 
-            throw new Error(
-                "No PDF page images available for visual analysis"
-            );
+                    model:
+                        "openai/gpt-oss-120b",
 
-        }
+                    messages: [
 
+                        {
 
-        // ==================================================
-        // DETECT VISUAL QUESTION CATEGORY
-        // ==================================================
+                            role: "system",
 
-        const personKeywords = [
-            "person",
-            "image",
-            "photo",
-            "photograph",
-            "picture",
-            "face",
-            "appearance",
-            "look like",
-            "shown",
-            "wearing",
-            "attire",
-            "dress",
-            "clothing"
-        ];
-
-
-        const structuredVisualKeywords = [
-            "chart",
-            "graph",
-            "diagram",
-            "table",
-            "figure",
-            "screenshot",
-            "illustration",
-            "logo",
-            "qr code",
-            "qr"
-        ];
-
-
-        const isPersonQuestion =
-            personKeywords.some(
-                keyword =>
-                    lowerQuestion.includes(
-                        keyword
-                    )
-            );
-
-
-        const isStructuredVisualQuestion =
-            structuredVisualKeywords.some(
-                keyword =>
-                    lowerQuestion.includes(
-                        keyword
-                    )
-            );
-
-
-        console.log(
-            `🧠 Person visual question: ${isPersonQuestion}`
-        );
-
-
-        console.log(
-            `📊 Structured visual question: ${isStructuredVisualQuestion}`
-        );
-
-
-        // ==================================================
-        // SELECT PAGES
-        // ==================================================
-
-        let selectedPageImages = [];
-
-
-        // --------------------------------------------------
-        // PERSON / IMAGE QUESTIONS
-        // --------------------------------------------------
-
-        if (
-            isPersonQuestion
-        ) {
-
-            console.log(
-                "👤 Person/image question detected"
-            );
-
-
-            // For person/image questions, first page
-            // is usually the most relevant resume/profile page.
-
-            selectedPageImages =
-                pageImages.slice(
-                    0,
-                    1
-                );
-
-        }
-
-
-        // --------------------------------------------------
-        // CHART / GRAPH / TABLE / DIAGRAM QUESTIONS
-        // --------------------------------------------------
-
-        else if (
-            isStructuredVisualQuestion
-        ) {
-
-            console.log(
-                "📊 Structured visual question detected"
-            );
-
-
-            // Limit pages to avoid exceeding Groq TPM.
-
-            selectedPageImages =
-                pageImages.slice(
-                    0,
-                    2
-                );
-
-        }
-
-
-        // --------------------------------------------------
-        // OTHER VISUAL QUESTIONS
-        // --------------------------------------------------
-
-        else {
-
-            console.log(
-                "🖼️ General visual question detected"
-            );
-
-
-            selectedPageImages =
-                pageImages.slice(
-                    0,
-                    1
-                );
-
-        }
-
-
-        console.log(
-            `🖼️ Selected ${selectedPageImages.length}/${pageImages.length} PDF page(s) for visual analysis`
-        );
-
-
-        // ==================================================
-        // LIMIT SUPPORTING PDF TEXT
-        // ==================================================
-
-        const visualContext =
-            limitedText.length > 1500
-                ? limitedText.substring(
-                    0,
-                    1500
-                )
-                : limitedText;
-
-
-        console.log(
-            `📝 Visual context text: ${visualContext.length} characters`
-        );
-
-
-        // ==================================================
-        // CREATE MULTIMODAL CONTENT
-        // ==================================================
-
-        const content = [];
-
-
-        content.push({
-
-            type: "text",
-
-            text: `
+                            content: `
 You are EduCompanion, an AI Study Assistant.
 
-The student is asking a visual question about a PDF.
+The student has uploaded a PDF and is asking a question about its contents.
+
+Use the extracted PDF text as the PRIMARY source.
+
+Student-friendly rules:
+
+- Answer the student's exact question.
+- Use ONLY information supported by the PDF text.
+- Do not invent information.
+- If the answer cannot be found in the PDF, clearly say that.
+- Explain in simple English.
+- Use Markdown formatting when useful.
+- Use headings and bullet points when appropriate.
+- If the student asks "explain in brief", give a short and concise explanation.
+- If the student asks "explain in detail", provide a detailed explanation.
+- If the student asks about a specific topic, focus on that topic.
+- If the student asks for a definition, provide the definition first.
+- If the student asks for comparison, use a table when appropriate.
+- If the student asks a mathematical or technical question, explain the reasoning clearly.
+- Do not mention internal processing.
+- Do not mention that you are an AI.
 
 Student question:
+
+${cleanQuestion || "Explain the PDF briefly."}
+
+PDF content:
+
+${limitedText}
+                            `.trim(),
+
+                        },
+
+                        {
+
+                            role: "user",
+
+                            content:
+                                cleanQuestion ||
+                                "Explain the main content of this PDF briefly.",
+
+                        },
+
+                    ],
+
+                    temperature:
+                        0.3,
+
+                    max_completion_tokens:
+                        1200,
+
+                    // IMPORTANT:
+                    // GPT-OSS supports low/medium/high.
+                    // "none" is NOT valid.
+                    reasoning_effort:
+                        "low",
+
+                });
+
+
+            const answer =
+                completion
+                    ?.choices?.[0]
+                    ?.message
+                    ?.content;
+
+
+            if (!answer) {
+
+                throw new Error(
+                    "Text PDF AI returned an empty response"
+                );
+
+            }
+
+
+            console.log(
+                "✅ Text PDF analysis completed successfully"
+            );
+
+
+            return answer;
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "❌ TEXT PDF AI ERROR:",
+                error
+            );
+
+
+            throw error;
+
+        }
+
+    }
+
+
+
+    // ==================================================
+    // VISUAL PDF
+    // ==================================================
+
+    console.log(
+        "🖼️ Visual PDF question detected"
+    );
+
+
+    if (
+        !pageImages ||
+        !Array.isArray(pageImages) ||
+        pageImages.length === 0
+    ) {
+
+        throw new Error(
+            "No PDF page images available for visual analysis"
+        );
+
+    }
+
+
+
+    // ==================================================
+    // VISUAL QUESTION CATEGORY
+    // ==================================================
+
+    const personKeywords = [
+
+        "person",
+        "image",
+        "photo",
+        "photograph",
+        "picture",
+        "face",
+        "appearance",
+        "look like",
+        "shown",
+        "wearing",
+        "attire",
+        "dress",
+        "clothing"
+
+    ];
+
+
+    const structuredVisualKeywords = [
+
+        "chart",
+        "graph",
+        "diagram",
+        "table",
+        "figure",
+        "screenshot",
+        "illustration",
+        "logo",
+        "qr code",
+        "qr"
+
+    ];
+
+
+    const isPersonQuestion =
+        personKeywords.some(
+            keyword =>
+                lowerQuestion.includes(keyword)
+        );
+
+
+    const isStructuredVisualQuestion =
+        structuredVisualKeywords.some(
+            keyword =>
+                lowerQuestion.includes(keyword)
+        );
+
+
+    console.log(
+        `🧠 Person visual question: ${isPersonQuestion}`
+    );
+
+
+    console.log(
+        `📊 Structured visual question: ${isStructuredVisualQuestion}`
+    );
+
+
+
+    // ==================================================
+    // SELECT PAGES
+    // ==================================================
+
+    let selectedPageImages = [];
+
+
+    if (isPersonQuestion) {
+
+        selectedPageImages =
+            pageImages.slice(0, 1);
+
+    }
+
+    else if (
+        isStructuredVisualQuestion
+    ) {
+
+        selectedPageImages =
+            pageImages.slice(0, 2);
+
+    }
+
+    else {
+
+        selectedPageImages =
+            pageImages.slice(0, 1);
+
+    }
+
+
+    console.log(
+        `🖼️ Selected ${selectedPageImages.length}/${pageImages.length} PDF page(s)`
+    );
+
+
+
+    // ==================================================
+    // SUPPORTING TEXT
+    // ==================================================
+
+    const visualContext =
+        limitedText.length > 1500
+
+            ? limitedText.substring(
+                0,
+                1500
+            )
+
+            : limitedText;
+
+
+
+    // ==================================================
+    // MULTIMODAL CONTENT
+    // ==================================================
+
+    const content = [];
+
+
+    content.push({
+
+        type: "text",
+
+        text: `
+You are EduCompanion, an AI Study Assistant.
+
+The student is asking a visual question about an uploaded PDF.
+
+Student question:
+
 ${cleanQuestion || "Describe the visual content of this PDF."}
 
 Use the PDF page image as the PRIMARY source.
@@ -614,12 +687,12 @@ IMPORTANT RULES:
 
 - Carefully inspect the provided page image.
 - Answer the student's exact question.
-- Describe only information that is visibly present.
+- Describe only information clearly visible in the image.
 - Do not invent visual details.
 - If the question asks about a person, describe visible characteristics only.
-- Do not identify a real person by name from facial appearance alone.
+- Do not identify a real person by facial appearance alone.
 - If the requested information is unclear or not visible, say so.
-- Use the extracted text only to understand document context.
+- Use extracted PDF text only for document context.
 - Keep the answer concise and useful.
 - Use Markdown when helpful.
 
@@ -628,338 +701,317 @@ Supporting PDF text:
 ${visualContext}
         `.trim()
 
+    });
+
+
+
+    // ==================================================
+    // ADD PAGE IMAGES
+    // ==================================================
+
+    for (
+        let index = 0;
+        index < selectedPageImages.length;
+        index++
+    ) {
+
+        const imageBuffer =
+            selectedPageImages[index];
+
+
+        if (
+            !imageBuffer ||
+            !Buffer.isBuffer(imageBuffer)
+        ) {
+
+            console.warn(
+                `⚠️ Skipping invalid PDF page image ${index + 1}`
+            );
+
+            continue;
+
+        }
+
+
+        const base64Image =
+            imageBuffer.toString("base64");
+
+
+        if (!base64Image) {
+
+            continue;
+
+        }
+
+
+        console.log(
+            `🖼️ Preparing visual PDF page ${index + 1}`
+        );
+
+
+        content.push({
+
+            type: "text",
+
+            text:
+                `PDF Page ${index + 1}`
+
         });
 
 
+        content.push({
+
+            type: "image_url",
+
+            image_url: {
+
+                url:
+                    `data:image/jpeg;base64,${base64Image}`
+
+            }
+
+        });
+
+    }
+
+
+
+    // ==================================================
+    // VALIDATE IMAGE CONTENT
+    // ==================================================
+
+    if (content.length <= 1) {
+
+        throw new Error(
+            "No valid PDF page images available"
+        );
+
+    }
+
+
+
+    // ==================================================
+    // VISION REQUEST
+    // ==================================================
+
+    try {
+
+        console.log(
+            "🤖 Sending visual PDF question to Vision AI..."
+        );
+
+
+        const completion =
+            await groq.chat.completions.create({
+
+                model:
+                    "qwen/qwen3.6-27b",
+
+                messages: [
+
+                    {
+
+                        role: "system",
+
+                        content: `
+You are EduCompanion.
+
+Answer visual PDF questions using the provided page images.
+
+Rules:
+
+- Inspect the images carefully.
+- Answer the exact student question.
+- Use visible information only.
+- Do not invent details.
+- Use simple English.
+- Use Markdown where useful.
+- Keep the answer concise.
+                        `,
+
+                    },
+
+                    {
+
+                        role: "user",
+
+                        content,
+
+                    },
+
+                ],
+
+                temperature:
+                    0.2,
+
+                max_completion_tokens:
+                    700,
+
+            });
+
+
+        const answer =
+            completion
+                ?.choices?.[0]
+                ?.message
+                ?.content;
+
+
+        if (!answer) {
+
+            throw new Error(
+                "Vision AI returned an empty response"
+            );
+
+        }
+
+
+        console.log(
+            "✅ Visual PDF analysis completed"
+        );
+
+
+        return answer;
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "❌ VISUAL PDF AI ERROR:",
+            error
+        );
+
+
         // ==================================================
-        // ADD SELECTED PAGE IMAGES
+        // VISUAL FALLBACK
         // ==================================================
 
-        for (
-            let index = 0;
-            index < selectedPageImages.length;
-            index++
-        ) {
+        console.log(
+            "🔄 Trying minimal visual fallback..."
+        );
 
-            const imageBuffer =
-                selectedPageImages[index];
+
+        try {
+
+            const firstImage =
+                pageImages[0];
 
 
             if (
-                !imageBuffer ||
-                !Buffer.isBuffer(
-                    imageBuffer
-                )
+                !firstImage ||
+                !Buffer.isBuffer(firstImage)
             ) {
 
-                console.warn(
-                    `⚠️ Skipping invalid page image ${index + 1}`
-                );
-
-                continue;
+                throw error;
 
             }
 
 
             const base64Image =
-                imageBuffer.toString(
-                    "base64"
-                );
+                firstImage.toString("base64");
 
 
-            console.log(
-                `🖼️ Preparing selected visual page ${index + 1}...`
-            );
-
-
-            content.push({
-
-                type: "text",
-
-                text:
-                    `PDF Page ${index + 1}:`
-
-            });
-
-
-            content.push({
-
-                type: "image_url",
-
-                image_url: {
-
-                    url:
-                        `data:image/jpeg;base64,${base64Image}`
-
-                }
-
-            });
-
-        }
-
-
-        // ==================================================
-        // VALIDATE CONTENT
-        // ==================================================
-
-        if (
-            content.length <= 1
-        ) {
-
-            throw new Error(
-                "No valid PDF page images available"
-            );
-
-        }
-
-
-        // ==================================================
-        // VISION AI REQUEST
-        // ==================================================
-
-        try {
-
-            console.log(
-                "🤖 Sending optimized visual PDF question to Vision AI..."
-            );
-
-
-            const completion =
+            const fallbackCompletion =
                 await groq.chat.completions.create({
 
                     model:
                         "qwen/qwen3.6-27b",
 
-
                     messages: [
-
-                        {
-
-                            role: "system",
-
-                            content:
-                                "You are EduCompanion. Answer visual PDF questions using the provided page images."
-
-                        },
 
                         {
 
                             role: "user",
 
-                            content
+                            content: [
 
-                        }
+                                {
+
+                                    type: "text",
+
+                                    text: `
+Answer this question about the PDF page:
+
+${cleanQuestion}
+
+Inspect the image carefully.
+
+Only use information clearly visible in the image.
+Do not invent information.
+If the requested information is not visible, say so.
+                                    `.trim(),
+
+                                },
+
+                                {
+
+                                    type: "image_url",
+
+                                    image_url: {
+
+                                        url:
+                                            `data:image/jpeg;base64,${base64Image}`
+
+                                    },
+
+                                },
+
+                            ],
+
+                        },
 
                     ],
 
+                    temperature:
+                        0.2,
 
-                    temperature: 0.2,
-
-                    max_completion_tokens: 600,
-
-                    reasoning_effort:
-                        "none"
+                    max_completion_tokens:
+                        500,
 
                 });
 
 
-            const answer =
-                completion
+            const fallbackAnswer =
+                fallbackCompletion
                     ?.choices?.[0]
-                    ?.message?.content;
+                    ?.message
+                    ?.content;
 
 
-            if (
-                !answer
-            ) {
+            if (!fallbackAnswer) {
 
-                throw new Error(
-                    "Vision AI returned an empty response"
-                );
+                throw error;
 
             }
 
 
             console.log(
-                "✅ Optimized visual PDF analysis completed"
+                "✅ Visual fallback completed"
             );
 
 
-            return answer;
+            return fallbackAnswer;
 
         }
 
-
-        catch (error) {
+        catch (fallbackError) {
 
             console.error(
-                "❌ VISUAL PDF AI ERROR:",
-                error
+                "❌ Visual fallback failed:",
+                fallbackError
             );
 
 
-            // ==================================================
-            // FALLBACK
-            // ==================================================
-
-            if (
-                error?.status === 413 ||
-                error?.error?.code ===
-                "rate_limit_exceeded"
-            ) {
-
-                console.warn(
-                    "⚠️ Vision request exceeded TPM limit."
-                );
-
-
-                console.log(
-                    "🔄 Retrying with minimal visual request..."
-                );
-
-
-                try {
-
-                    const firstImage =
-                        pageImages[0];
-
-
-                    if (
-                        !firstImage ||
-                        !Buffer.isBuffer(
-                            firstImage
-                        )
-                    ) {
-
-                        throw error;
-
-                    }
-
-
-                    const base64Image =
-                        firstImage.toString(
-                            "base64"
-                        );
-
-
-                    const fallbackContent = [
-
-                        {
-
-                            type: "text",
-
-                            text: `
-Answer this visual question about the PDF:
-
-${cleanQuestion}
-
-Carefully inspect the page image.
-
-Only describe information that is clearly visible.
-Do not invent details.
-If the requested information is not visible, say so.
-                        `.trim()
-
-                        },
-
-                        {
-
-                            type: "image_url",
-
-                            image_url: {
-
-                                url:
-                                    `data:image/jpeg;base64,${base64Image}`
-
-                            }
-
-                        }
-
-                    ];
-
-
-                    const fallbackCompletion =
-                        await groq.chat.completions.create({
-
-                            model:
-                                "qwen/qwen3.6-27b",
-
-
-                            messages: [
-
-                                {
-
-                                    role:
-                                        "user",
-
-                                    content:
-                                        fallbackContent
-
-                                }
-
-                            ],
-
-
-                            temperature:
-                                0.2,
-
-                            max_completion_tokens:
-                                400,
-
-                            reasoning_effort:
-                                "none"
-
-                        });
-
-
-                    const fallbackAnswer =
-                        fallbackCompletion
-                            ?.choices?.[0]
-                            ?.message?.content;
-
-
-                    if (
-                        !fallbackAnswer
-                    ) {
-
-                        throw error;
-
-                    }
-
-
-                    console.log(
-                        "✅ Minimal visual fallback completed"
-                    );
-
-
-                    return fallbackAnswer;
-
-                }
-
-                catch (
-                fallbackError
-                ) {
-
-                    console.error(
-                        "❌ Minimal visual fallback failed:",
-                        fallbackError
-                    );
-
-
-                    throw fallbackError;
-
-                }
-
-            }
-
-
-            throw error;
+            throw fallbackError;
 
         }
 
     }
 
 }
+
+
 
 // ======================================================
 // ANALYZE SCANNED PDF
@@ -970,10 +1022,6 @@ export async function analyzePDFImages(
     imageBuffers,
     question
 ) {
-
-    // ======================================================
-    // VALIDATE INPUT
-    // ======================================================
 
     if (
         !imageBuffers ||
@@ -996,10 +1044,6 @@ export async function analyzePDFImages(
     const results = [];
 
 
-    // ======================================================
-    // PROCESS EACH PAGE
-    // ======================================================
-
     for (
         let index = 0;
         index < imageBuffers.length;
@@ -1016,36 +1060,21 @@ export async function analyzePDFImages(
 
 
         // ==================================================
-        // NORMALIZE IMAGE BUFFER
+        // NORMALIZE BUFFER
         // ==================================================
 
         try {
 
-            // If it is already a Buffer
-            if (Buffer.isBuffer(imageBuffer)) {
-
-                console.log(
-                    `📦 Page ${index + 1} is already a Buffer`
-                );
-
-            }
-
-            // If pdf2pic somehow returned another
-            // binary-compatible object
-            else if (imageBuffer) {
-
-                console.log(
-                    `🔄 Converting page ${index + 1} data to Buffer`
-                );
+            if (!Buffer.isBuffer(imageBuffer)) {
 
                 imageBuffer =
-                    Buffer.from(
-                        imageBuffer
-                    );
+                    Buffer.from(imageBuffer);
 
             }
 
-        } catch (bufferError) {
+        }
+
+        catch (bufferError) {
 
             console.error(
                 `❌ Buffer conversion failed for page ${index + 1}:`,
@@ -1054,10 +1083,9 @@ export async function analyzePDFImages(
 
 
             results.push(
-
                 `## Page ${index + 1}\n\nUnable to read this page.`
-
             );
+
 
             continue;
 
@@ -1065,7 +1093,7 @@ export async function analyzePDFImages(
 
 
         // ==================================================
-        // VALIDATE BUFFER
+        // VALIDATE
         // ==================================================
 
         if (
@@ -1074,16 +1102,10 @@ export async function analyzePDFImages(
             imageBuffer.length === 0
         ) {
 
-            console.error(
-                `❌ Invalid or empty image buffer for page ${index + 1}`
-            );
-
-
             results.push(
-
                 `## Page ${index + 1}\n\nUnable to read this page.`
-
             );
+
 
             continue;
 
@@ -1095,17 +1117,8 @@ export async function analyzePDFImages(
         );
 
 
-        // ==================================================
-        // CONVERT TO BASE64
-        // ==================================================
-
         const base64Image =
             imageBuffer.toString("base64");
-
-
-        console.log(
-            `🔤 Page ${index + 1} Base64 length: ${base64Image.length}`
-        );
 
 
         if (
@@ -1113,27 +1126,21 @@ export async function analyzePDFImages(
             base64Image.length < 100
         ) {
 
-            console.error(
-                `❌ Invalid Base64 image for page ${index + 1}`
-            );
-
-
             results.push(
-
                 `## Page ${index + 1}\n\nUnable to read this page.`
-
             );
+
 
             continue;
 
         }
 
 
-        try {
+        // ==================================================
+        // AI ANALYSIS
+        // ==================================================
 
-            // ==================================================
-            // SEND IMAGE TO GROQ VISION MODEL
-            // ==================================================
+        try {
 
             console.log(
                 `🤖 Sending page ${index + 1} to AI...`
@@ -1149,6 +1156,7 @@ export async function analyzePDFImages(
                     messages: [
 
                         {
+
                             role: "system",
 
                             content: `
@@ -1158,32 +1166,32 @@ You are analyzing ONE page of a scanned PDF.
 
 Carefully inspect the provided image.
 
-Your job is to understand and explain the visible content.
-
 Rules:
 
 - Read all visible text carefully.
-- Extract important information from the page.
+- Extract important information.
 - Explain diagrams and charts.
 - Solve mathematical problems step by step.
 - Explain code if present.
 - Try to understand handwritten notes.
 - Do not invent information.
-- If something is unclear or unreadable, clearly mention it.
+- If something is unclear, mention it.
 - Answer the student's question using information visible on the page.
 - Use simple English.
 - Use Markdown formatting.
-- Use headings and bullet points where useful.
 - Be concise but informative.
-                `,
+                            `,
+
                         },
 
                         {
+
                             role: "user",
 
                             content: [
 
                                 {
+
                                     type: "text",
 
                                     text:
@@ -1193,6 +1201,7 @@ Rules:
                                 },
 
                                 {
+
                                     type: "image_url",
 
                                     image_url: {
@@ -1210,18 +1219,14 @@ Rules:
 
                     ],
 
-                    temperature: 0.7,
+                    temperature:
+                        0.5,
 
-                    max_completion_tokens: 1000,
-
-                    reasoning_effort: "none",
+                    max_completion_tokens:
+                        1000,
 
                 });
 
-
-            // ==================================================
-            // GET AI RESPONSE
-            // ==================================================
 
             const answer =
                 completion
@@ -1232,15 +1237,8 @@ Rules:
 
             if (!answer) {
 
-                console.warn(
-                    `⚠️ AI returned empty response for page ${index + 1}`
-                );
-
-
                 results.push(
-
                     `## Page ${index + 1}\n\nAI could not analyze this page.`
-
                 );
 
                 continue;
@@ -1248,14 +1246,8 @@ Rules:
             }
 
 
-            // ==================================================
-            // SAVE RESULT
-            // ==================================================
-
             results.push(
-
                 `## Page ${index + 1}\n\n${answer}`
-
             );
 
 
@@ -1263,8 +1255,9 @@ Rules:
                 `✅ Page ${index + 1} analyzed successfully`
             );
 
+        }
 
-        } catch (error) {
+        catch (error) {
 
             console.error(
                 `❌ Error analyzing page ${index + 1}:`,
@@ -1273,27 +1266,20 @@ Rules:
 
 
             results.push(
-
                 `## Page ${index + 1}\n\nUnable to analyze this page.`
-
             );
 
         }
 
 
         // ==================================================
-        // DELAY BETWEEN PAGES
+        // DELAY
         // ==================================================
 
         if (
             index <
             imageBuffers.length - 1
         ) {
-
-            console.log(
-                "⏳ Waiting before next page..."
-            );
-
 
             await new Promise(
                 resolve =>
@@ -1307,10 +1293,6 @@ Rules:
 
     }
 
-
-    // ======================================================
-    // COMBINE ALL PAGE RESULTS
-    // ======================================================
 
     const finalAnswer =
         results.join(
@@ -1335,31 +1317,41 @@ Rules:
 
 export async function generateNotes(topic) {
 
-    if (!topic || !topic.trim()) {
-        throw new Error("Topic is required");
+    if (
+        !topic ||
+        !topic.trim()
+    ) {
+
+        throw new Error(
+            "Topic is required"
+        );
+
     }
 
-    console.log(`📝 Generating notes for: ${topic}`);
+
+    console.log(
+        `📝 Generating notes for: ${topic}`
+    );
+
 
     try {
 
         const completion =
             await groq.chat.completions.create({
 
-                model: "openai/gpt-oss-120b",
+                model:
+                    "openai/gpt-oss-120b",
 
                 messages: [
 
                     {
+
                         role: "system",
 
                         content: `
 You are EduCompanion AI, an expert study assistant.
 
 Create clear, complete and student-friendly study notes.
-
-Topic:
-The user will provide a topic.
 
 Rules:
 
@@ -1376,11 +1368,11 @@ Rules:
 - Return only the study notes.
 
 TABLE RULES:
+
 - Use Markdown tables when information is naturally comparative or structured.
 - Use tables for comparisons such as advantages vs disadvantages, types, features, differences, classifications, or similar structured information.
 - Always include a clear header row in every table.
 - Keep table cells concise and readable.
-- Do not replace useful tables with long paragraphs.
 - Use valid GitHub-Flavored Markdown table syntax.
 
 Use this structure:
@@ -1409,28 +1401,37 @@ Use this structure:
 
 ## Summary
                         `,
+
                     },
 
                     {
+
                         role: "user",
 
                         content:
                             `Create complete study notes on "${topic}".`,
+
                     },
 
                 ],
 
-                temperature: 0.5,
+                temperature:
+                    0.5,
 
-                max_completion_tokens: 2500,
+                max_completion_tokens:
+                    2500,
 
-                include_reasoning: false,
+                reasoning_effort:
+                    "low",
 
             });
 
 
         const answer =
-            completion?.choices?.[0]?.message?.content;
+            completion
+                ?.choices?.[0]
+                ?.message
+                ?.content;
 
 
         if (!answer) {
@@ -1449,13 +1450,15 @@ Use this structure:
 
         return answer;
 
+    }
 
-    } catch (error) {
+    catch (error) {
 
         console.error(
             "❌ GENERATE NOTES ERROR:",
             error
         );
+
 
         throw new Error(
             error?.message ||
@@ -1466,32 +1469,44 @@ Use this structure:
 
 }
 
+
+
 // ======================================================
 // GENERATE QUIZ
 // ======================================================
 
 export async function generateQuizAI(topic) {
 
-    if (!topic || !topic.trim()) {
-        throw new Error("Quiz topic is required");
+    if (
+        !topic ||
+        !topic.trim()
+    ) {
+
+        throw new Error(
+            "Quiz topic is required"
+        );
+
     }
 
-    console.log("🧠 Generating quiz for:", topic);
+
+    console.log(
+        "🧠 Generating quiz for:",
+        topic
+    );
+
 
     try {
 
         const completion =
             await groq.chat.completions.create({
 
-                // ==================================================
-                // USE GPT-OSS 120B
-                // ==================================================
-
-                model: "openai/gpt-oss-120b",
+                model:
+                    "openai/gpt-oss-120b",
 
                 messages: [
 
                     {
+
                         role: "system",
 
                         content: `
@@ -1513,94 +1528,119 @@ Rules:
 - Do not include markdown.
 - Return data according to the provided JSON schema.
                         `,
+
                     },
 
                     {
+
                         role: "user",
 
                         content:
                             `Generate a quiz on the topic: "${topic.trim()}"`
+
                     },
 
                 ],
 
-                // ==================================================
-                // JSON SCHEMA
-                // ==================================================
-
                 response_format: {
 
-                    type: "json_schema",
+                    type:
+                        "json_schema",
 
                     json_schema: {
 
-                        name: "quiz",
+                        name:
+                            "quiz",
 
-                        strict: true,
+                        strict:
+                            true,
 
                         schema: {
 
-                            type: "object",
+                            type:
+                                "object",
 
                             properties: {
 
                                 quiz: {
 
-                                    type: "array",
+                                    type:
+                                        "array",
 
                                     items: {
 
-                                        type: "object",
+                                        type:
+                                            "object",
 
                                         properties: {
 
                                             question: {
-                                                type: "string"
+
+                                                type:
+                                                    "string"
+
                                             },
 
                                             options: {
 
-                                                type: "array",
+                                                type:
+                                                    "array",
 
                                                 items: {
-                                                    type: "string"
+
+                                                    type:
+                                                        "string"
+
                                                 },
 
-                                                minItems: 4,
+                                                minItems:
+                                                    4,
 
-                                                maxItems: 4
+                                                maxItems:
+                                                    4
 
                                             },
 
                                             answer: {
-                                                type: "string"
+
+                                                type:
+                                                    "string"
+
                                             }
 
                                         },
 
                                         required: [
+
                                             "question",
                                             "options",
                                             "answer"
+
                                         ],
 
-                                        additionalProperties: false
+                                        additionalProperties:
+                                            false
 
                                     },
 
-                                    minItems: 10,
+                                    minItems:
+                                        10,
 
-                                    maxItems: 10
+                                    maxItems:
+                                        10
 
                                 }
 
                             },
 
                             required: [
+
                                 "quiz"
+
                             ],
 
-                            additionalProperties: false
+                            additionalProperties:
+                                false
 
                         }
 
@@ -1608,26 +1648,23 @@ Rules:
 
                 },
 
-                temperature: 0.3,
+                temperature:
+                    0.3,
 
-                max_completion_tokens: 4000,
+                max_completion_tokens:
+                    4000,
 
-                reasoning_effort: "low",
+                reasoning_effort:
+                    "low",
 
             });
 
 
-        // ==================================================
-        // GET RESPONSE
-        // ==================================================
-
         const rawResponse =
-            completion?.choices?.[0]?.message?.content;
-
-
-        console.log(
-            "🤖 Quiz AI response received"
-        );
+            completion
+                ?.choices?.[0]
+                ?.message
+                ?.content;
 
 
         if (!rawResponse) {
@@ -1639,34 +1676,23 @@ Rules:
         }
 
 
-        console.log(
-            "📦 Quiz response length:",
-            rawResponse.length
-        );
-
-
-        // ==================================================
-        // PARSE JSON
-        // ==================================================
-
         let parsedResponse;
+
 
         try {
 
             parsedResponse =
                 JSON.parse(rawResponse);
 
-        } catch (jsonError) {
+        }
+
+        catch (jsonError) {
 
             console.error(
                 "❌ Quiz JSON Parse Error:",
                 jsonError.message
             );
 
-            console.error(
-                "❌ Raw response:",
-                rawResponse
-            );
 
             throw new Error(
                 "AI returned invalid quiz JSON"
@@ -1675,13 +1701,11 @@ Rules:
         }
 
 
-        // ==================================================
-        // CHECK QUIZ ARRAY
-        // ==================================================
-
         if (
             !parsedResponse ||
-            !Array.isArray(parsedResponse.quiz)
+            !Array.isArray(
+                parsedResponse.quiz
+            )
         ) {
 
             throw new Error(
@@ -1690,10 +1714,6 @@ Rules:
 
         }
 
-
-        // ==================================================
-        // CHECK QUESTION COUNT
-        // ==================================================
 
         if (
             parsedResponse.quiz.length !== 10
@@ -1705,10 +1725,6 @@ Rules:
 
         }
 
-
-        // ==================================================
-        // VALIDATE QUESTIONS
-        // ==================================================
 
         const quiz =
             parsedResponse.quiz.map(
@@ -1728,10 +1744,6 @@ Rules:
                     }
 
 
-                    // ------------------------------------------
-                    // Exactly 4 options
-                    // ------------------------------------------
-
                     if (
                         item.options.length !== 4
                     ) {
@@ -1743,20 +1755,12 @@ Rules:
                     }
 
 
-                    // ------------------------------------------
-                    // Clean options
-                    // ------------------------------------------
-
                     const options =
                         item.options.map(
                             option =>
                                 String(option).trim()
                         );
 
-
-                    // ------------------------------------------
-                    // Check duplicate options
-                    // ------------------------------------------
 
                     if (
                         new Set(options).size !== 4
@@ -1769,19 +1773,11 @@ Rules:
                     }
 
 
-                    // ------------------------------------------
-                    // Clean answer
-                    // ------------------------------------------
-
                     const answer =
                         String(
                             item.answer
                         ).trim();
 
-
-                    // ------------------------------------------
-                    // Answer must match option
-                    // ------------------------------------------
 
                     if (
                         !options.includes(answer)
@@ -1809,13 +1805,10 @@ Rules:
             );
 
 
-        // ==================================================
-        // SUCCESS
-        // ==================================================
-
         console.log(
             "✅ Quiz generated successfully"
         );
+
 
         console.log(
             `📝 Total questions: ${quiz.length}`
@@ -1824,22 +1817,15 @@ Rules:
 
         return quiz;
 
+    }
 
-    } catch (error) {
-
-        console.error(
-            "❌ generateQuizAI ERROR:"
-        );
+    catch (error) {
 
         console.error(
-            "Message:",
-            error.message
-        );
-
-        console.error(
-            "Full error:",
+            "❌ generateQuizAI ERROR:",
             error
         );
+
 
         throw error;
 
@@ -1847,30 +1833,43 @@ Rules:
 
 }
 
+
+
 // ======================================================
 // GENERATE FLASHCARDS
 // ======================================================
 
 export async function generateFlashcards(topic) {
 
-    if (!topic || !topic.trim()) {
-        throw new Error("Topic is required");
+    if (
+        !topic ||
+        !topic.trim()
+    ) {
+
+        throw new Error(
+            "Topic is required"
+        );
+
     }
+
 
     console.log(
         `🃏 Generating flashcards for: ${topic}`
     );
+
 
     try {
 
         const completion =
             await groq.chat.completions.create({
 
-                model: "openai/gpt-oss-120b",
+                model:
+                    "openai/gpt-oss-120b",
 
                 messages: [
 
                     {
+
                         role: "system",
 
                         content: `
@@ -1888,85 +1887,111 @@ Rules:
 - Avoid duplicate questions.
 - Cover different parts of the topic.
                         `,
+
                     },
 
                     {
+
                         role: "user",
 
                         content:
                             `Generate 10 flashcards on "${topic}".`,
+
                     },
 
                 ],
 
-                temperature: 0.4,
+                temperature:
+                    0.4,
 
-                max_completion_tokens: 2500,
+                max_completion_tokens:
+                    2500,
 
-                include_reasoning: false,
+                reasoning_effort:
+                    "low",
 
                 response_format: {
 
-                    type: "json_schema",
+                    type:
+                        "json_schema",
 
                     json_schema: {
 
-                        name: "flashcards",
+                        name:
+                            "flashcards",
 
-                        strict: true,
+                        strict:
+                            true,
 
                         schema: {
 
-                            type: "object",
+                            type:
+                                "object",
 
                             properties: {
 
                                 flashcards: {
 
-                                    type: "array",
+                                    type:
+                                        "array",
 
                                     items: {
 
-                                        type: "object",
+                                        type:
+                                            "object",
 
                                         properties: {
 
                                             question: {
-                                                type: "string",
+
+                                                type:
+                                                    "string"
+
                                             },
 
                                             answer: {
-                                                type: "string",
-                                            },
+
+                                                type:
+                                                    "string"
+
+                                            }
 
                                         },
 
                                         required: [
+
                                             "question",
-                                            "answer",
+                                            "answer"
+
                                         ],
 
-                                        additionalProperties: false,
+                                        additionalProperties:
+                                            false
 
                                     },
 
-                                    minItems: 10,
+                                    minItems:
+                                        10,
 
-                                    maxItems: 10,
+                                    maxItems:
+                                        10
 
-                                },
+                                }
 
                             },
 
                             required: [
-                                "flashcards",
+
+                                "flashcards"
+
                             ],
 
-                            additionalProperties: false,
+                            additionalProperties:
+                                false
 
-                        },
+                        }
 
-                    },
+                    }
 
                 },
 
@@ -1974,7 +1999,10 @@ Rules:
 
 
         const content =
-            completion?.choices?.[0]?.message?.content;
+            completion
+                ?.choices?.[0]
+                ?.message
+                ?.content;
 
 
         if (!content) {
@@ -1992,7 +2020,9 @@ Rules:
 
         if (
             !data.flashcards ||
-            !Array.isArray(data.flashcards)
+            !Array.isArray(
+                data.flashcards
+            )
         ) {
 
             throw new Error(
@@ -2009,18 +2039,668 @@ Rules:
 
         return data.flashcards;
 
+    }
 
-    } catch (error) {
+    catch (error) {
 
         console.error(
             "❌ GENERATE FLASHCARDS ERROR:",
             error
         );
 
+
         throw new Error(
             error?.message ||
             "Failed to generate flashcards"
         );
+
+    }
+
+}
+
+// ======================================================
+// GENERATE NOTES FROM PDF
+// ======================================================
+
+export async function generateNotesFromPDF(pdfText) {
+
+    if (!pdfText || !pdfText.trim()) {
+        throw new Error("PDF text is required");
+    }
+
+    console.log(
+        `📄 Generating notes from PDF: ${pdfText.length} characters`
+    );
+
+    try {
+
+        const MAX_CHUNK_CHARS = 12000;
+
+        const chunks = [];
+
+        for (
+            let i = 0;
+            i < pdfText.length;
+            i += MAX_CHUNK_CHARS
+        ) {
+
+            chunks.push(
+                pdfText.substring(
+                    i,
+                    i + MAX_CHUNK_CHARS
+                )
+            );
+
+        }
+
+        console.log(
+            `📚 PDF divided into ${chunks.length} chunks`
+        );
+
+        const chunkSummaries = [];
+
+        // ----------------------------------------------
+        // SUMMARIZE EACH CHUNK
+        // ----------------------------------------------
+
+        for (
+            let index = 0;
+            index < chunks.length;
+            index++
+        ) {
+
+            console.log(
+                `📝 Summarizing PDF chunk ${index + 1}/${chunks.length}`
+            );
+
+            const completion =
+                await groq.chat.completions.create({
+
+                    model:
+                        "openai/gpt-oss-120b",
+
+                    messages: [
+
+                        {
+                            role: "system",
+
+                            content: `
+You are EduCompanion AI.
+
+Summarize the provided section of a student's PDF.
+
+Rules:
+
+- Use ONLY information present in the PDF section.
+- Do not invent information.
+- Focus on important academic concepts.
+- Remove unnecessary repetition.
+- Use simple English.
+- Use headings and bullet points.
+- Keep the summary concise.
+- Preserve important definitions, formulas, examples and key facts.
+- Do not write an introduction about yourself.
+- Return only the summary.
+                            `.trim(),
+                        },
+
+                        {
+                            role: "user",
+
+                            content:
+                                `Summarize PDF section ${index + 1}:\n\n${chunks[index]}`,
+                        },
+
+                    ],
+
+                    temperature:
+                        0.3,
+
+                    max_completion_tokens:
+                        1800,
+
+                    reasoning_effort:
+                        "low",
+
+                });
+
+
+            const summary =
+                completion
+                    ?.choices?.[0]
+                    ?.message
+                    ?.content;
+
+
+            if (summary) {
+
+                chunkSummaries.push(
+                    summary
+                );
+
+            }
+
+        }
+
+        // ----------------------------------------------
+        // FINAL COMBINED NOTES
+        // ----------------------------------------------
+
+        const combinedSummary =
+            chunkSummaries.join("\n\n");
+
+
+        console.log(
+            "📚 Creating final brief PDF notes..."
+        );
+
+
+        const finalCompletion =
+            await groq.chat.completions.create({
+
+                model:
+                    "openai/gpt-oss-120b",
+
+                messages: [
+
+                    {
+
+                        role: "system",
+
+                        content: `
+You are EduCompanion AI.
+
+Create final brief study notes from the supplied PDF section summaries.
+
+Rules:
+
+- Use ONLY the supplied information.
+- Do not invent information.
+- Remove duplicate information.
+- Organize topics logically.
+- Keep the notes concise but useful.
+- Preserve important definitions.
+- Preserve important formulas.
+- Preserve important examples.
+- Use Markdown.
+- Use headings and bullet points.
+- Use tables when comparison is useful.
+- Focus on exam preparation.
+- Do not mention that you are an AI.
+- Return ONLY the final notes.
+
+Suggested structure:
+
+# PDF Study Notes
+
+## Main Topics
+
+## Important Concepts
+
+## Definitions
+
+## Important Points
+
+## Formulas
+
+## Examples
+
+## Exam Focus
+
+## Quick Revision
+
+## Summary
+                        `.trim(),
+
+                    },
+
+                    {
+
+                        role:
+                            "user",
+
+                        content:
+                            combinedSummary,
+
+                    },
+
+                ],
+
+                temperature:
+                    0.3,
+
+                max_completion_tokens:
+                    3000,
+
+                reasoning_effort:
+                    "low",
+
+            });
+
+
+        const finalNotes =
+            finalCompletion
+                ?.choices?.[0]
+                ?.message
+                ?.content;
+
+
+        if (!finalNotes) {
+
+            throw new Error(
+                "AI returned empty PDF notes"
+            );
+
+        }
+
+
+        console.log(
+            "✅ PDF notes generated successfully"
+        );
+
+
+        return finalNotes;
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "❌ generateNotesFromPDF ERROR:",
+            error
+        );
+
+        throw error;
+
+    }
+
+}
+
+
+
+// ======================================================
+// GENERATE QUIZ FROM PDF
+// ======================================================
+
+export async function generateQuizFromPDF(
+    pdfText,
+    previousQuestions = []
+) {
+
+    if (!pdfText || !pdfText.trim()) {
+
+        throw new Error(
+            "PDF text is required"
+        );
+
+    }
+
+
+    console.log(
+        "🧠 Generating quiz from uploaded PDF..."
+    );
+
+
+    // --------------------------------------------------
+    // LIMIT PDF CONTEXT
+    // --------------------------------------------------
+
+    const MAX_PDF_CHARS = 30000;
+
+    let limitedPDFText =
+        pdfText;
+
+
+    if (
+        limitedPDFText.length >
+        MAX_PDF_CHARS
+    ) {
+
+        limitedPDFText =
+            limitedPDFText.substring(
+                0,
+                MAX_PDF_CHARS
+            );
+
+    }
+
+
+    // --------------------------------------------------
+    // PREVIOUS QUESTIONS
+    // --------------------------------------------------
+
+    let previousQuestionText =
+        "None";
+
+
+    if (
+        Array.isArray(previousQuestions) &&
+        previousQuestions.length > 0
+    ) {
+
+        previousQuestionText =
+            previousQuestions
+                .map(
+                    (question, index) =>
+                        `${index + 1}. ${question}`
+                )
+                .join("\n");
+
+    }
+
+
+    try {
+
+        const completion =
+            await groq.chat.completions.create({
+
+                model:
+                    "openai/gpt-oss-120b",
+
+                messages: [
+
+                    {
+
+                        role:
+                            "system",
+
+                        content: `
+You are EduCompanion AI Quiz Generator.
+
+Generate exactly 10 MCQ questions based ONLY on the uploaded PDF.
+
+Rules:
+
+- Generate exactly 10 questions.
+- Every question must have exactly 4 options.
+- Only one option is correct.
+- The answer must exactly match one option.
+- Questions MUST be based on the PDF content.
+- Do not use outside knowledge.
+- Questions should test different parts of the PDF.
+- Mix conceptual, factual and understanding-based questions.
+- Do not generate duplicate questions.
+- Questions must be different from the previous quiz questions.
+- Do not simply change the wording of a previous question.
+- Ask about different information from the PDF.
+- Keep questions student-friendly.
+- Do not include explanations.
+- Return valid JSON according to the schema.
+                        `.trim(),
+
+                    },
+
+                    {
+
+                        role:
+                            "user",
+
+                        content:
+                            `
+UPLOADED PDF:
+
+${limitedPDFText}
+
+PREVIOUS QUIZ QUESTIONS:
+
+${previousQuestionText}
+
+Generate a NEW set of 10 questions.
+Do not repeat or rephrase the previous questions.
+                            `.trim(),
+
+                    },
+
+                ],
+
+                response_format: {
+
+                    type:
+                        "json_schema",
+
+                    json_schema: {
+
+                        name:
+                            "pdf_quiz",
+
+                        strict:
+                            true,
+
+                        schema: {
+
+                            type:
+                                "object",
+
+                            properties: {
+
+                                quiz: {
+
+                                    type:
+                                        "array",
+
+                                    minItems:
+                                        10,
+
+                                    maxItems:
+                                        10,
+
+                                    items: {
+
+                                        type:
+                                            "object",
+
+                                        properties: {
+
+                                            question: {
+
+                                                type:
+                                                    "string"
+
+                                            },
+
+                                            options: {
+
+                                                type:
+                                                    "array",
+
+                                                minItems:
+                                                    4,
+
+                                                maxItems:
+                                                    4,
+
+                                                items: {
+
+                                                    type:
+                                                        "string"
+
+                                                }
+
+                                            },
+
+                                            answer: {
+
+                                                type:
+                                                    "string"
+
+                                            }
+
+                                        },
+
+                                        required: [
+
+                                            "question",
+                                            "options",
+                                            "answer"
+
+                                        ],
+
+                                        additionalProperties:
+                                            false
+
+                                    }
+
+                                }
+
+                            },
+
+                            required: [
+
+                                "quiz"
+
+                            ],
+
+                            additionalProperties:
+                                false
+
+                        }
+
+                    }
+
+                },
+
+                temperature:
+                    0.7,
+
+                max_completion_tokens:
+                    4000,
+
+                reasoning_effort:
+                    "low",
+
+            });
+
+
+        const rawResponse =
+            completion
+                ?.choices?.[0]
+                ?.message
+                ?.content;
+
+
+        if (!rawResponse) {
+
+            throw new Error(
+                "AI returned empty PDF quiz"
+            );
+
+        }
+
+
+        const parsed =
+            JSON.parse(
+                rawResponse
+            );
+
+
+        if (
+            !parsed.quiz ||
+            !Array.isArray(parsed.quiz)
+        ) {
+
+            throw new Error(
+                "Invalid PDF quiz format"
+            );
+
+        }
+
+
+        if (
+            parsed.quiz.length !== 10
+        ) {
+
+            throw new Error(
+                `Expected 10 questions but received ${parsed.quiz.length}`
+            );
+
+        }
+
+
+        const quiz =
+            parsed.quiz.map(
+                (item, index) => {
+
+                    if (
+                        !item.question ||
+                        !Array.isArray(item.options) ||
+                        item.options.length !== 4 ||
+                        !item.answer
+                    ) {
+
+                        throw new Error(
+                            `Invalid question ${index + 1}`
+                        );
+
+                    }
+
+
+                    const options =
+                        item.options.map(
+                            option =>
+                                String(option).trim()
+                        );
+
+
+                    if (
+                        new Set(options).size !== 4
+                    ) {
+
+                        throw new Error(
+                            `Duplicate options in question ${index + 1}`
+                        );
+
+                    }
+
+
+                    const answer =
+                        String(
+                            item.answer
+                        ).trim();
+
+
+                    if (
+                        !options.includes(answer)
+                    ) {
+
+                        throw new Error(
+                            `Answer does not match options in question ${index + 1}`
+                        );
+
+                    }
+
+
+                    return {
+
+                        question:
+                            item.question.trim(),
+
+                        options,
+
+                        answer,
+
+                    };
+
+                }
+            );
+
+
+        console.log(
+            "✅ PDF quiz generated successfully"
+        );
+
+
+        return quiz;
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "❌ generateQuizFromPDF ERROR:",
+            error
+        );
+
+        throw error;
 
     }
 

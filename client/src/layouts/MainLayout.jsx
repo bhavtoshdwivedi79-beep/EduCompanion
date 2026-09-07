@@ -10,6 +10,7 @@ function MainLayout() {
         "/chat",
         "/notes",
         "/quiz",
+        "/pdf-study-assistant",
         "/saved-notes",
         "/quiz-history",
         "/chat-history",
