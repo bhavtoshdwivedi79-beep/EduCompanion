@@ -358,10 +358,9 @@ export async function analyzePDF(
 
 
     console.log(
-        `🧠 Question type: ${
-            isVisualQuestion
-                ? "VISUAL"
-                : "TEXT"
+        `🧠 Question type: ${isVisualQuestion
+            ? "VISUAL"
+            : "TEXT"
         }`
     );
 
@@ -2060,58 +2059,69 @@ Rules:
 
 // ======================================================
 // GENERATE NOTES FROM PDF
+// SUPPORTS TEXT + SCANNED/IMAGE PDF
 // ======================================================
 
-export async function generateNotesFromPDF(pdfText) {
+export async function generateNotesFromPDF(
+    pdfText = "",
+    pageImages = []
+) {
 
-    if (!pdfText || !pdfText.trim()) {
-        throw new Error("PDF text is required");
-    }
+    const cleanText =
+        String(pdfText || "")
+            .replace(
+                /--\s*\d+\s+of\s+\d+\s*--/gi,
+                ""
+            )
+            .replace(
+                /\n{3,}/g,
+                "\n\n"
+            )
+            .trim();
+
+
+    const hasReadableText =
+        cleanText
+            .replace(/\s+/g, "")
+            .length >= 30;
+
 
     console.log(
-        `📄 Generating notes from PDF: ${pdfText.length} characters`
+        `📄 PDF notes - readable text: ${hasReadableText}`
     );
 
-    try {
+    console.log(
+        `📝 PDF text characters: ${cleanText.length}`
+    );
 
-        const MAX_CHUNK_CHARS = 12000;
+    console.log(
+        `🖼️ PDF page images available: ${pageImages.length}`
+    );
 
-        const chunks = [];
 
-        for (
-            let i = 0;
-            i < pdfText.length;
-            i += MAX_CHUNK_CHARS
-        ) {
+    // ==================================================
+    // TEXT PDF
+    // ==================================================
 
-            chunks.push(
-                pdfText.substring(
-                    i,
-                    i + MAX_CHUNK_CHARS
-                )
-            );
-
-        }
+    if (hasReadableText) {
 
         console.log(
-            `📚 PDF divided into ${chunks.length} chunks`
+            "📄 Using text-based PDF notes pipeline..."
         );
 
-        const chunkSummaries = [];
 
-        // ----------------------------------------------
-        // SUMMARIZE EACH CHUNK
-        // ----------------------------------------------
+        const MAX_TEXT_CHARS = 50000;
 
-        for (
-            let index = 0;
-            index < chunks.length;
-            index++
-        ) {
+        const limitedText =
+            cleanText.length > MAX_TEXT_CHARS
+                ? cleanText.substring(
+                    0,
+                    MAX_TEXT_CHARS
+                )
+                : cleanText;
 
-            console.log(
-                `📝 Summarizing PDF chunk ${index + 1}/${chunks.length}`
-            );
+
+        try {
 
             const completion =
                 await groq.chat.completions.create({
@@ -2122,112 +2132,34 @@ export async function generateNotesFromPDF(pdfText) {
                     messages: [
 
                         {
+
                             role: "system",
 
                             content: `
 You are EduCompanion AI.
 
-Summarize the provided section of a student's PDF.
+Create professional, exam-friendly study notes from the uploaded PDF.
+
+Use ONLY the information provided in the PDF.
 
 Rules:
 
-- Use ONLY information present in the PDF section.
 - Do not invent information.
-- Focus on important academic concepts.
-- Remove unnecessary repetition.
-- Use simple English.
-- Use headings and bullet points.
-- Keep the summary concise.
-- Preserve important definitions, formulas, examples and key facts.
-- Do not write an introduction about yourself.
-- Return only the summary.
-                            `.trim(),
-                        },
-
-                        {
-                            role: "user",
-
-                            content:
-                                `Summarize PDF section ${index + 1}:\n\n${chunks[index]}`,
-                        },
-
-                    ],
-
-                    temperature:
-                        0.3,
-
-                    max_completion_tokens:
-                        1800,
-
-                    reasoning_effort:
-                        "low",
-
-                });
-
-
-            const summary =
-                completion
-                    ?.choices?.[0]
-                    ?.message
-                    ?.content;
-
-
-            if (summary) {
-
-                chunkSummaries.push(
-                    summary
-                );
-
-            }
-
-        }
-
-        // ----------------------------------------------
-        // FINAL COMBINED NOTES
-        // ----------------------------------------------
-
-        const combinedSummary =
-            chunkSummaries.join("\n\n");
-
-
-        console.log(
-            "📚 Creating final brief PDF notes..."
-        );
-
-
-        const finalCompletion =
-            await groq.chat.completions.create({
-
-                model:
-                    "openai/gpt-oss-120b",
-
-                messages: [
-
-                    {
-
-                        role: "system",
-
-                        content: `
-You are EduCompanion AI.
-
-Create final brief study notes from the supplied PDF section summaries.
-
-Rules:
-
-- Use ONLY the supplied information.
-- Do not invent information.
-- Remove duplicate information.
-- Organize topics logically.
-- Keep the notes concise but useful.
 - Preserve important definitions.
-- Preserve important formulas.
-- Preserve important examples.
-- Use Markdown.
-- Use headings and bullet points.
-- Use tables when comparison is useful.
-- Focus on exam preparation.
+- Preserve formulas.
+- Preserve examples.
+- Preserve important technical details.
+- Organize information logically.
+- Use Markdown headings and subheadings.
+- Use bullet points where useful.
+- Use Markdown tables when comparison or structured information requires a table.
+- Keep tables concise and readable.
+- Explain difficult concepts simply.
+- Focus on useful study material.
+- Remove unnecessary repetition.
 - Do not mention that you are an AI.
-- Return ONLY the final notes.
+- Do not mention internal processing.
+- Return ONLY the study notes.
 
 Suggested structure:
 
@@ -2239,469 +2171,1150 @@ Suggested structure:
 
 ## Definitions
 
+## Detailed Explanation
+
 ## Important Points
 
 ## Formulas
 
 ## Examples
 
+## Applications
+
 ## Exam Focus
 
 ## Quick Revision
 
 ## Summary
-                        `.trim(),
+                            `.trim(),
 
-                    },
+                        },
 
-                    {
+                        {
 
-                        role:
-                            "user",
+                            role: "user",
 
-                        content:
-                            combinedSummary,
+                            content:
+                                `Create complete but concise study notes from this PDF:
 
-                    },
+${limitedText}`,
 
-                ],
+                        },
 
-                temperature:
-                    0.3,
+                    ],
 
-                max_completion_tokens:
-                    3000,
+                    temperature:
+                        0.3,
 
-                reasoning_effort:
-                    "low",
+                    max_completion_tokens:
+                        3500,
 
-            });
+                    reasoning_effort:
+                        "low",
 
-
-        const finalNotes =
-            finalCompletion
-                ?.choices?.[0]
-                ?.message
-                ?.content;
+                });
 
 
-        if (!finalNotes) {
+            const notes =
+                completion
+                    ?.choices?.[0]
+                    ?.message
+                    ?.content;
 
-            throw new Error(
-                "AI returned empty PDF notes"
+
+            if (!notes) {
+
+                throw new Error(
+                    "AI returned empty PDF notes"
+                );
+
+            }
+
+
+            console.log(
+                "✅ Text PDF notes generated successfully"
             );
+
+
+            return notes;
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "❌ Text PDF notes generation error:",
+                error
+            );
+
+            throw error;
+
+        }
+
+    }
+
+
+
+    // ==================================================
+    // SCANNED / IMAGE PDF
+    // ==================================================
+
+    console.log(
+        "🖼️ No readable PDF text found."
+    );
+
+    console.log(
+        "🔄 Switching to Vision AI for scanned PDF..."
+    );
+
+
+    if (
+        !Array.isArray(pageImages) ||
+        pageImages.length === 0
+    ) {
+
+        throw new Error(
+            "This PDF contains no readable text and its pages could not be converted to images."
+        );
+
+    }
+
+
+    const pageResults = [];
+
+
+    // --------------------------------------------------
+    // Analyze each page
+    // --------------------------------------------------
+
+    for (
+        let index = 0;
+        index < pageImages.length;
+        index++
+    ) {
+
+        const imageBuffer =
+            pageImages[index];
+
+
+        if (
+            !imageBuffer ||
+            !Buffer.isBuffer(imageBuffer)
+        ) {
+
+            console.warn(
+                `⚠️ Skipping invalid page ${index + 1}`
+            );
+
+            continue;
 
         }
 
 
         console.log(
-            "✅ PDF notes generated successfully"
+            `🖼️ Reading scanned PDF page ${index + 1}/${pageImages.length}...`
         );
 
 
-        return finalNotes;
+        const base64Image =
+            imageBuffer.toString("base64");
+
+
+        if (!base64Image) {
+
+            continue;
+
+        }
+
+
+        try {
+
+            const completion =
+                await groq.chat.completions.create({
+
+                    model:
+                        "qwen/qwen3.6-27b",
+
+                    messages: [
+
+                        {
+
+                            role: "system",
+
+                            content: `
+You are EduCompanion AI.
+
+You are reading ONE page of a scanned or image-based educational PDF.
+
+Carefully inspect the page image.
+
+Extract the educational content from the page.
+
+Rules:
+
+- Read all visible printed text.
+- Read handwritten text when reasonably clear.
+- Understand headings and subheadings.
+- Extract definitions.
+- Extract formulas.
+- Extract examples.
+- Extract important facts.
+- Understand tables.
+- Understand diagrams, charts and illustrations.
+- Explain technical content when necessary.
+- Preserve important information.
+- Do not invent information.
+- If something is unclear, mention that it is unclear.
+- Do not talk about yourself.
+- Return only useful study content.
+                            `.trim(),
+
+                        },
+
+                        {
+
+                            role: "user",
+
+                            content: [
+
+                                {
+
+                                    type: "text",
+
+                                    text:
+                                        `Extract and summarize the important study content from PDF page ${index + 1}.`,
+
+                                },
+
+                                {
+
+                                    type: "image_url",
+
+                                    image_url: {
+
+                                        url:
+                                            `data:image/jpeg;base64,${base64Image}`,
+
+                                    },
+
+                                },
+
+                            ],
+
+                        },
+
+                    ],
+
+                    temperature:
+                        0.2,
+
+                    max_completion_tokens:
+                        1400,
+
+                });
+
+
+            const pageContent =
+                completion
+                    ?.choices?.[0]
+                    ?.message
+                    ?.content;
+
+
+            if (pageContent) {
+
+                pageResults.push(
+                    `## Page ${index + 1}\n\n${pageContent}`
+                );
+
+            }
+
+
+            console.log(
+                `✅ Page ${index + 1} processed`
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                `❌ Failed to process page ${index + 1}:`,
+                error.message
+            );
+
+        }
+
+
+        // Small delay to avoid hitting limits too aggressively
+
+        if (
+            index <
+            pageImages.length - 1
+        ) {
+
+            await new Promise(
+                resolve =>
+                    setTimeout(
+                        resolve,
+                        1200
+                    )
+            );
+
+        }
 
     }
 
-    catch (error) {
 
-        console.error(
-            "❌ generateNotesFromPDF ERROR:",
-            error
-        );
-
-        throw error;
-
-    }
-
-}
-
-
-
-// ======================================================
-// GENERATE QUIZ FROM PDF
-// ======================================================
-
-export async function generateQuizFromPDF(
-    pdfText,
-    previousQuestions = []
-) {
-
-    if (!pdfText || !pdfText.trim()) {
+    if (pageResults.length === 0) {
 
         throw new Error(
-            "PDF text is required"
+            "Vision AI could not read any page of this PDF."
+        );
+
+    }
+
+
+    // ==================================================
+    // FINAL NOTES
+    // ==================================================
+
+    const extractedContent =
+        pageResults.join("\n\n");
+
+
+    console.log(
+        `📚 Vision extracted content: ${extractedContent.length} characters`
+    );
+
+
+    const MAX_EXTRACTED_CHARS = 30000;
+
+
+    const limitedExtractedContent =
+        extractedContent.length >
+            MAX_EXTRACTED_CHARS
+
+            ? extractedContent.substring(
+                0,
+                MAX_EXTRACTED_CHARS
+            )
+
+            : extractedContent;
+
+
+    console.log(
+        "📝 Creating final notes from scanned PDF..."
+    );
+
+
+    const finalCompletion =
+        await groq.chat.completions.create({
+
+            model:
+                "openai/gpt-oss-120b",
+
+            messages: [
+
+                {
+
+                    role: "system",
+
+                    content: `
+You are EduCompanion AI.
+
+Create professional study notes from content extracted from a scanned PDF.
+
+Use ONLY the supplied extracted content.
+
+Rules:
+
+- Do not invent information.
+- Remove page-by-page repetition.
+- Combine related topics.
+- Preserve important definitions.
+- Preserve formulas.
+- Preserve examples.
+- Preserve important technical information.
+- Use clear headings.
+- Use bullet points.
+- Use Markdown tables when useful.
+- Keep the notes concise but complete.
+- Make the notes useful for exam preparation.
+- Do not mention OCR, Vision AI, scanning or internal processing.
+- Do not mention that you are an AI.
+- Return ONLY the final study notes.
+
+Structure:
+
+# PDF Study Notes
+
+## Main Topics
+
+## Important Concepts
+
+## Definitions
+
+## Detailed Explanation
+
+## Important Points
+
+## Formulas
+
+## Examples
+
+## Applications
+
+## Exam Focus
+
+## Quick Revision
+
+## Summary
+                    `.trim(),
+
+                },
+
+                {
+
+                    role: "user",
+
+                    content:
+                        `Create final study notes from this extracted PDF content:
+
+${limitedExtractedContent}`,
+
+                },
+
+            ],
+
+            temperature:
+                0.3,
+
+            max_completion_tokens:
+                3500,
+
+            reasoning_effort:
+                "low",
+
+        });
+
+
+    const finalNotes =
+        finalCompletion
+            ?.choices?.[0]
+            ?.message
+            ?.content;
+
+
+    if (!finalNotes) {
+
+        throw new Error(
+            "AI returned empty notes for scanned PDF"
         );
 
     }
 
 
     console.log(
-        "🧠 Generating quiz from uploaded PDF..."
+        "✅ Scanned/image PDF notes generated successfully"
     );
 
 
-    // --------------------------------------------------
-    // LIMIT PDF CONTEXT
-    // --------------------------------------------------
+    return finalNotes;
 
-    const MAX_PDF_CHARS = 30000;
+}
 
-    let limitedPDFText =
-        pdfText;
+// ============================================================
+// PDF QUIZ GENERATION - TEXT PDF
+// ============================================================
 
-
-    if (
-        limitedPDFText.length >
-        MAX_PDF_CHARS
-    ) {
-
-        limitedPDFText =
-            limitedPDFText.substring(
-                0,
-                MAX_PDF_CHARS
-            );
-
+export async function generateQuizFromPDF(
+    pdfText,
+    previousQuestions = []
+) {
+    if (!pdfText || pdfText.trim().length < 30) {
+        throw new Error("PDF does not contain enough readable text.");
     }
 
-
-    // --------------------------------------------------
-    // PREVIOUS QUESTIONS
-    // --------------------------------------------------
-
-    let previousQuestionText =
-        "None";
-
-
-    if (
-        Array.isArray(previousQuestions) &&
-        previousQuestions.length > 0
-    ) {
-
-        previousQuestionText =
-            previousQuestions
-                .map(
-                    (question, index) =>
-                        `${index + 1}. ${question}`
-                )
-                .join("\n");
-
-    }
-
-
-    try {
-
-        const completion =
-            await groq.chat.completions.create({
-
-                model:
-                    "openai/gpt-oss-120b",
-
-                messages: [
-
-                    {
-
-                        role:
-                            "system",
-
-                        content: `
-You are EduCompanion AI Quiz Generator.
-
-Generate exactly 10 MCQ questions based ONLY on the uploaded PDF.
-
-Rules:
-
-- Generate exactly 10 questions.
-- Every question must have exactly 4 options.
-- Only one option is correct.
-- The answer must exactly match one option.
-- Questions MUST be based on the PDF content.
-- Do not use outside knowledge.
-- Questions should test different parts of the PDF.
-- Mix conceptual, factual and understanding-based questions.
-- Do not generate duplicate questions.
-- Questions must be different from the previous quiz questions.
-- Do not simply change the wording of a previous question.
-- Ask about different information from the PDF.
-- Keep questions student-friendly.
-- Do not include explanations.
-- Return valid JSON according to the schema.
-                        `.trim(),
-
-                    },
-
-                    {
-
-                        role:
-                            "user",
-
-                        content:
-                            `
-UPLOADED PDF:
-
-${limitedPDFText}
-
-PREVIOUS QUIZ QUESTIONS:
-
-${previousQuestionText}
-
-Generate a NEW set of 10 questions.
-Do not repeat or rephrase the previous questions.
-                            `.trim(),
-
-                    },
-
-                ],
-
-                response_format: {
-
-                    type:
-                        "json_schema",
-
-                    json_schema: {
-
-                        name:
-                            "pdf_quiz",
-
-                        strict:
-                            true,
-
-                        schema: {
-
-                            type:
-                                "object",
-
-                            properties: {
-
-                                quiz: {
-
-                                    type:
-                                        "array",
-
-                                    minItems:
-                                        10,
-
-                                    maxItems:
-                                        10,
-
-                                    items: {
-
-                                        type:
-                                            "object",
-
-                                        properties: {
-
-                                            question: {
-
-                                                type:
-                                                    "string"
-
-                                            },
-
-                                            options: {
-
-                                                type:
-                                                    "array",
-
-                                                minItems:
-                                                    4,
-
-                                                maxItems:
-                                                    4,
-
-                                                items: {
-
-                                                    type:
-                                                        "string"
-
-                                                }
-
-                                            },
-
-                                            answer: {
-
-                                                type:
-                                                    "string"
-
-                                            }
-
-                                        },
-
-                                        required: [
-
-                                            "question",
-                                            "options",
-                                            "answer"
-
-                                        ],
-
-                                        additionalProperties:
-                                            false
-
-                                    }
-
-                                }
-
-                            },
-
-                            required: [
-
-                                "quiz"
-
-                            ],
-
-                            additionalProperties:
-                                false
-
-                        }
-
-                    }
-
-                },
-
-                temperature:
-                    0.7,
-
-                max_completion_tokens:
-                    4000,
-
-                reasoning_effort:
-                    "low",
-
-            });
-
-
-        const rawResponse =
-            completion
-                ?.choices?.[0]
-                ?.message
-                ?.content;
-
-
-        if (!rawResponse) {
-
-            throw new Error(
-                "AI returned empty PDF quiz"
-            );
-
-        }
-
-
-        const parsed =
-            JSON.parse(
-                rawResponse
-            );
-
-
-        if (
-            !parsed.quiz ||
-            !Array.isArray(parsed.quiz)
-        ) {
-
-            throw new Error(
-                "Invalid PDF quiz format"
-            );
-
-        }
-
-
-        if (
-            parsed.quiz.length !== 10
-        ) {
-
-            throw new Error(
-                `Expected 10 questions but received ${parsed.quiz.length}`
-            );
-
-        }
-
-
-        const quiz =
-            parsed.quiz.map(
-                (item, index) => {
-
-                    if (
-                        !item.question ||
-                        !Array.isArray(item.options) ||
-                        item.options.length !== 4 ||
-                        !item.answer
-                    ) {
-
-                        throw new Error(
-                            `Invalid question ${index + 1}`
-                        );
-
-                    }
-
-
-                    const options =
-                        item.options.map(
-                            option =>
-                                String(option).trim()
-                        );
-
-
-                    if (
-                        new Set(options).size !== 4
-                    ) {
-
-                        throw new Error(
-                            `Duplicate options in question ${index + 1}`
-                        );
-
-                    }
-
-
-                    const answer =
-                        String(
-                            item.answer
-                        ).trim();
-
-
-                    if (
-                        !options.includes(answer)
-                    ) {
-
-                        throw new Error(
-                            `Answer does not match options in question ${index + 1}`
-                        );
-
-                    }
-
-
-                    return {
-
-                        question:
-                            item.question.trim(),
-
-                        options,
-
-                        answer,
-
-                    };
-
-                }
-            );
-
-
-        console.log(
-            "✅ PDF quiz generated successfully"
+    const cleanText = pdfText
+        .replace(/\s+/g, " ")
+        .trim();
+
+    // Keep enough content for quiz generation.
+    // We take content from throughout the PDF instead of only
+    // blindly using the first characters.
+    const MAX_CHARS = 30000;
+
+    let sourceText = cleanText;
+
+    if (cleanText.length > MAX_CHARS) {
+        const chunkSize = Math.floor(MAX_CHARS / 3);
+
+        const beginning = cleanText.slice(0, chunkSize);
+        const middleStart = Math.floor(
+            (cleanText.length - chunkSize) / 2
+        );
+        const middle = cleanText.slice(
+            middleStart,
+            middleStart + chunkSize
         );
 
+        const ending = cleanText.slice(-chunkSize);
 
-        return quiz;
+        sourceText = `
+BEGINNING OF PDF:
+${beginning}
 
+MIDDLE OF PDF:
+${middle}
+
+END OF PDF:
+${ending}
+        `.trim();
     }
 
-    catch (error) {
+    const previous = Array.isArray(previousQuestions)
+        ? previousQuestions
+            .filter(Boolean)
+            .map((q) => String(q).trim())
+            .filter(Boolean)
+        : [];
 
+    const previousSection =
+        previous.length > 0
+            ? `
+IMPORTANT:
+The following questions were already generated.
+
+Do NOT repeat them.
+Do NOT create rephrased versions of them.
+Generate genuinely different questions.
+
+PREVIOUS QUESTIONS:
+${previous.map((q, i) => `${i + 1}. ${q}`).join("\n")}
+`
+            : "";
+
+    const prompt = `
+You are an expert educational quiz generator.
+
+Create a quiz using ONLY the educational content present in the
+provided PDF content.
+
+Generate EXACTLY 10 multiple-choice questions.
+
+Requirements:
+
+1. Exactly 10 questions.
+2. Each question must have exactly 4 options.
+3. Exactly ONE option must be correct.
+4. Questions must test understanding of the PDF content.
+5. Do not ask about information that is not present in the PDF.
+6. Avoid duplicate or nearly identical questions.
+7. If previous questions are provided, do not repeat or rephrase them.
+8. Use clear student-friendly language.
+9. Mix definitions, concepts, applications, comparisons and reasoning
+   where the PDF content allows.
+10. Return ONLY valid JSON.
+
+JSON format:
+
+{
+  "quiz": [
+    {
+      "question": "Question text",
+      "options": [
+        "Option 1",
+        "Option 2",
+        "Option 3",
+        "Option 4"
+      ],
+      "answer": "Option 1"
+    }
+  ]
+}
+
+The "answer" field MUST exactly match one of the four options.
+
+${previousSection}
+
+PDF CONTENT:
+${sourceText}
+`;
+
+    try {
+        const completion = await groq.chat.completions.create({
+            model: "openai/gpt-oss-120b",
+            messages: [
+                {
+                    role: "system",
+                    content:
+                        "You are a precise educational quiz generator. Return valid JSON only."
+                },
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ],
+            temperature: 0.5,
+            max_tokens: 5000,
+            response_format: {
+                type: "json_object"
+            }
+        });
+
+        const raw = completion?.choices?.[0]?.message?.content;
+
+        if (!raw) {
+            throw new Error("AI returned an empty quiz response.");
+        }
+
+        const parsed =
+            typeof raw === "string"
+                ? JSON.parse(raw)
+                : raw;
+
+        const generatedQuiz = parsed?.quiz;
+
+        if (!Array.isArray(generatedQuiz)) {
+            throw new Error("AI returned an invalid quiz structure.");
+        }
+
+        if (generatedQuiz.length !== 10) {
+            throw new Error(
+                `AI generated ${generatedQuiz.length} questions instead of 10.`
+            );
+        }
+
+        const finalQuiz = generatedQuiz.map((item, index) => {
+            if (!item || typeof item !== "object") {
+                throw new Error(
+                    `Invalid question structure at question ${index + 1}.`
+                );
+            }
+
+            const question = String(
+                item.question || ""
+            ).trim();
+
+            const options = Array.isArray(item.options)
+                ? item.options
+                    .map((option) => String(option).trim())
+                    .filter(Boolean)
+                : [];
+
+            const answer = String(
+                item.answer || ""
+            ).trim();
+
+            if (!question) {
+                throw new Error(
+                    `Question ${index + 1} is empty.`
+                );
+            }
+
+            if (options.length !== 4) {
+                throw new Error(
+                    `Question ${index + 1} does not contain exactly 4 options.`
+                );
+            }
+
+            const uniqueOptions = new Set(
+                options.map((option) => option.toLowerCase())
+            );
+
+            if (uniqueOptions.size !== 4) {
+                throw new Error(
+                    `Question ${index + 1} contains duplicate options.`
+                );
+            }
+
+            if (!options.includes(answer)) {
+                throw new Error(
+                    `Question ${index + 1} has an invalid correct answer.`
+                );
+            }
+
+            return {
+                question,
+                options,
+                answer
+            };
+        });
+
+        // Final duplicate-question check
+        const questionSet = new Set();
+
+        for (const item of finalQuiz) {
+            const normalized = item.question
+                .toLowerCase()
+                .replace(/\s+/g, " ")
+                .trim();
+
+            if (questionSet.has(normalized)) {
+                throw new Error(
+                    "AI generated duplicate questions."
+                );
+            }
+
+            questionSet.add(normalized);
+        }
+
+        return finalQuiz;
+
+    } catch (error) {
         console.error(
-            "❌ generateQuizFromPDF ERROR:",
+            "❌ PDF TEXT QUIZ GENERATION ERROR:",
             error
         );
 
-        throw error;
+        throw new Error(
+            error.message ||
+            "Failed to generate quiz from PDF."
+        );
+    }
+}
 
+
+// ============================================================
+// PDF QUIZ GENERATION - SCANNED / IMAGE PDF
+// ============================================================
+
+export async function generateQuizFromPDFImages(
+    imageBuffers,
+    previousQuestions = []
+) {
+    if (
+        !Array.isArray(imageBuffers) ||
+        imageBuffers.length === 0
+    ) {
+        throw new Error(
+            "No PDF page images were available for quiz generation."
+        );
     }
 
+    console.log(
+        `🖼️ PDF Quiz Vision Mode: ${imageBuffers.length} page(s)`
+    );
+
+    /*
+     * Processing a very large PDF page-by-page can create a huge
+     * number of Vision requests.
+     *
+     * We therefore select pages distributed throughout the PDF.
+     * This is much better than taking only the first few pages.
+     */
+    const MAX_VISION_PAGES = 15;
+
+    let selectedImages = imageBuffers;
+
+    if (imageBuffers.length > MAX_VISION_PAGES) {
+        const selectedIndexes = [];
+        const step =
+            (imageBuffers.length - 1) /
+            (MAX_VISION_PAGES - 1);
+
+        for (
+            let i = 0;
+            i < MAX_VISION_PAGES;
+            i++
+        ) {
+            const index = Math.round(i * step);
+
+            if (!selectedIndexes.includes(index)) {
+                selectedIndexes.push(index);
+            }
+        }
+
+        selectedImages = selectedIndexes.map(
+            (index) => imageBuffers[index]
+        );
+
+        console.log(
+            `📚 Large PDF detected. Using ${selectedImages.length} distributed pages for quiz generation.`
+        );
+    }
+
+    // --------------------------------------------------------
+    // STEP 1: Vision AI extracts educational content
+    // --------------------------------------------------------
+
+    const visionPrompt = `
+Read this PDF page carefully.
+
+Extract the important educational content visible on this page.
+
+Include:
+
+- headings
+- definitions
+- concepts
+- explanations
+- important facts
+- formulas
+- examples
+- comparisons
+- processes
+- steps
+- tables
+- diagram information
+- labels
+- code concepts if present
+
+Do NOT invent information.
+
+Do NOT answer a question.
+
+Your job is only to accurately convert the visible educational
+content into clear text that another AI can use to create quiz
+questions.
+
+If the page contains mostly images or diagrams, describe the
+educational information conveyed by those diagrams.
+
+Return concise but information-rich text.
+`;
+
+    // --------------------------------------------------------
+    // STEP 1: Vision AI extracts educational content
+    // --------------------------------------------------------
+
+    let visionResult;
+
+    try {
+        visionResult = await analyzePDFImages(
+            selectedImages,
+            visionPrompt
+        );
+    } catch (error) {
+        console.error(
+            "❌ Vision PDF extraction failed:",
+            error
+        );
+
+        throw new Error(
+            "Vision AI could not read the scanned PDF pages."
+        );
+    }
+
+    // --------------------------------------------------------
+    // analyzePDFImages() in EduCompanion returns the
+    // combined page analysis as a STRING.
+    // Keep this code flexible in case the function
+    // returns an array in the future.
+    // --------------------------------------------------------
+
+    let extractedContent = "";
+
+    if (Array.isArray(visionResult)) {
+        extractedContent = visionResult
+            .filter(Boolean)
+            .map((page) => String(page).trim())
+            .filter((page) => page.length > 20)
+            .join("\n\n");
+    } else if (typeof visionResult === "string") {
+        extractedContent = visionResult.trim();
+    } else if (
+        visionResult &&
+        typeof visionResult === "object"
+    ) {
+        // Extra safety if the service ever returns an object
+        extractedContent = String(
+            visionResult.content ||
+            visionResult.text ||
+            visionResult.result ||
+            ""
+        ).trim();
+    }
+
+    if (!extractedContent) {
+        throw new Error(
+            "Vision AI could not extract quiz content from this PDF."
+        );
+    }
+
+    if (extractedContent.length < 50) {
+        throw new Error(
+            "Vision AI could not extract enough educational content from this PDF."
+        );
+    }
+
+    console.log(
+        `📝 Vision extracted ${extractedContent.length} characters of content.`
+    );
+
+    if (extractedContent.length < 50) {
+        throw new Error(
+            "Vision AI could not extract enough educational content from this PDF."
+        );
+    }
+
+    console.log(
+        `📝 Vision extracted ${extractedContent.length} characters of content.`
+    );
+
+    // --------------------------------------------------------
+    // STEP 2: GPT generates quiz from Vision output
+    // --------------------------------------------------------
+
+    const MAX_CONTENT_CHARS = 30000;
+
+    let quizContent = extractedContent;
+
+    if (quizContent.length > MAX_CONTENT_CHARS) {
+        const chunkSize =
+            Math.floor(MAX_CONTENT_CHARS / 3);
+
+        const beginning =
+            quizContent.slice(0, chunkSize);
+
+        const middleStart =
+            Math.floor(
+                (quizContent.length - chunkSize) / 2
+            );
+
+        const middle =
+            quizContent.slice(
+                middleStart,
+                middleStart + chunkSize
+            );
+
+        const ending =
+            quizContent.slice(-chunkSize);
+
+        quizContent = `
+BEGINNING OF PDF:
+${beginning}
+
+MIDDLE OF PDF:
+${middle}
+
+END OF PDF:
+${ending}
+        `.trim();
+    }
+
+    const previous = Array.isArray(previousQuestions)
+        ? previousQuestions
+            .filter(Boolean)
+            .map((q) => String(q).trim())
+            .filter(Boolean)
+        : [];
+
+    const previousSection =
+        previous.length > 0
+            ? `
+IMPORTANT:
+
+These questions have already been generated.
+
+Do NOT repeat them.
+Do NOT create rephrased versions.
+Create genuinely different questions.
+
+PREVIOUS QUESTIONS:
+${previous.map((q, i) => `${i + 1}. ${q}`).join("\n")}
+`
+            : "";
+
+    const quizPrompt = `
+You are an expert educational quiz generator.
+
+Generate a quiz ONLY from the educational content extracted from
+a scanned/image-based PDF.
+
+Generate EXACTLY 10 multiple-choice questions.
+
+Requirements:
+
+1. Exactly 10 questions.
+2. Exactly 4 options per question.
+3. Exactly ONE correct answer per question.
+4. Every answer must be supported by the extracted PDF content.
+5. Do not use outside knowledge.
+6. Do not invent facts.
+7. Do not repeat questions.
+8. Do not create rephrased versions of previous questions.
+9. Questions should cover different parts of the PDF where possible.
+10. Mix definitions, concepts, understanding, applications,
+    comparisons and reasoning when supported by the content.
+11. Return ONLY valid JSON.
+
+JSON format:
+
+{
+  "quiz": [
+    {
+      "question": "Question text",
+      "options": [
+        "Option 1",
+        "Option 2",
+        "Option 3",
+        "Option 4"
+      ],
+      "answer": "Option 1"
+    }
+  ]
+}
+
+The "answer" field MUST exactly match one of the four options.
+
+${previousSection}
+
+EXTRACTED PDF CONTENT:
+${quizContent}
+`;
+
+    try {
+        const completion = await groq.chat.completions.create({
+            model: "openai/gpt-oss-120b",
+            messages: [
+                {
+                    role: "system",
+                    content:
+                        "You are a precise educational quiz generator. Return valid JSON only."
+                },
+                {
+                    role: "user",
+                    content: quizPrompt
+                }
+            ],
+            temperature: 0.6,
+            max_tokens: 5000,
+            response_format: {
+                type: "json_object"
+            }
+        });
+
+        const raw = completion?.choices?.[0]?.message?.content;
+
+        if (!raw) {
+            throw new Error(
+                "AI returned an empty quiz response."
+            );
+        }
+
+        const parsed =
+            typeof raw === "string"
+                ? JSON.parse(raw)
+                : raw;
+
+        const generatedQuiz = parsed?.quiz;
+
+        if (!Array.isArray(generatedQuiz)) {
+            throw new Error(
+                "AI returned an invalid quiz structure."
+            );
+        }
+
+        if (generatedQuiz.length !== 10) {
+            throw new Error(
+                `AI generated ${generatedQuiz.length} questions instead of 10.`
+            );
+        }
+
+        const finalQuiz = generatedQuiz.map(
+            (item, index) => {
+                if (
+                    !item ||
+                    typeof item !== "object"
+                ) {
+                    throw new Error(
+                        `Invalid question structure at question ${index + 1}.`
+                    );
+                }
+
+                const question = String(
+                    item.question || ""
+                ).trim();
+
+                const options = Array.isArray(
+                    item.options
+                )
+                    ? item.options
+                        .map((option) =>
+                            String(option).trim()
+                        )
+                        .filter(Boolean)
+                    : [];
+
+                const answer = String(
+                    item.answer || ""
+                ).trim();
+
+                if (!question) {
+                    throw new Error(
+                        `Question ${index + 1} is empty.`
+                    );
+                }
+
+                if (options.length !== 4) {
+                    throw new Error(
+                        `Question ${index + 1} must have exactly 4 options.`
+                    );
+                }
+
+                const uniqueOptions =
+                    new Set(
+                        options.map((option) =>
+                            option.toLowerCase()
+                        )
+                    );
+
+                if (uniqueOptions.size !== 4) {
+                    throw new Error(
+                        `Question ${index + 1} contains duplicate options.`
+                    );
+                }
+
+                if (!options.includes(answer)) {
+                    throw new Error(
+                        `Question ${index + 1} has an invalid correct answer.`
+                    );
+                }
+
+                return {
+                    question,
+                    options,
+                    answer
+                };
+            }
+        );
+
+        // Check duplicate questions
+        const questionSet = new Set();
+
+        for (const item of finalQuiz) {
+            const normalized =
+                item.question
+                    .toLowerCase()
+                    .replace(/\s+/g, " ")
+                    .trim();
+
+            if (questionSet.has(normalized)) {
+                throw new Error(
+                    "AI generated duplicate questions."
+                );
+            }
+
+            questionSet.add(normalized);
+        }
+
+        console.log(
+            "✅ Scanned PDF quiz generated successfully."
+        );
+
+        return finalQuiz;
+
+    } catch (error) {
+        console.error(
+            "❌ SCANNED PDF QUIZ GENERATION ERROR:",
+            error
+        );
+
+        throw new Error(
+            error.message ||
+            "Failed to generate quiz from scanned PDF."
+        );
+    }
 }

@@ -10,7 +10,8 @@ import {
     generateQuizAI,
     generateFlashcards,
     generateNotesFromPDF,
-    generateQuizFromPDF
+    generateQuizFromPDF,
+    generateQuizFromPDFImages
 } from "../services/geminiService.js";
 
 import {
@@ -1483,6 +1484,7 @@ export const generateQuiz = async (
 
 // ======================================================
 // GENERATE NOTES FROM UPLOADED PDF
+// TEXT + IMAGE PDF SUPPORT
 // ======================================================
 
 export const generatePDFNotes = async (
@@ -1515,10 +1517,17 @@ export const generatePDFNotes = async (
         );
 
 
+        // ==============================================
+        // EXTRACT TEXT + PAGE COUNT
+        // ==============================================
+
         const {
             pdfText,
             pages
-        } = await extractPDFText(req.file.buffer);
+        } =
+            await extractPDFText(
+                req.file.buffer
+            );
 
 
         const cleanedPDFText =
@@ -1534,25 +1543,60 @@ export const generatePDFNotes = async (
                 .trim();
 
 
-        if (
-            cleanedPDFText.length < 30
-        ) {
+        console.log(
+            `📄 PDF pages: ${pages}`
+        );
 
-            return res.status(400).json({
+        console.log(
+            `📝 Extracted text: ${cleanedPDFText.length} characters`
+        );
 
-                success: false,
 
-                message:
-                    "Unable to extract readable text from this PDF."
+        // ==============================================
+        // CONVERT PDF TO IMAGES
+        // ==============================================
 
-            });
+        let pageImages = [];
+
+
+        try {
+
+            console.log(
+                "🖼️ Converting PDF pages to images..."
+            );
+
+
+            pageImages =
+                await convertPDFToImages(
+                    req.file.buffer,
+                    pages
+                );
+
+
+            console.log(
+                `🖼️ Converted ${pageImages.length}/${pages} pages`
+            );
+
+        }
+
+        catch (imageError) {
+
+            console.error(
+                "⚠️ PDF image conversion failed:",
+                imageError.message
+            );
 
         }
 
 
+        // ==============================================
+        // GENERATE NOTES
+        // ==============================================
+
         const notes =
             await generateNotesFromPDF(
-                cleanedPDFText
+                cleanedPDFText,
+                pageImages
             );
 
 
@@ -1600,53 +1644,57 @@ export const generatePDFNotes = async (
 
 // ======================================================
 // GENERATE QUIZ FROM UPLOADED PDF
+// TEXT + IMAGE PDF SUPPORT
 // ======================================================
 
-export const generatePDFQuiz = async (
-    req,
-    res
-) => {
-
+export const generatePDFQuiz = async (req, res) => {
     try {
-
         if (
             !req.file ||
             req.file.mimetype !== "application/pdf"
         ) {
-
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "Please upload a PDF file."
-
+                message: "Please upload a valid PDF file."
             });
-
         }
 
+        // ----------------------------------------------------
+        // Previous questions for Retry / New Quiz
+        // ----------------------------------------------------
 
-        const previousQuestions =
-            req.body.previousQuestions
-                ? JSON.parse(
-                    req.body.previousQuestions
-                )
-                : [];
+        let previousQuestions = [];
 
+        if (req.body.previousQuestions) {
+            try {
+                previousQuestions =
+                    JSON.parse(
+                        req.body.previousQuestions
+                    );
 
-        console.log(
-            "🧠 Previous quiz questions:",
-            previousQuestions.length
-        );
+                if (!Array.isArray(previousQuestions)) {
+                    previousQuestions = [];
+                }
+            } catch (parseError) {
+                console.warn(
+                    "⚠️ Could not parse previousQuestions:",
+                    parseError.message
+                );
 
+                previousQuestions = [];
+            }
+        }
+
+        // ----------------------------------------------------
+        // STEP 1: Try normal PDF text extraction
+        // ----------------------------------------------------
 
         const {
-            pdfText
-        } =
-            await extractPDFText(
-                req.file.buffer
-            );
-
+            pdfText,
+            pages
+        } = await extractPDFText(
+            req.file.buffer
+        );
 
         const cleanedPDFText =
             (pdfText || "")
@@ -1660,66 +1708,125 @@ export const generatePDFQuiz = async (
                 )
                 .trim();
 
+        const meaningfulText =
+            cleanedPDFText
+                .replace(/\s+/g, "")
+                .trim();
 
-        if (
-            cleanedPDFText.length < 30
-        ) {
+        const hasMeaningfulText =
+            meaningfulText.length >= 30;
 
-            return res.status(400).json({
+        // ----------------------------------------------------
+        // CASE 1: NORMAL TEXT PDF
+        // ----------------------------------------------------
 
-                success: false,
-
-                message:
-                    "Unable to extract readable text from this PDF."
-
-            });
-
-        }
-
-
-        const quiz =
-            await generateQuizFromPDF(
-                cleanedPDFText,
-                previousQuestions
+        if (hasMeaningfulText) {
+            console.log(
+                "📄 PDF Quiz Mode: TEXT"
             );
 
+            const quiz =
+                await generateQuizFromPDF(
+                    cleanedPDFText,
+                    previousQuestions
+                );
+
+            await updateStreak(
+                req.user._id
+            );
+
+            return res.status(200).json({
+                success: true,
+                quiz,
+                fileName:
+                    req.file.originalname,
+                pages,
+                mode: "text"
+            });
+        }
+
+        // ----------------------------------------------------
+        // CASE 2: SCANNED / IMAGE PDF
+        // ----------------------------------------------------
+
+        console.log(
+            "🖼️ PDF Quiz Mode: SCANNED / IMAGE PDF"
+        );
+
+        console.log(
+            "📄 Extracted text is insufficient. Rendering PDF pages..."
+        );
+
+        let pageImages;
+
+        try {
+            pageImages =
+                await convertPDFToImages(
+                    req.file.buffer,
+                    pages
+                );
+        } catch (renderError) {
+            console.error(
+                "❌ PDF page rendering failed:",
+                renderError
+            );
+
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Could not convert the scanned PDF pages into images."
+            });
+        }
+
+        if (
+            !Array.isArray(pageImages) ||
+            pageImages.length === 0
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Could not read any pages from this PDF."
+            });
+        }
+
+        console.log(
+            `🖼️ Successfully rendered ${pageImages.length} PDF pages.`
+        );
+
+        // ----------------------------------------------------
+        // Vision AI → Quiz
+        // ----------------------------------------------------
+
+        const quiz =
+            await generateQuizFromPDFImages(
+                pageImages,
+                previousQuestions
+            );
 
         await updateStreak(
             req.user._id
         );
 
-
         return res.status(200).json({
-
             success: true,
-
             quiz,
-
             fileName:
                 req.file.originalname,
-
+            pages,
+            mode: "vision"
         });
 
-    }
-
-    catch (error) {
-
+    } catch (error) {
         console.error(
-            "❌ generatePDFQuiz ERROR:",
+            "❌ GENERATE PDF QUIZ ERROR:",
             error
         );
 
-
         return res.status(500).json({
-
             success: false,
-
             message:
                 error.message ||
                 "Failed to generate quiz from PDF."
-
         });
-
     }
-
 };
