@@ -2060,6 +2060,7 @@ Rules:
 // ======================================================
 // GENERATE NOTES FROM PDF
 // SUPPORTS TEXT + SCANNED/IMAGE PDF
+// IMPROVED OCR + MATH + STRUCTURE
 // ======================================================
 
 export async function generateNotesFromPDF(
@@ -2067,11 +2068,23 @@ export async function generateNotesFromPDF(
     pageImages = []
 ) {
 
+    // ==================================================
+    // BASIC PDF TEXT CLEANUP
+    // ==================================================
+
     const cleanText =
         String(pdfText || "")
             .replace(
                 /--\s*\d+\s+of\s+\d+\s*--/gi,
                 ""
+            )
+            .replace(
+                /\r\n/g,
+                "\n"
+            )
+            .replace(
+                /\r/g,
+                "\n"
             )
             .replace(
                 /\n{3,}/g,
@@ -2095,73 +2108,186 @@ export async function generateNotesFromPDF(
     );
 
     console.log(
-        `🖼️ PDF page images available: ${pageImages.length}`
+        `🖼️ PDF page images available: ${Array.isArray(pageImages)
+            ? pageImages.length
+            : 0
+        }`
     );
 
 
     // ==================================================
-    // TEXT PDF
+    // COMMON NOTE-GENERATION INSTRUCTIONS
     // ==================================================
 
-    if (hasReadableText) {
+    const notesInstructions = `
+You are EduCompanion AI, an expert educational study-notes generator.
 
-        console.log(
-            "📄 Using text-based PDF notes pipeline..."
-        );
+Create professional, concise, exam-friendly study notes from the
+provided PDF content.
 
+Use ONLY the information present in the supplied source.
 
-        const MAX_TEXT_CHARS = 50000;
+IMPORTANT RULES:
 
-        const limitedText =
-            cleanText.length > MAX_TEXT_CHARS
-                ? cleanText.substring(
-                    0,
-                    MAX_TEXT_CHARS
-                )
-                : cleanText;
+1. Do not invent facts, examples, formulas, applications, definitions,
+   or explanations that are not supported by the source.
 
+2. Preserve the original technical meaning.
 
-        try {
+3. Correct only obvious OCR/spacing errors when the intended meaning
+   is completely clear from the surrounding context.
 
-            const completion =
-                await groq.chat.completions.create({
+4. Do not merge technical words, variable names, or symbols together.
 
-                    model:
-                        "openai/gpt-oss-120b",
+5. Preserve technical terminology accurately.
 
-                    messages: [
+6. Remove unnecessary repetition.
 
-                        {
+7. Combine information belonging to the same topic even if it appears
+   on different PDF pages.
 
-                            role: "system",
+8. Do not organize the final notes page-by-page.
 
-                            content: `
-You are EduCompanion AI.
+9. Use clear Markdown headings and subheadings.
 
-Create professional, exam-friendly study notes from the uploaded PDF.
+10. Use bullet points for important points.
 
-Use ONLY the information provided in the PDF.
+11. Use numbered lists for ordered steps or procedures.
 
-Rules:
+12. Use Markdown tables when the source contains comparisons,
+    classifications, or structured information that is clearer as a
+    table.
 
-- Do not invent information.
-- Preserve important definitions.
-- Preserve formulas.
-- Preserve examples.
-- Preserve important technical details.
-- Organize information logically.
-- Use Markdown headings and subheadings.
-- Use bullet points where useful.
-- Use Markdown tables when comparison or structured information requires a table.
-- Keep tables concise and readable.
-- Explain difficult concepts simply.
-- Focus on useful study material.
-- Remove unnecessary repetition.
-- Do not mention that you are an AI.
-- Do not mention internal processing.
-- Return ONLY the study notes.
+13. Keep tables concise and readable.
 
-Suggested structure:
+14. Include important examples when they help understand a concept.
+
+15. Keep the notes concise, but do not remove important exam-relevant
+    information.
+
+16. Do not mention OCR, Vision AI, scanning, image processing,
+    internal processing, prompts, or AI.
+
+17. Do not mention that you are an AI.
+
+18. Return ONLY the final study notes.
+
+==================================================
+MATHEMATICAL FORMATTING
+==================================================
+
+Mathematical expressions and formulas are extremely important.
+
+Whenever the source contains:
+
+- equations
+- formulas
+- inequalities
+- mathematical expressions
+- complexity notation
+- summations
+- square roots
+- logarithms
+- fractions
+- subscripts
+- superscripts
+- Greek symbols
+- mathematical relationships
+
+preserve them accurately.
+
+For DISPLAY formulas use:
+
+$$
+formula
+$$
+
+For INLINE mathematical expressions use:
+
+$formula$
+
+Do NOT use:
+
+\\[
+formula
+\\]
+
+or:
+
+\\(
+formula
+\\)
+
+Do NOT put mathematical formulas inside code blocks.
+
+Preserve mathematical operators and symbols.
+
+Examples:
+
+$$
+degree(x) \\leq \\lfloor \\log_{\\phi}(n) \\rfloor
+$$
+
+$$
+BF(x) = height(left) - height(right)
+$$
+
+Inline example:
+
+The search complexity is $O(\\log n)$.
+
+Preserve symbols such as:
+
+≤ ≥ < > ± √ ∑ ∞ π φ θ α β γ
+
+when they are supported by the source.
+
+Do not replace a mathematical formula with a vague verbal
+description when the actual formula is available.
+
+==================================================
+TECHNICAL / CODE FORMATTING
+==================================================
+
+If the PDF contains code:
+
+- Preserve code accurately.
+- Keep variable names separated correctly.
+- Preserve indentation where possible.
+- Use fenced code blocks.
+- Do not convert code into ordinary prose.
+
+For example:
+
+\`\`\`text
+Node* next;
+Node* prev;
+\`\`\`
+
+==================================================
+OCR CLEANUP
+==================================================
+
+The source may contain OCR errors.
+
+Fix obvious errors such as:
+
+"nodex" → "node x"
+
+"heapH" → "heap H"
+
+"heightleft" → "height(left)"
+
+only when the intended meaning is clear.
+
+Do NOT guess unclear content.
+
+If a word, formula, number, or symbol is genuinely unreadable,
+preserve the uncertainty rather than inventing a replacement.
+
+==================================================
+RECOMMENDED STRUCTURE
+==================================================
 
 # PDF Study Notes
 
@@ -2186,7 +2312,114 @@ Suggested structure:
 ## Quick Revision
 
 ## Summary
-                            `.trim(),
+
+Use only the sections that are actually supported by the source.
+Do not create empty sections.
+`.trim();
+
+
+    // ==================================================
+    // TEXT PDF
+    // ==================================================
+
+    if (hasReadableText) {
+
+        console.log(
+            "📄 Using improved text-based PDF notes pipeline..."
+        );
+
+
+        const MAX_TEXT_CHARS = 50000;
+
+
+        let limitedText =
+            cleanText;
+
+
+        // --------------------------------------------------
+        // For very large PDFs, preserve beginning, middle and
+        // ending instead of blindly taking only the beginning.
+        // --------------------------------------------------
+
+        if (
+            cleanText.length >
+            MAX_TEXT_CHARS
+        ) {
+
+            const chunkSize =
+                Math.floor(
+                    MAX_TEXT_CHARS / 3
+                );
+
+
+            const beginning =
+                cleanText.slice(
+                    0,
+                    chunkSize
+                );
+
+
+            const middleStart =
+                Math.floor(
+                    (
+                        cleanText.length -
+                        chunkSize
+                    ) / 2
+                );
+
+
+            const middle =
+                cleanText.slice(
+                    middleStart,
+                    middleStart + chunkSize
+                );
+
+
+            const ending =
+                cleanText.slice(
+                    -chunkSize
+                );
+
+
+            limitedText = `
+BEGINNING OF PDF:
+
+${beginning}
+
+
+MIDDLE OF PDF:
+
+${middle}
+
+
+END OF PDF:
+
+${ending}
+            `.trim();
+
+        }
+
+
+        try {
+
+            console.log(
+                "🤖 Generating structured notes from text PDF..."
+            );
+
+
+            const completion =
+                await groq.chat.completions.create({
+
+                    model:
+                        "openai/gpt-oss-120b",
+
+                    messages: [
+
+                        {
+                            role: "system",
+
+                            content:
+                                notesInstructions,
 
                         },
 
@@ -2195,19 +2428,25 @@ Suggested structure:
                             role: "user",
 
                             content:
-                                `Create complete but concise study notes from this PDF:
+                                `
+Create complete but concise study notes from the following PDF content.
 
-${limitedText}`,
+Preserve important technical details and mathematical notation.
+
+PDF CONTENT:
+
+${limitedText}
+                                `.trim(),
 
                         },
 
                     ],
 
                     temperature:
-                        0.3,
+                        0.25,
 
                     max_completion_tokens:
-                        3500,
+                        4500,
 
                     reasoning_effort:
                         "low",
@@ -2225,7 +2464,7 @@ ${limitedText}`,
             if (!notes) {
 
                 throw new Error(
-                    "AI returned empty PDF notes"
+                    "AI returned empty PDF notes."
                 );
 
             }
@@ -2236,7 +2475,7 @@ ${limitedText}`,
             );
 
 
-            return notes;
+            return notes.trim();
 
         }
 
@@ -2254,7 +2493,6 @@ ${limitedText}`,
     }
 
 
-
     // ==================================================
     // SCANNED / IMAGE PDF
     // ==================================================
@@ -2264,7 +2502,7 @@ ${limitedText}`,
     );
 
     console.log(
-        "🔄 Switching to Vision AI for scanned PDF..."
+        "🔄 Switching to improved Vision AI pipeline..."
     );
 
 
@@ -2283,9 +2521,9 @@ ${limitedText}`,
     const pageResults = [];
 
 
-    // --------------------------------------------------
-    // Analyze each page
-    // --------------------------------------------------
+    // ==================================================
+    // VISION AI — PAGE-BY-PAGE EXTRACTION
+    // ==================================================
 
     for (
         let index = 0;
@@ -2312,15 +2550,22 @@ ${limitedText}`,
 
 
         console.log(
-            `🖼️ Reading scanned PDF page ${index + 1}/${pageImages.length}...`
+            `🖼️ Reading scanned PDF page ${index + 1
+            }/${pageImages.length}...`
         );
 
 
         const base64Image =
-            imageBuffer.toString("base64");
+            imageBuffer.toString(
+                "base64"
+            );
 
 
         if (!base64Image) {
+
+            console.warn(
+                `⚠️ Empty image for page ${index + 1}`
+            );
 
             continue;
 
@@ -2342,31 +2587,132 @@ ${limitedText}`,
                             role: "system",
 
                             content: `
-You are EduCompanion AI.
+You are an expert document-reading assistant for EduCompanion.
 
-You are reading ONE page of a scanned or image-based educational PDF.
+You are reading ONE page of a scanned educational PDF.
 
-Carefully inspect the page image.
+Your task is to accurately extract the educational information
+visible on this page so another AI can later create polished
+study notes.
 
-Extract the educational content from the page.
+Read the page carefully.
 
-Rules:
+EXTRACT:
 
-- Read all visible printed text.
-- Read handwritten text when reasonably clear.
-- Understand headings and subheadings.
-- Extract definitions.
-- Extract formulas.
-- Extract examples.
-- Extract important facts.
-- Understand tables.
-- Understand diagrams, charts and illustrations.
-- Explain technical content when necessary.
-- Preserve important information.
-- Do not invent information.
-- If something is unclear, mention that it is unclear.
-- Do not talk about yourself.
-- Return only useful study content.
+- headings
+- subheadings
+- definitions
+- concepts
+- explanations
+- important facts
+- formulas
+- mathematical expressions
+- examples
+- algorithms
+- steps
+- procedures
+- comparisons
+- tables
+- diagram labels
+- information conveyed by diagrams
+- charts
+- code
+- important exam-related points
+
+==================================================
+OCR ACCURACY
+==================================================
+
+Pay special attention to:
+
+- spaces between words
+- spaces between technical terms and variables
+- subscripts
+- superscripts
+- mathematical symbols
+- parentheses
+- brackets
+- punctuation
+- numbers
+- variable names
+- operators
+- code syntax
+
+For example:
+
+"nodex" should be interpreted as "node x" only when the
+surrounding context clearly supports that interpretation.
+
+"heapH" should be interpreted as "heap H" only when clearly
+supported by context.
+
+Do not invent unreadable text.
+
+==================================================
+MATHEMATICS
+==================================================
+
+Preserve formulas accurately.
+
+Use LaTeX notation.
+
+For display formulas use:
+
+$$
+formula
+$$
+
+For inline formulas use:
+
+$formula$
+
+Examples:
+
+$$
+BF(x) = height(left) - height(right)
+$$
+
+$$
+T(n) = O(\\log n)
+$$
+
+Do not put formulas inside code blocks.
+
+Preserve symbols such as:
+
+≤ ≥ < > ± √ ∑ ∞ π φ θ α β γ
+
+when visible.
+
+==================================================
+CODE
+==================================================
+
+If code is visible, preserve it as code.
+
+Do not rewrite code into prose.
+
+==================================================
+DIAGRAMS AND TABLES
+==================================================
+
+If a diagram is visible, explain the educational information
+communicated by it.
+
+If a table is visible, preserve its rows, columns and relationships
+as accurately as possible.
+
+==================================================
+IMPORTANT
+==================================================
+
+Do not answer questions.
+
+Do not create final study notes.
+
+Do not invent missing information.
+
+Return only the extracted educational content from this page.
                             `.trim(),
 
                         },
@@ -2382,7 +2728,10 @@ Rules:
                                     type: "text",
 
                                     text:
-                                        `Extract and summarize the important study content from PDF page ${index + 1}.`,
+                                        `
+Extract the educational content from PDF page ${index + 1
+                                            } accurately and completely.
+                                        `.trim(),
 
                                 },
 
@@ -2406,10 +2755,10 @@ Rules:
                     ],
 
                     temperature:
-                        0.2,
+                        0.1,
 
                     max_completion_tokens:
-                        1400,
+                        1800,
 
                 });
 
@@ -2421,10 +2770,17 @@ Rules:
                     ?.content;
 
 
-            if (pageContent) {
+            if (
+                pageContent &&
+                pageContent.trim()
+            ) {
 
                 pageResults.push(
-                    `## Page ${index + 1}\n\n${pageContent}`
+                    `
+PAGE ${index + 1}
+
+${pageContent.trim()}
+                    `.trim()
                 );
 
             }
@@ -2439,14 +2795,17 @@ Rules:
         catch (error) {
 
             console.error(
-                `❌ Failed to process page ${index + 1}:`,
+                `❌ Failed to process page ${index + 1
+                }:`,
                 error.message
             );
 
         }
 
 
-        // Small delay to avoid hitting limits too aggressively
+        // --------------------------------------------------
+        // Small delay between Vision requests
+        // --------------------------------------------------
 
         if (
             index <
@@ -2466,7 +2825,13 @@ Rules:
     }
 
 
-    if (pageResults.length === 0) {
+    // ==================================================
+    // CHECK VISION RESULTS
+    // ==================================================
+
+    if (
+        pageResults.length === 0
+    ) {
 
         throw new Error(
             "Vision AI could not read any page of this PDF."
@@ -2475,152 +2840,199 @@ Rules:
     }
 
 
-    // ==================================================
-    // FINAL NOTES
-    // ==================================================
-
     const extractedContent =
-        pageResults.join("\n\n");
-
-
-    console.log(
-        `📚 Vision extracted content: ${extractedContent.length} characters`
-    );
-
-
-    const MAX_EXTRACTED_CHARS = 30000;
-
-
-    const limitedExtractedContent =
-        extractedContent.length >
-            MAX_EXTRACTED_CHARS
-
-            ? extractedContent.substring(
-                0,
-                MAX_EXTRACTED_CHARS
-            )
-
-            : extractedContent;
-
-
-    console.log(
-        "📝 Creating final notes from scanned PDF..."
-    );
-
-
-    const finalCompletion =
-        await groq.chat.completions.create({
-
-            model:
-                "openai/gpt-oss-120b",
-
-            messages: [
-
-                {
-
-                    role: "system",
-
-                    content: `
-You are EduCompanion AI.
-
-Create professional study notes from content extracted from a scanned PDF.
-
-Use ONLY the supplied extracted content.
-
-Rules:
-
-- Do not invent information.
-- Remove page-by-page repetition.
-- Combine related topics.
-- Preserve important definitions.
-- Preserve formulas.
-- Preserve examples.
-- Preserve important technical information.
-- Use clear headings.
-- Use bullet points.
-- Use Markdown tables when useful.
-- Keep the notes concise but complete.
-- Make the notes useful for exam preparation.
-- Do not mention OCR, Vision AI, scanning or internal processing.
-- Do not mention that you are an AI.
-- Return ONLY the final study notes.
-
-Structure:
-
-# PDF Study Notes
-
-## Main Topics
-
-## Important Concepts
-
-## Definitions
-
-## Detailed Explanation
-
-## Important Points
-
-## Formulas
-
-## Examples
-
-## Applications
-
-## Exam Focus
-
-## Quick Revision
-
-## Summary
-                    `.trim(),
-
-                },
-
-                {
-
-                    role: "user",
-
-                    content:
-                        `Create final study notes from this extracted PDF content:
-
-${limitedExtractedContent}`,
-
-                },
-
-            ],
-
-            temperature:
-                0.3,
-
-            max_completion_tokens:
-                3500,
-
-            reasoning_effort:
-                "low",
-
-        });
-
-
-    const finalNotes =
-        finalCompletion
-            ?.choices?.[0]
-            ?.message
-            ?.content;
-
-
-    if (!finalNotes) {
-
-        throw new Error(
-            "AI returned empty notes for scanned PDF"
+        pageResults.join(
+            "\n\n"
         );
+
+
+    console.log(
+        `📚 Vision extracted content: ${extractedContent.length
+        } characters`
+    );
+
+
+    // ==================================================
+    // LIMIT FINAL VISION CONTENT
+    // ==================================================
+
+    const MAX_EXTRACTED_CHARS = 40000;
+
+
+    let limitedExtractedContent =
+        extractedContent;
+
+
+    // --------------------------------------------------
+    // Preserve content from beginning, middle and end
+    // instead of losing everything after 30k characters.
+    // --------------------------------------------------
+
+    if (
+        extractedContent.length >
+        MAX_EXTRACTED_CHARS
+    ) {
+
+        const chunkSize =
+            Math.floor(
+                MAX_EXTRACTED_CHARS / 3
+            );
+
+
+        const beginning =
+            extractedContent.slice(
+                0,
+                chunkSize
+            );
+
+
+        const middleStart =
+            Math.floor(
+                (
+                    extractedContent.length -
+                    chunkSize
+                ) / 2
+            );
+
+
+        const middle =
+            extractedContent.slice(
+                middleStart,
+                middleStart + chunkSize
+            );
+
+
+        const ending =
+            extractedContent.slice(
+                -chunkSize
+            );
+
+
+        limitedExtractedContent = `
+BEGINNING OF PDF:
+
+${beginning}
+
+
+MIDDLE OF PDF:
+
+${middle}
+
+
+END OF PDF:
+
+${ending}
+        `.trim();
 
     }
 
 
+    // ==================================================
+    // FINAL NOTES GENERATION
+    // ==================================================
+
     console.log(
-        "✅ Scanned/image PDF notes generated successfully"
+        "📝 Creating polished final notes from scanned PDF..."
     );
 
 
-    return finalNotes;
+    try {
+
+        const finalCompletion =
+            await groq.chat.completions.create({
+
+                model:
+                    "openai/gpt-oss-120b",
+
+                messages: [
+
+                    {
+
+                        role: "system",
+
+                        content:
+                            notesInstructions,
+
+                    },
+
+                    {
+
+                        role: "user",
+
+                        content:
+                            `
+Create the final polished study notes from the extracted
+educational content below.
+
+IMPORTANT:
+
+- Do not organize the final answer page-by-page.
+- Merge related concepts from different pages.
+- Remove duplicate information.
+- Preserve formulas accurately.
+- Preserve important definitions.
+- Preserve examples.
+- Preserve technical terminology.
+- Correct only obvious OCR spacing errors when the meaning is clear.
+- Use proper mathematical Markdown.
+- Make the notes useful for exam preparation.
+
+EXTRACTED PDF CONTENT:
+
+${limitedExtractedContent}
+                            `.trim(),
+
+                    },
+
+                ],
+
+                temperature:
+                    0.25,
+
+                max_completion_tokens:
+                    4500,
+
+                reasoning_effort:
+                    "low",
+
+            });
+
+
+        const finalNotes =
+            finalCompletion
+                ?.choices?.[0]
+                ?.message
+                ?.content;
+
+
+        if (!finalNotes) {
+
+            throw new Error(
+                "AI returned empty notes for scanned PDF."
+            );
+
+        }
+
+
+        console.log(
+            "✅ Scanned/image PDF notes generated successfully"
+        );
+
+
+        return finalNotes.trim();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "❌ Final scanned PDF notes generation error:",
+            error
+        );
+
+        throw error;
+
+    }
 
 }
 

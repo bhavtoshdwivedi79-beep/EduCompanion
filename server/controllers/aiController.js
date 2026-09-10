@@ -1484,7 +1484,8 @@ export const generateQuiz = async (
 
 // ======================================================
 // GENERATE NOTES FROM UPLOADED PDF
-// TEXT + IMAGE PDF SUPPORT
+// TEXT + IMAGE/SCANNED PDF SUPPORT
+// SMART PIPELINE
 // ======================================================
 
 export const generatePDFNotes = async (
@@ -1493,6 +1494,10 @@ export const generatePDFNotes = async (
 ) => {
 
     try {
+
+        // ==============================================
+        // VALIDATE PDF
+        // ==============================================
 
         if (
             !req.file ||
@@ -1530,11 +1535,23 @@ export const generatePDFNotes = async (
             );
 
 
+        // ==============================================
+        // CLEAN EXTRACTED TEXT
+        // ==============================================
+
         const cleanedPDFText =
             (pdfText || "")
                 .replace(
                     /--\s*\d+\s+of\s+\d+\s*--/gi,
                     ""
+                )
+                .replace(
+                    /\r\n/g,
+                    "\n"
+                )
+                .replace(
+                    /\r/g,
+                    "\n"
                 )
                 .replace(
                     /\n{3,}/g,
@@ -1548,42 +1565,111 @@ export const generatePDFNotes = async (
         );
 
         console.log(
-            `📝 Extracted text: ${cleanedPDFText.length} characters`
+            `📝 Extracted text: ${cleanedPDFText.length
+            } characters`
         );
 
 
         // ==============================================
-        // CONVERT PDF TO IMAGES
+        // DETECT TEXT PDF VS SCANNED PDF
+        // ==============================================
+
+        const meaningfulText =
+            cleanedPDFText
+                .replace(/\s+/g, "")
+                .trim();
+
+
+        const hasReadableText =
+            meaningfulText.length >= 30;
+
+
+        console.log(
+            `📄 Readable PDF text: ${hasReadableText}`
+        );
+
+
+        // ==============================================
+        // PAGE IMAGES
+        // ONLY REQUIRED FOR SCANNED PDF
         // ==============================================
 
         let pageImages = [];
 
 
-        try {
+        if (!hasReadableText) {
 
             console.log(
-                "🖼️ Converting PDF pages to images..."
+                "🖼️ Scanned/image PDF detected."
+            );
+
+            console.log(
+                "🔄 Converting PDF pages to images..."
             );
 
 
-            pageImages =
-                await convertPDFToImages(
-                    req.file.buffer,
-                    pages
+            try {
+
+                pageImages =
+                    await convertPDFToImages(
+                        req.file.buffer,
+                        pages
+                    );
+
+
+                console.log(
+                    `🖼️ Converted ${pageImages.length
+                    }/${pages} pages`
                 );
 
 
-            console.log(
-                `🖼️ Converted ${pageImages.length}/${pages} pages`
-            );
+                if (
+                    !Array.isArray(pageImages) ||
+                    pageImages.length === 0
+                ) {
+
+                    return res.status(400).json({
+
+                        success: false,
+
+                        message:
+                            "This PDF appears to be image-based, but its pages could not be processed."
+
+                    });
+
+                }
+
+            }
+
+            catch (imageError) {
+
+                console.error(
+                    "❌ PDF image conversion failed:",
+                    imageError
+                );
+
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    message:
+                        "Unable to process the scanned PDF pages."
+
+                });
+
+            }
 
         }
 
-        catch (imageError) {
+        else {
 
-            console.error(
-                "⚠️ PDF image conversion failed:",
-                imageError.message
+            console.log(
+                "📄 Text-based PDF detected."
+            );
+
+            console.log(
+                "⏭️ Skipping unnecessary PDF image conversion."
             );
 
         }
@@ -1593,6 +1679,11 @@ export const generatePDFNotes = async (
         // GENERATE NOTES
         // ==============================================
 
+        console.log(
+            "🤖 Starting PDF notes generation..."
+        );
+
+
         const notes =
             await generateNotesFromPDF(
                 cleanedPDFText,
@@ -1600,8 +1691,21 @@ export const generatePDFNotes = async (
             );
 
 
+        // ==============================================
+        // UPDATE STREAK
+        // ==============================================
+
         await updateStreak(
             req.user._id
+        );
+
+
+        // ==============================================
+        // SUCCESS RESPONSE
+        // ==============================================
+
+        console.log(
+            "✅ PDF notes generated successfully."
         );
 
 
