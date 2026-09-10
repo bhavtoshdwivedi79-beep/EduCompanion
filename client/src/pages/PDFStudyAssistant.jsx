@@ -4,6 +4,9 @@ import { useRef, useState } from "react";
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
@@ -142,13 +145,36 @@ function PDFStudyAssistant() {
     /* ================= PDF CONTENT FORMATTER ================= */
 
     const cleanPDFText = (text = "") => {
-        return text
-            .replace(/<br\s*\/?>/gi, "\n")
+        return normalizeMathForMarkdown(text)
             .replace(/&nbsp;/gi, " ")
             .replace(/&amp;/gi, "&")
             .replace(/&lt;/gi, "<")
             .replace(/&gt;/gi, ">")
             .trim();
+    };
+
+    /* ================= NORMALIZE MATH ================= */
+
+    const normalizeMathForMarkdown = (text = "") => {
+        if (!text) return "";
+
+        return text
+            // Display math:
+            // \[ ... \]  →  $$ ... $$
+            .replace(
+                /\\\[\s*([\s\S]*?)\s*\\\]/g,
+                (_, formula) => `\n$$\n${formula.trim()}\n$$\n`
+            )
+
+            // Inline math:
+            // \( ... \)  →  $ ... $
+            .replace(
+                /\\\(\s*([\s\S]*?)\s*\\\)/g,
+                (_, formula) => `$${formula.trim()}$`
+            )
+
+            // Remove accidental HTML line breaks
+            .replace(/<br\s*\/?>/gi, "\n");
     };
 
     /* ================= INLINE MARKDOWN ================= */
@@ -1561,9 +1587,15 @@ function PDFStudyAssistant() {
                     <div className="pdf-notes-content">
 
                         <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
+                            remarkPlugins={[
+                                remarkGfm,
+                                remarkMath,
+                            ]}
+                            rehypePlugins={[
+                                rehypeKatex,
+                            ]}
                         >
-                            {notes}
+                            {normalizeMathForMarkdown(notes)}
                         </ReactMarkdown>
 
                     </div>
