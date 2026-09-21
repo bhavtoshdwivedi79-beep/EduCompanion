@@ -945,6 +945,7 @@
     margin-top: 20px;
 }
 
+.pdf-save-quiz-btn,
 .pdf-retry-btn,
 .pdf-new-quiz-btn {
     padding: 12px 20px;
@@ -984,6 +985,41 @@
 
 .pdf-new-quiz-btn:hover {
     transform: translateY(-1px);
+}
+
+.pdf-save-quiz-btn {
+    border: none;
+
+    background: var(--primary);
+    color: #ffffff;
+
+    padding: 12px 20px;
+
+    border-radius: 10px;
+
+    font-size: 14px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.pdf-save-quiz-btn:hover:not(:disabled) {
+    opacity: 0.9;
+
+    transform: translateY(-1px);
+}
+
+.pdf-save-quiz-btn:disabled {
+    opacity: 0.65;
+
+    cursor: not-allowed;
+
+    transform: none;
 }
 
 
@@ -1099,6 +1135,6 @@
     text-align: center;
 }
 
-.pdf-notes-content .katex-display > .katex {
+.pdf-notes-content .katex-display>.katex {
     max-width: 100%;
 }

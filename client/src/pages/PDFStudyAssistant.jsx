@@ -20,6 +20,8 @@ import {
     generatePDFQuiz,
 } from "../services/pdfService";
 
+import { saveQuizResult } from "../services/quizService";
+
 import { useNotifications } from "../context/NotificationContext";
 
 function PDFStudyAssistant() {
@@ -39,6 +41,10 @@ function PDFStudyAssistant() {
     const [submitted, setSubmitted] = useState(false);
 
     const [loading, setLoading] = useState(false);
+
+    const [savedToHistory, setSavedToHistory] = useState(false);
+
+    const [savingQuiz, setSavingQuiz] = useState(false);
 
     const [mode, setMode] = useState("");
 
@@ -1167,6 +1173,8 @@ function PDFStudyAssistant() {
 
             setAnswers({});
 
+            setSavedToHistory(false);
+
 
             const previousQuestions = retry
                 ? quiz.map((q) => q.question)
@@ -1326,6 +1334,71 @@ function PDFStudyAssistant() {
 
     };
 
+    /* ================= SAVE QUIZ TO HISTORY ================= */
+
+    const handleSaveQuiz = async () => {
+
+        if (!quiz.length || !submitted) {
+            return;
+        }
+
+        if (savedToHistory) {
+            return;
+        }
+
+        try {
+
+            setSavingQuiz(true);
+
+            const accuracy = Math.round(
+                (score / quiz.length) * 100
+            );
+
+            await saveQuizResult({
+
+                topic: `PDF: ${pdfFile?.name || "PDF Quiz"}`,
+
+                score: score,
+
+                totalQuestions: quiz.length,
+
+                accuracy: accuracy,
+
+            });
+
+            setSavedToHistory(true);
+
+            toast.success(
+                "💾 Quiz saved to Quiz History!"
+            );
+
+            addNotification(
+                `💾 PDF Quiz saved to Quiz History (${score}/${quiz.length})`
+            );
+
+        }
+        catch (error) {
+
+            console.error(
+                "Save PDF Quiz Error:",
+                error
+            );
+
+            const message =
+                error?.response?.data?.message ||
+                "Failed to save quiz to Quiz History.";
+
+            toast.error(message);
+
+        }
+        finally {
+
+            setSavingQuiz(false);
+
+        }
+
+    };
+
 
     /* ================= NEW QUIZ ================= */
 
@@ -1338,6 +1411,8 @@ function PDFStudyAssistant() {
         setSubmitted(false);
 
         setScore(0);
+
+        setSavedToHistory(false);
 
         setError("");
 
@@ -1807,6 +1882,19 @@ function PDFStudyAssistant() {
 
 
                             <div className="pdf-result-buttons">
+
+                                <button
+                                    className="pdf-save-quiz-btn"
+                                    onClick={handleSaveQuiz}
+                                    disabled={savedToHistory || savingQuiz}
+                                >
+                                    {savingQuiz
+                                        ? "Saving..."
+                                        : savedToHistory
+                                            ? "✅ Saved to Quiz History"
+                                            : "💾 Save to Quiz History"
+                                    }
+                                </button>
 
                                 <button
                                     className="pdf-retry-btn"
