@@ -19,7 +19,6 @@ const getConfig = () => {
 /* ================= PDF NOTES ================= */
 
 export const generatePDFNotes = async (pdfFile) => {
-
     const formData = new FormData();
 
     formData.append("pdf", pdfFile);
@@ -37,9 +36,9 @@ export const generatePDFNotes = async (pdfFile) => {
 
 export const generatePDFQuiz = async (
     pdfFile,
-    previousQuestions = []
+    previousQuestions = [],
+    questionCount = 10
 ) => {
-
     const formData = new FormData();
 
     formData.append("pdf", pdfFile);
@@ -47,6 +46,11 @@ export const generatePDFQuiz = async (
     formData.append(
         "previousQuestions",
         JSON.stringify(previousQuestions)
+    );
+
+    formData.append(
+        "questionCount",
+        String(questionCount)
     );
 
     const res = await API.post(

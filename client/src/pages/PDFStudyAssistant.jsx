@@ -50,6 +50,13 @@ function PDFStudyAssistant() {
 
     const [error, setError] = useState("");
 
+    /* ================= DYNAMIC QUIZ STATES ================= */
+
+    const [questionCount, setQuestionCount] = useState(10);
+
+    const [showQuizCountSelector, setShowQuizCountSelector] =
+        useState(false);
+
     const fileInputRef = useRef(null);
 
     const { addNotification } = useNotifications();
@@ -100,7 +107,15 @@ function PDFStudyAssistant() {
 
         setScore(0);
 
+        setSavedToHistory(false);
+
+        setSavingQuiz(false);
+
         setError("");
+
+        setMode("");
+
+        setShowQuizCountSelector(false);
 
     };
 
@@ -121,9 +136,15 @@ function PDFStudyAssistant() {
 
         setScore(0);
 
+        setSavedToHistory(false);
+
+        setSavingQuiz(false);
+
         setError("");
 
         setMode("");
+
+        setShowQuizCountSelector(false);
 
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
@@ -148,40 +169,50 @@ function PDFStudyAssistant() {
 
     };
 
+
     /* ================= PDF CONTENT FORMATTER ================= */
 
     const cleanPDFText = (text = "") => {
+
         return normalizeMathForMarkdown(text)
             .replace(/&nbsp;/gi, " ")
             .replace(/&amp;/gi, "&")
             .replace(/&lt;/gi, "<")
             .replace(/&gt;/gi, ">")
             .trim();
+
     };
+
 
     /* ================= NORMALIZE MATH ================= */
 
     const normalizeMathForMarkdown = (text = "") => {
+
         if (!text) return "";
 
         return text
+
             // Display math:
-            // \[ ... \]  →  $$ ... $$
+            // \[ ... \] → $$ ... $$
             .replace(
                 /\\\[\s*([\s\S]*?)\s*\\\]/g,
-                (_, formula) => `\n$$\n${formula.trim()}\n$$\n`
+                (_, formula) =>
+                    `\n$$\n${formula.trim()}\n$$\n`
             )
 
             // Inline math:
-            // \( ... \)  →  $ ... $
+            // \( ... \) → $ ... $
             .replace(
                 /\\\(\s*([\s\S]*?)\s*\\\)/g,
-                (_, formula) => `$${formula.trim()}$`
+                (_, formula) =>
+                    `$${formula.trim()}$`
             )
 
             // Remove accidental HTML line breaks
             .replace(/<br\s*\/?>/gi, "\n");
+
     };
+
 
     /* ================= INLINE MARKDOWN ================= */
 
@@ -416,6 +447,7 @@ function PDFStudyAssistant() {
         return cleaned
             .split("|")
             .map((cell) => cleanPDFText(cell));
+
     };
 
 
@@ -901,6 +933,7 @@ function PDFStudyAssistant() {
 
     };
 
+
     /* ================= DOWNLOAD NOTES PDF ================= */
 
     const handleDownloadNotes = () => {
@@ -1090,6 +1123,10 @@ function PDFStudyAssistant() {
 
             setScore(0);
 
+            setSavedToHistory(false);
+
+            setShowQuizCountSelector(false);
+
 
             const toastId = toast.loading(
                 "📚 Generating notes from PDF..."
@@ -1142,10 +1179,34 @@ function PDFStudyAssistant() {
     };
 
 
+    /* ================= OPEN QUIZ COUNT SELECTOR ================= */
+
+    const handleOpenQuizSelector = () => {
+
+        if (!pdfFile) {
+
+            toast.error("Please upload a PDF first.");
+
+            return;
+
+        }
+
+        if (loading) {
+            return;
+        }
+
+        setError("");
+
+        setShowQuizCountSelector(true);
+
+    };
+
+
     /* ================= GENERATE QUIZ ================= */
 
     const handleGenerateQuiz = async (
-        retry = false
+        retry = false,
+        selectedQuestionCount = questionCount
     ) => {
 
         if (!pdfFile) {
@@ -1175,6 +1236,8 @@ function PDFStudyAssistant() {
 
             setSavedToHistory(false);
 
+            setShowQuizCountSelector(false);
+
 
             const previousQuestions = retry
                 ? quiz.map((q) => q.question)
@@ -1183,14 +1246,15 @@ function PDFStudyAssistant() {
 
             const toastId = toast.loading(
                 retry
-                    ? "🔄 Generating fresh questions..."
-                    : "🧠 Generating quiz from PDF..."
+                    ? `🔄 Generating fresh ${selectedQuestionCount} questions...`
+                    : `🧠 Generating ${selectedQuestionCount} questions from PDF...`
             );
 
 
             const data = await generatePDFQuiz(
                 pdfFile,
-                previousQuestions
+                previousQuestions,
+                selectedQuestionCount
             );
 
 
@@ -1206,13 +1270,20 @@ function PDFStudyAssistant() {
             }
 
 
+            /*
+             * Store the selected count so Retry Quiz
+             * uses the same number of questions.
+             */
+
+            setQuestionCount(selectedQuestionCount);
+
             setQuiz(newQuiz);
 
 
             toast.success(
                 retry
-                    ? "🔄 Fresh quiz generated!"
-                    : "🧠 PDF quiz generated successfully!",
+                    ? `🔄 Fresh ${newQuiz.length}-question quiz generated!`
+                    : `🧠 ${newQuiz.length}-question PDF quiz generated successfully!`,
                 {
                     id: toastId,
                 }
@@ -1221,8 +1292,8 @@ function PDFStudyAssistant() {
 
             addNotification(
                 retry
-                    ? `🔄 New quiz generated from "${pdfFile.name}"`
-                    : `🧠 Quiz generated from "${pdfFile.name}"`
+                    ? `🔄 New ${newQuiz.length}-question quiz generated from "${pdfFile.name}"`
+                    : `🧠 ${newQuiz.length}-question quiz generated from "${pdfFile.name}"`
             );
 
 
@@ -1250,6 +1321,27 @@ function PDFStudyAssistant() {
             setLoading(false);
 
         }
+
+    };
+
+
+    /* ================= SELECT QUIZ COUNT ================= */
+
+    const handleQuestionCountSelect = (count) => {
+
+        setQuestionCount(count);
+
+    };
+
+
+    /* ================= CONFIRM QUIZ COUNT ================= */
+
+    const handleConfirmQuizCount = () => {
+
+        handleGenerateQuiz(
+            false,
+            questionCount
+        );
 
     };
 
@@ -1334,6 +1426,7 @@ function PDFStudyAssistant() {
 
     };
 
+
     /* ================= SAVE QUIZ TO HISTORY ================= */
 
     const handleSaveQuiz = async () => {
@@ -1415,6 +1508,8 @@ function PDFStudyAssistant() {
         setSavedToHistory(false);
 
         setError("");
+
+        setShowQuizCountSelector(false);
 
     };
 
@@ -1556,9 +1651,7 @@ function PDFStudyAssistant() {
 
                     <button
                         className="pdf-action-btn quiz-action"
-                        onClick={() =>
-                            handleGenerateQuiz(false)
-                        }
+                        onClick={handleOpenQuizSelector}
                         disabled={loading}
                     >
 
@@ -1585,6 +1678,100 @@ function PDFStudyAssistant() {
             )}
 
 
+            {/* ================= QUIZ COUNT SELECTOR ================= */}
+
+            {showQuizCountSelector && pdfFile && !loading && (
+
+                <div className="pdf-quiz-count-card">
+
+                    <div className="pdf-quiz-count-header">
+
+                        <div>
+
+                            <h2>
+                                🧠 Choose Quiz Size
+                            </h2>
+
+                            <p>
+                                How many questions would you like
+                                to generate?
+                            </p>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            className="pdf-quiz-count-close"
+                            onClick={() =>
+                                setShowQuizCountSelector(false)
+                            }
+                            aria-label="Close quiz size selector"
+                        >
+                            ✕
+                        </button>
+
+                    </div>
+
+
+                    <div className="pdf-quiz-count-options">
+
+                        {[10, 20, 30, 50].map((count) => (
+
+                            <button
+                                key={count}
+                                type="button"
+                                className={`pdf-quiz-count-option ${
+                                    questionCount === count
+                                        ? "selected"
+                                        : ""
+                                }`}
+                                onClick={() =>
+                                    handleQuestionCountSelect(count)
+                                }
+                            >
+
+                                <strong>
+                                    {count}
+                                </strong>
+
+                                <span>
+                                    Questions
+                                </span>
+
+                            </button>
+
+                        ))}
+
+                    </div>
+
+
+                    <div className="pdf-quiz-count-actions">
+
+                        <button
+                            type="button"
+                            className="pdf-quiz-count-cancel"
+                            onClick={() =>
+                                setShowQuizCountSelector(false)
+                            }
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            type="button"
+                            className="pdf-quiz-count-generate"
+                            onClick={handleConfirmQuizCount}
+                        >
+                            🧠 Generate {questionCount} Questions
+                        </button>
+
+                    </div>
+
+                </div>
+
+            )}
+
+
             {/* ================= LOADING ================= */}
 
             {loading && (
@@ -1596,7 +1783,7 @@ function PDFStudyAssistant() {
                     <p>
                         {mode === "notes"
                             ? "AI is reading your PDF and preparing concise notes..."
-                            : "AI is creating questions from your PDF..."
+                            : `AI is creating ${questionCount} questions from your PDF...`
                         }
                     </p>
 
@@ -1886,7 +2073,10 @@ function PDFStudyAssistant() {
                                 <button
                                     className="pdf-save-quiz-btn"
                                     onClick={handleSaveQuiz}
-                                    disabled={savedToHistory || savingQuiz}
+                                    disabled={
+                                        savedToHistory ||
+                                        savingQuiz
+                                    }
                                 >
                                     {savingQuiz
                                         ? "Saving..."
@@ -1896,14 +2086,19 @@ function PDFStudyAssistant() {
                                     }
                                 </button>
 
+
                                 <button
                                     className="pdf-retry-btn"
                                     onClick={() =>
-                                        handleGenerateQuiz(true)
+                                        handleGenerateQuiz(
+                                            true,
+                                            questionCount
+                                        )
                                     }
                                 >
                                     🔄 Retry Quiz
                                 </button>
+
 
                                 <button
                                     className="pdf-new-quiz-btn"

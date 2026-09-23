@@ -3042,11 +3042,34 @@ ${limitedExtractedContent}
 
 export async function generateQuizFromPDF(
     pdfText,
-    previousQuestions = []
+    previousQuestions = [],
+    questionCount = 10
 ) {
     if (!pdfText || pdfText.trim().length < 30) {
         throw new Error("PDF does not contain enough readable text.");
     }
+
+    // --------------------------------------------------------
+    // Validate question count
+    // --------------------------------------------------------
+
+    const allowedQuestionCounts = [10, 20, 30, 50];
+
+    questionCount = Number(questionCount) || 10;
+
+    if (!allowedQuestionCounts.includes(questionCount)) {
+        throw new Error(
+            "Question count must be 10, 20, 30, or 50."
+        );
+    }
+
+    console.log(
+        `🧠 PDF Text Quiz: Generating exactly ${questionCount} questions`
+    );
+
+    // --------------------------------------------------------
+    // Clean PDF text
+    // --------------------------------------------------------
 
     const cleanText = pdfText
         .replace(/\s+/g, " ")
@@ -3063,9 +3086,11 @@ export async function generateQuizFromPDF(
         const chunkSize = Math.floor(MAX_CHARS / 3);
 
         const beginning = cleanText.slice(0, chunkSize);
+
         const middleStart = Math.floor(
             (cleanText.length - chunkSize) / 2
         );
+
         const middle = cleanText.slice(
             middleStart,
             middleStart + chunkSize
@@ -3084,6 +3109,10 @@ END OF PDF:
 ${ending}
         `.trim();
     }
+
+    // --------------------------------------------------------
+    // Previous questions
+    // --------------------------------------------------------
 
     const previous = Array.isArray(previousQuestions)
         ? previousQuestions
@@ -3107,17 +3136,21 @@ ${previous.map((q, i) => `${i + 1}. ${q}`).join("\n")}
 `
             : "";
 
+    // --------------------------------------------------------
+    // AI PROMPT
+    // --------------------------------------------------------
+
     const prompt = `
 You are an expert educational quiz generator.
 
 Create a quiz using ONLY the educational content present in the
 provided PDF content.
 
-Generate EXACTLY 10 multiple-choice questions.
+Generate EXACTLY ${questionCount} multiple-choice questions.
 
 Requirements:
 
-1. Exactly 10 questions.
+1. Generate EXACTLY ${questionCount} questions.
 2. Each question must have exactly 4 options.
 3. Exactly ONE option must be correct.
 4. Questions must test understanding of the PDF content.
@@ -3127,7 +3160,8 @@ Requirements:
 8. Use clear student-friendly language.
 9. Mix definitions, concepts, applications, comparisons and reasoning
    where the PDF content allows.
-10. Return ONLY valid JSON.
+10. Try to cover different parts of the PDF content.
+11. Return ONLY valid JSON.
 
 JSON format:
 
@@ -3155,8 +3189,13 @@ ${sourceText}
 `;
 
     try {
+        // ----------------------------------------------------
+        // GROQ AI
+        // ----------------------------------------------------
+
         const completion = await groq.chat.completions.create({
             model: "openai/gpt-oss-120b",
+
             messages: [
                 {
                     role: "system",
@@ -3168,18 +3207,36 @@ ${sourceText}
                     content: prompt
                 }
             ],
+
             temperature: 0.5,
-            max_tokens: 5000,
+
+            // More questions require more output tokens.
+            max_tokens:
+                Math.min(
+                    20000,
+                    Math.max(
+                        5000,
+                        questionCount * 500
+                    )
+                ),
+
             response_format: {
                 type: "json_object"
             }
         });
 
-        const raw = completion?.choices?.[0]?.message?.content;
+        const raw =
+            completion?.choices?.[0]?.message?.content;
 
         if (!raw) {
-            throw new Error("AI returned an empty quiz response.");
+            throw new Error(
+                "AI returned an empty quiz response."
+            );
         }
+
+        // ----------------------------------------------------
+        // PARSE JSON
+        // ----------------------------------------------------
 
         const parsed =
             typeof raw === "string"
@@ -3189,79 +3246,114 @@ ${sourceText}
         const generatedQuiz = parsed?.quiz;
 
         if (!Array.isArray(generatedQuiz)) {
-            throw new Error("AI returned an invalid quiz structure.");
-        }
-
-        if (generatedQuiz.length !== 10) {
             throw new Error(
-                `AI generated ${generatedQuiz.length} questions instead of 10.`
+                "AI returned an invalid quiz structure."
             );
         }
 
-        const finalQuiz = generatedQuiz.map((item, index) => {
-            if (!item || typeof item !== "object") {
-                throw new Error(
-                    `Invalid question structure at question ${index + 1}.`
-                );
-            }
+        // ----------------------------------------------------
+        // EXACT QUESTION COUNT VALIDATION
+        // ----------------------------------------------------
 
-            const question = String(
-                item.question || ""
-            ).trim();
-
-            const options = Array.isArray(item.options)
-                ? item.options
-                    .map((option) => String(option).trim())
-                    .filter(Boolean)
-                : [];
-
-            const answer = String(
-                item.answer || ""
-            ).trim();
-
-            if (!question) {
-                throw new Error(
-                    `Question ${index + 1} is empty.`
-                );
-            }
-
-            if (options.length !== 4) {
-                throw new Error(
-                    `Question ${index + 1} does not contain exactly 4 options.`
-                );
-            }
-
-            const uniqueOptions = new Set(
-                options.map((option) => option.toLowerCase())
+        if (generatedQuiz.length !== questionCount) {
+            throw new Error(
+                `AI generated ${generatedQuiz.length} questions instead of ${questionCount}. Please try generating the quiz again.`
             );
+        }
 
-            if (uniqueOptions.size !== 4) {
-                throw new Error(
-                    `Question ${index + 1} contains duplicate options.`
-                );
+        // ----------------------------------------------------
+        // VALIDATE EVERY QUESTION
+        // ----------------------------------------------------
+
+        const finalQuiz = generatedQuiz.map(
+            (item, index) => {
+
+                if (
+                    !item ||
+                    typeof item !== "object"
+                ) {
+                    throw new Error(
+                        `Invalid question structure at question ${index + 1}.`
+                    );
+                }
+
+                const question = String(
+                    item.question || ""
+                ).trim();
+
+                const options =
+                    Array.isArray(item.options)
+                        ? item.options
+                            .map((option) =>
+                                String(option).trim()
+                            )
+                            .filter(Boolean)
+                        : [];
+
+                const answer = String(
+                    item.answer || ""
+                ).trim();
+
+                if (!question) {
+                    throw new Error(
+                        `Question ${index + 1} is empty.`
+                    );
+                }
+
+                if (options.length !== 4) {
+                    throw new Error(
+                        `Question ${index + 1} does not contain exactly 4 options.`
+                    );
+                }
+
+                // ------------------------------------------------
+                // Duplicate options
+                // ------------------------------------------------
+
+                const uniqueOptions =
+                    new Set(
+                        options.map((option) =>
+                            option.toLowerCase()
+                        )
+                    );
+
+                if (uniqueOptions.size !== 4) {
+                    throw new Error(
+                        `Question ${index + 1} contains duplicate options.`
+                    );
+                }
+
+                // ------------------------------------------------
+                // Correct answer must match an option
+                // ------------------------------------------------
+
+                if (!options.includes(answer)) {
+                    throw new Error(
+                        `Question ${index + 1} has an invalid correct answer.`
+                    );
+                }
+
+                return {
+                    question,
+                    options,
+                    answer
+                };
             }
+        );
 
-            if (!options.includes(answer)) {
-                throw new Error(
-                    `Question ${index + 1} has an invalid correct answer.`
-                );
-            }
+        // --------------------------------------------------------
+        // FINAL DUPLICATE QUESTION CHECK
+        // --------------------------------------------------------
 
-            return {
-                question,
-                options,
-                answer
-            };
-        });
-
-        // Final duplicate-question check
         const questionSet = new Set();
 
         for (const item of finalQuiz) {
-            const normalized = item.question
-                .toLowerCase()
-                .replace(/\s+/g, " ")
-                .trim();
+
+            const normalized =
+                item.question
+                    .toLowerCase()
+                    .replace(/\s+/g, " ")
+                    .trim();
 
             if (questionSet.has(normalized)) {
                 throw new Error(
@@ -3272,9 +3364,14 @@ ${sourceText}
             questionSet.add(normalized);
         }
 
+        console.log(
+            `✅ PDF Text Quiz generated successfully: ${finalQuiz.length}/${questionCount}`
+        );
+
         return finalQuiz;
 
     } catch (error) {
+
         console.error(
             "❌ PDF TEXT QUIZ GENERATION ERROR:",
             error
@@ -3294,7 +3391,8 @@ ${sourceText}
 
 export async function generateQuizFromPDFImages(
     imageBuffers,
-    previousQuestions = []
+    previousQuestions = [],
+    questionCount = 10
 ) {
     if (
         !Array.isArray(imageBuffers) ||
@@ -3305,9 +3403,31 @@ export async function generateQuizFromPDFImages(
         );
     }
 
+    // --------------------------------------------------------
+    // Validate question count
+    // --------------------------------------------------------
+
+    const allowedQuestionCounts = [10, 20, 30, 50];
+
+    questionCount = Number(questionCount) || 10;
+
+    if (!allowedQuestionCounts.includes(questionCount)) {
+        throw new Error(
+            "Question count must be 10, 20, 30, or 50."
+        );
+    }
+
     console.log(
         `🖼️ PDF Quiz Vision Mode: ${imageBuffers.length} page(s)`
     );
+
+    console.log(
+        `🧠 Vision Quiz: Generating exactly ${questionCount} questions`
+    );
+
+    // --------------------------------------------------------
+    // Select distributed pages
+    // --------------------------------------------------------
 
     /*
      * Processing a very large PDF page-by-page can create a huge
@@ -3316,12 +3436,15 @@ export async function generateQuizFromPDFImages(
      * We therefore select pages distributed throughout the PDF.
      * This is much better than taking only the first few pages.
      */
+
     const MAX_VISION_PAGES = 15;
 
     let selectedImages = imageBuffers;
 
     if (imageBuffers.length > MAX_VISION_PAGES) {
+
         const selectedIndexes = [];
+
         const step =
             (imageBuffers.length - 1) /
             (MAX_VISION_PAGES - 1);
@@ -3338,9 +3461,10 @@ export async function generateQuizFromPDFImages(
             }
         }
 
-        selectedImages = selectedIndexes.map(
-            (index) => imageBuffers[index]
-        );
+        selectedImages =
+            selectedIndexes.map(
+                (index) => imageBuffers[index]
+            );
 
         console.log(
             `📚 Large PDF detected. Using ${selectedImages.length} distributed pages for quiz generation.`
@@ -3387,18 +3511,18 @@ educational information conveyed by those diagrams.
 Return concise but information-rich text.
 `;
 
-    // --------------------------------------------------------
-    // STEP 1: Vision AI extracts educational content
-    // --------------------------------------------------------
-
     let visionResult;
 
     try {
-        visionResult = await analyzePDFImages(
-            selectedImages,
-            visionPrompt
-        );
+
+        visionResult =
+            await analyzePDFImages(
+                selectedImages,
+                visionPrompt
+            );
+
     } catch (error) {
+
         console.error(
             "❌ Vision PDF extraction failed:",
             error
@@ -3410,33 +3534,44 @@ Return concise but information-rich text.
     }
 
     // --------------------------------------------------------
-    // analyzePDFImages() in EduCompanion returns the
-    // combined page analysis as a STRING.
-    // Keep this code flexible in case the function
-    // returns an array in the future.
+    // Convert Vision result to text
     // --------------------------------------------------------
 
     let extractedContent = "";
 
     if (Array.isArray(visionResult)) {
-        extractedContent = visionResult
-            .filter(Boolean)
-            .map((page) => String(page).trim())
-            .filter((page) => page.length > 20)
-            .join("\n\n");
-    } else if (typeof visionResult === "string") {
-        extractedContent = visionResult.trim();
+
+        extractedContent =
+            visionResult
+                .filter(Boolean)
+                .map((page) =>
+                    String(page).trim()
+                )
+                .filter(
+                    (page) =>
+                        page.length > 20
+                )
+                .join("\n\n");
+
+    } else if (
+        typeof visionResult === "string"
+    ) {
+
+        extractedContent =
+            visionResult.trim();
+
     } else if (
         visionResult &&
         typeof visionResult === "object"
     ) {
-        // Extra safety if the service ever returns an object
-        extractedContent = String(
-            visionResult.content ||
-            visionResult.text ||
-            visionResult.result ||
-            ""
-        ).trim();
+
+        extractedContent =
+            String(
+                visionResult.content ||
+                visionResult.text ||
+                visionResult.result ||
+                ""
+            ).trim();
     }
 
     if (!extractedContent) {
@@ -3455,34 +3590,35 @@ Return concise but information-rich text.
         `📝 Vision extracted ${extractedContent.length} characters of content.`
     );
 
-    if (extractedContent.length < 50) {
-        throw new Error(
-            "Vision AI could not extract enough educational content from this PDF."
-        );
-    }
-
-    console.log(
-        `📝 Vision extracted ${extractedContent.length} characters of content.`
-    );
-
     // --------------------------------------------------------
-    // STEP 2: GPT generates quiz from Vision output
+    // STEP 2: Limit content size
     // --------------------------------------------------------
 
     const MAX_CONTENT_CHARS = 30000;
 
     let quizContent = extractedContent;
 
-    if (quizContent.length > MAX_CONTENT_CHARS) {
+    if (
+        quizContent.length >
+        MAX_CONTENT_CHARS
+    ) {
+
         const chunkSize =
-            Math.floor(MAX_CONTENT_CHARS / 3);
+            Math.floor(
+                MAX_CONTENT_CHARS / 3
+            );
 
         const beginning =
-            quizContent.slice(0, chunkSize);
+            quizContent.slice(
+                0,
+                chunkSize
+            );
 
         const middleStart =
             Math.floor(
-                (quizContent.length - chunkSize) / 2
+                (quizContent.length -
+                    chunkSize) /
+                    2
             );
 
         const middle =
@@ -3492,7 +3628,9 @@ Return concise but information-rich text.
             );
 
         const ending =
-            quizContent.slice(-chunkSize);
+            quizContent.slice(
+                -chunkSize
+            );
 
         quizContent = `
 BEGINNING OF PDF:
@@ -3506,12 +3644,19 @@ ${ending}
         `.trim();
     }
 
-    const previous = Array.isArray(previousQuestions)
-        ? previousQuestions
-            .filter(Boolean)
-            .map((q) => String(q).trim())
-            .filter(Boolean)
-        : [];
+    // --------------------------------------------------------
+    // Previous questions
+    // --------------------------------------------------------
+
+    const previous =
+        Array.isArray(previousQuestions)
+            ? previousQuestions
+                .filter(Boolean)
+                .map((q) =>
+                    String(q).trim()
+                )
+                .filter(Boolean)
+            : [];
 
     const previousSection =
         previous.length > 0
@@ -3525,9 +3670,18 @@ Do NOT create rephrased versions.
 Create genuinely different questions.
 
 PREVIOUS QUESTIONS:
-${previous.map((q, i) => `${i + 1}. ${q}`).join("\n")}
+${previous
+    .map(
+        (q, i) =>
+            `${i + 1}. ${q}`
+    )
+    .join("\n")}
 `
             : "";
+
+    // --------------------------------------------------------
+    // QUIZ PROMPT
+    // --------------------------------------------------------
 
     const quizPrompt = `
 You are an expert educational quiz generator.
@@ -3535,11 +3689,11 @@ You are an expert educational quiz generator.
 Generate a quiz ONLY from the educational content extracted from
 a scanned/image-based PDF.
 
-Generate EXACTLY 10 multiple-choice questions.
+Generate EXACTLY ${questionCount} multiple-choice questions.
 
 Requirements:
 
-1. Exactly 10 questions.
+1. Generate EXACTLY ${questionCount} questions.
 2. Exactly 4 options per question.
 3. Exactly ONE correct answer per question.
 4. Every answer must be supported by the extracted PDF content.
@@ -3578,27 +3732,48 @@ ${quizContent}
 `;
 
     try {
-        const completion = await groq.chat.completions.create({
-            model: "openai/gpt-oss-120b",
-            messages: [
-                {
-                    role: "system",
-                    content:
-                        "You are a precise educational quiz generator. Return valid JSON only."
-                },
-                {
-                    role: "user",
-                    content: quizPrompt
-                }
-            ],
-            temperature: 0.6,
-            max_tokens: 5000,
-            response_format: {
-                type: "json_object"
-            }
-        });
 
-        const raw = completion?.choices?.[0]?.message?.content;
+        // ----------------------------------------------------
+        // GROQ AI
+        // ----------------------------------------------------
+
+        const completion =
+            await groq.chat.completions.create({
+
+                model:
+                    "openai/gpt-oss-120b",
+
+                messages: [
+                    {
+                        role: "system",
+                        content:
+                            "You are a precise educational quiz generator. Return valid JSON only."
+                    },
+                    {
+                        role: "user",
+                        content: quizPrompt
+                    }
+                ],
+
+                temperature: 0.6,
+
+                // Increase token budget for larger quizzes.
+                max_tokens:
+                    Math.min(
+                        20000,
+                        Math.max(
+                            5000,
+                            questionCount * 500
+                        )
+                    ),
+
+                response_format: {
+                    type: "json_object"
+                }
+            });
+
+        const raw =
+            completion?.choices?.[0]?.message?.content;
 
         if (!raw) {
             throw new Error(
@@ -3606,119 +3781,186 @@ ${quizContent}
             );
         }
 
+        // ----------------------------------------------------
+        // Parse JSON
+        // ----------------------------------------------------
+
         const parsed =
             typeof raw === "string"
                 ? JSON.parse(raw)
                 : raw;
 
-        const generatedQuiz = parsed?.quiz;
+        const generatedQuiz =
+            parsed?.quiz;
 
-        if (!Array.isArray(generatedQuiz)) {
+        if (
+            !Array.isArray(
+                generatedQuiz
+            )
+        ) {
             throw new Error(
                 "AI returned an invalid quiz structure."
             );
         }
 
-        if (generatedQuiz.length !== 10) {
+        // ----------------------------------------------------
+        // EXACT QUESTION COUNT VALIDATION
+        // ----------------------------------------------------
+
+        if (
+            generatedQuiz.length !==
+            questionCount
+        ) {
             throw new Error(
-                `AI generated ${generatedQuiz.length} questions instead of 10.`
+                `AI generated ${generatedQuiz.length} questions instead of ${questionCount}. Please try generating the quiz again.`
             );
         }
 
-        const finalQuiz = generatedQuiz.map(
-            (item, index) => {
-                if (
-                    !item ||
-                    typeof item !== "object"
-                ) {
-                    throw new Error(
-                        `Invalid question structure at question ${index + 1}.`
-                    );
-                }
+        // ----------------------------------------------------
+        // Validate every question
+        // ----------------------------------------------------
 
-                const question = String(
-                    item.question || ""
-                ).trim();
+        const finalQuiz =
+            generatedQuiz.map(
+                (item, index) => {
 
-                const options = Array.isArray(
-                    item.options
-                )
-                    ? item.options
-                        .map((option) =>
-                            String(option).trim()
+                    if (
+                        !item ||
+                        typeof item !== "object"
+                    ) {
+                        throw new Error(
+                            `Invalid question structure at question ${index + 1}.`
+                        );
+                    }
+
+                    const question =
+                        String(
+                            item.question ||
+                            ""
+                        ).trim();
+
+                    const options =
+                        Array.isArray(
+                            item.options
                         )
-                        .filter(Boolean)
-                    : [];
+                            ? item.options
+                                .map(
+                                    (option) =>
+                                        String(
+                                            option
+                                        ).trim()
+                                )
+                                .filter(
+                                    Boolean
+                                )
+                            : [];
 
-                const answer = String(
-                    item.answer || ""
-                ).trim();
+                    const answer =
+                        String(
+                            item.answer ||
+                            ""
+                        ).trim();
 
-                if (!question) {
-                    throw new Error(
-                        `Question ${index + 1} is empty.`
-                    );
-                }
+                    if (!question) {
+                        throw new Error(
+                            `Question ${index + 1} is empty.`
+                        );
+                    }
 
-                if (options.length !== 4) {
-                    throw new Error(
-                        `Question ${index + 1} must have exactly 4 options.`
-                    );
-                }
+                    if (
+                        options.length !== 4
+                    ) {
+                        throw new Error(
+                            `Question ${index + 1} must have exactly 4 options.`
+                        );
+                    }
 
-                const uniqueOptions =
-                    new Set(
-                        options.map((option) =>
-                            option.toLowerCase()
+                    // ----------------------------------------
+                    // Duplicate options
+                    // ----------------------------------------
+
+                    const uniqueOptions =
+                        new Set(
+                            options.map(
+                                (option) =>
+                                    option.toLowerCase()
+                            )
+                        );
+
+                    if (
+                        uniqueOptions.size !==
+                        4
+                    ) {
+                        throw new Error(
+                            `Question ${index + 1} contains duplicate options.`
+                        );
+                    }
+
+                    // ----------------------------------------
+                    // Correct answer validation
+                    // ----------------------------------------
+
+                    if (
+                        !options.includes(
+                            answer
                         )
-                    );
+                    ) {
+                        throw new Error(
+                            `Question ${index + 1} has an invalid correct answer.`
+                        );
+                    }
 
-                if (uniqueOptions.size !== 4) {
-                    throw new Error(
-                        `Question ${index + 1} contains duplicate options.`
-                    );
+                    return {
+                        question,
+                        options,
+                        answer
+                    };
                 }
+            );
 
-                if (!options.includes(answer)) {
-                    throw new Error(
-                        `Question ${index + 1} has an invalid correct answer.`
-                    );
-                }
+        // --------------------------------------------------------
+        // Duplicate question check
+        // --------------------------------------------------------
 
-                return {
-                    question,
-                    options,
-                    answer
-                };
-            }
-        );
+        const questionSet =
+            new Set();
 
-        // Check duplicate questions
-        const questionSet = new Set();
+        for (
+            const item of finalQuiz
+        ) {
 
-        for (const item of finalQuiz) {
             const normalized =
                 item.question
                     .toLowerCase()
-                    .replace(/\s+/g, " ")
+                    .replace(
+                        /\s+/g,
+                        " "
+                    )
                     .trim();
 
-            if (questionSet.has(normalized)) {
+            if (
+                questionSet.has(
+                    normalized
+                )
+            ) {
                 throw new Error(
                     "AI generated duplicate questions."
                 );
             }
 
-            questionSet.add(normalized);
+            questionSet.add(
+                normalized
+            );
         }
 
         console.log(
-            "✅ Scanned PDF quiz generated successfully."
+            `✅ Scanned PDF quiz generated successfully: ${finalQuiz.length}/${questionCount}`
         );
 
         return finalQuiz;
 
     } catch (error) {
+
         console.error(
             "❌ SCANNED PDF QUIZ GENERATION ERROR:",
             error
