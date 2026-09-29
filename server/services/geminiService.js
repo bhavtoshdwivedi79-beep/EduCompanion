@@ -179,7 +179,7 @@ export async function analyzeImage(
         await groq.chat.completions.create({
 
             model:
-                "qwen/qwen3.6-27b",
+                "qwen/qwen3.8-27b",
 
             messages: [
 
@@ -804,7 +804,7 @@ ${visualContext}
             await groq.chat.completions.create({
 
                 model:
-                    "qwen/qwen3.6-27b",
+                    "qwen/qwen3.8-27b",
 
                 messages: [
 
@@ -915,7 +915,7 @@ Rules:
                 await groq.chat.completions.create({
 
                     model:
-                        "qwen/qwen3.6-27b",
+                        "qwen/qwen3.8-27b",
 
                     messages: [
 
@@ -1150,7 +1150,7 @@ export async function analyzePDFImages(
                 await groq.chat.completions.create({
 
                     model:
-                        "qwen/qwen3.6-27b",
+                        "qwen/qwen3.8-27b",
 
                     messages: [
 
@@ -2578,7 +2578,7 @@ ${limitedText}
                 await groq.chat.completions.create({
 
                     model:
-                        "qwen/qwen3.6-27b",
+                        "qwen/qwen3.8-27b",
 
                     messages: [
 

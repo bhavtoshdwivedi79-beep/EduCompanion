@@ -5,7 +5,6 @@ function AITools() {
   const navigate = useNavigate();
 
   const tools = [
-
     {
       icon: "📝",
       title: "AI Notes",
@@ -53,11 +52,23 @@ function AITools() {
       desc: "Track your learning journey and stay motivated.",
       button: "Try Now →"
     }
-
   ];
 
-  return (
+  // ================= LOGIN CHECK =================
+  const handleToolClick = (route) => {
+    const token = localStorage.getItem("token");
 
+    if (!token) {
+      // User is not logged in
+      navigate("/login");
+      return;
+    }
+
+    // User is logged in
+    navigate(route);
+  };
+
+  return (
     <section className="ai-tools" data-aos="fade-up">
 
       <h2>Powerful AI Tools</h2>
@@ -82,11 +93,7 @@ function AITools() {
 
             <button
               className="tool-btn"
-              onClick={() => {
-                if (tool.route) {
-                  navigate(tool.route);
-                }
-              }}
+              onClick={() => handleToolClick(tool.route)}
             >
               {tool.button}
             </button>
@@ -98,7 +105,6 @@ function AITools() {
       </div>
 
     </section>
-
   );
 }
 

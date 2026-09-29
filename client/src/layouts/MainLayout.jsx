@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, Navigate } from "react-router-dom";
 import Navbar from "../components/Navbar/Navbar";
 
 function MainLayout() {
@@ -22,6 +22,18 @@ function MainLayout() {
     ];
 
     const hideNavbar = dashboardRoutes.includes(location.pathname);
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        return (
+            <Navigate
+                to="/login"
+                replace
+                state={{ from: location.pathname }}
+            />
+        );
+    }
 
     return (
         <>

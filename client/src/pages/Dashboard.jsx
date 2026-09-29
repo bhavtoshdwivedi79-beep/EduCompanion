@@ -225,6 +225,14 @@ function Dashboard() {
 
                         <div
                             className="action-card"
+                            onClick={() => navigate("/pdf-study-assistant")}
+                        >
+                            📄
+                            <h3>PDF Study Assistant</h3>
+                        </div>
+
+                        <div
+                            className="action-card"
                             onClick={() => navigate("/study-planner")}
                         >
                             📅
