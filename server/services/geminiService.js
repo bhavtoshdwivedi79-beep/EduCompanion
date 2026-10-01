@@ -110,7 +110,7 @@ Rules:
                 0.7,
 
             max_completion_tokens:
-                1024,
+                4096,
 
             reasoning_effort:
                 "low",

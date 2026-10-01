@@ -430,9 +430,6 @@
     border-radius: 12px;
 
     margin-top: 12px;
-
-    white-space: pre-wrap;
-    word-break: break-word;
 }
 
 .ai-bot-msg code {
@@ -1197,4 +1194,377 @@
     .ai-chat-input button {
         padding: 0 18px;
     }
+}
+
+/* =========================================================
+   AI MARKDOWN CONTENT
+========================================================= */
+
+/* Main markdown container */
+
+.ai-bot-msg {
+    line-height: 1.75;
+}
+
+
+/* =========================================================
+   HEADINGS
+========================================================= */
+
+.ai-bot-msg h1,
+.ai-bot-msg h2,
+.ai-bot-msg h3,
+.ai-bot-msg h4,
+.ai-bot-msg h5,
+.ai-bot-msg h6 {
+    color: var(--text);
+
+    line-height: 1.35;
+
+    margin-top: 20px;
+    margin-bottom: 10px;
+
+    font-weight: 700;
+}
+
+.ai-bot-msg h1 {
+    font-size: 24px;
+
+    padding-bottom: 8px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.ai-bot-msg h2 {
+    font-size: 21px;
+}
+
+.ai-bot-msg h3 {
+    font-size: 18px;
+}
+
+.ai-bot-msg h4 {
+    font-size: 16px;
+}
+
+
+/* First heading shouldn't have huge top gap */
+
+.ai-bot-msg > h1:first-child,
+.ai-bot-msg > h2:first-child,
+.ai-bot-msg > h3:first-child {
+    margin-top: 0;
+}
+
+
+/* =========================================================
+   PARAGRAPHS
+========================================================= */
+
+.ai-bot-msg p {
+    margin: 10px 0;
+}
+
+
+/* =========================================================
+   BOLD / ITALIC
+========================================================= */
+
+.ai-bot-msg strong {
+    font-weight: 700;
+    color: var(--text);
+}
+
+.ai-bot-msg em {
+    font-style: italic;
+}
+
+
+/* =========================================================
+   LISTS
+========================================================= */
+
+.ai-bot-msg ul,
+.ai-bot-msg ol {
+    margin: 10px 0 14px;
+
+    padding-left: 28px;
+}
+
+.ai-bot-msg ul {
+    list-style-type: disc;
+}
+
+.ai-bot-msg ol {
+    list-style-type: decimal;
+}
+
+.ai-bot-msg li {
+    margin: 6px 0;
+
+    padding-left: 3px;
+}
+
+.ai-bot-msg li::marker {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+
+/* Nested lists */
+
+.ai-bot-msg li ul,
+.ai-bot-msg li ol {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+
+/* =========================================================
+   INLINE CODE
+========================================================= */
+
+.ai-bot-msg .ai-inline-code {
+    display: inline-block;
+
+    padding: 2px 7px;
+
+    border-radius: 6px;
+
+    background: var(--bg);
+
+    border: 1px solid var(--border);
+
+    color: var(--primary);
+
+    font-family: Consolas, "Courier New", monospace;
+
+    font-size: .9em;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   CODE BLOCK
+========================================================= */
+
+.ai-bot-msg pre {
+    max-width: 100%;
+
+    overflow-x: auto;
+
+    margin: 14px 0;
+
+    padding: 0;
+
+    border-radius: 12px;
+
+    white-space: pre;
+
+    word-break: normal;
+}
+
+.ai-bot-msg pre code {
+    font-family: Consolas, "Courier New", monospace;
+
+    overflow-wrap: normal;
+
+    word-break: normal;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.ai-table-wrapper {
+    width: 100%;
+
+    overflow-x: auto;
+
+    margin: 16px 0;
+
+    border: 1px solid var(--border);
+
+    border-radius: 12px;
+}
+
+.ai-markdown-table {
+    width: 100%;
+
+    min-width: 500px;
+
+    border-collapse: collapse;
+
+    font-size: 14px;
+
+    background: var(--card);
+}
+
+.ai-markdown-table th {
+    background: var(--bg);
+
+    color: var(--text);
+
+    font-weight: 700;
+
+    text-align: left;
+
+    padding: 12px 14px;
+
+    border-bottom: 2px solid var(--border);
+}
+
+.ai-markdown-table td {
+    padding: 11px 14px;
+
+    color: var(--text);
+
+    border-bottom: 1px solid var(--border);
+
+    vertical-align: top;
+}
+
+.ai-markdown-table tr:last-child td {
+    border-bottom: none;
+}
+
+.ai-markdown-table tr:hover td {
+    background: rgba(37, 99, 235, .05);
+}
+
+
+/* =========================================================
+   BLOCKQUOTES
+========================================================= */
+
+.ai-bot-msg blockquote {
+    margin: 14px 0;
+
+    padding: 10px 16px;
+
+    border-left: 4px solid var(--primary);
+
+    background: var(--bg);
+
+    color: var(--text);
+
+    border-radius: 0 8px 8px 0;
+}
+
+.ai-bot-msg blockquote p {
+    margin: 0;
+}
+
+
+/* =========================================================
+   HORIZONTAL LINE
+========================================================= */
+
+.ai-bot-msg hr {
+    border: none;
+
+    border-top: 1px solid var(--border);
+
+    margin: 20px 0;
+}
+
+
+/* =========================================================
+   LINKS
+========================================================= */
+
+.ai-bot-msg .ai-markdown-link {
+    color: var(--primary);
+
+    font-weight: 600;
+
+    text-decoration: none;
+
+    border-bottom: 1px solid transparent;
+
+    transition: .2s ease;
+}
+
+.ai-bot-msg .ai-markdown-link:hover {
+    border-bottom-color: var(--primary);
+}
+
+
+/* =========================================================
+   MATH / KATEX
+========================================================= */
+
+.ai-bot-msg .katex {
+    font-size: 1.05em;
+
+    color: var(--text);
+}
+
+.ai-bot-msg .katex-display {
+    overflow-x: auto;
+
+    overflow-y: hidden;
+
+    padding: 12px 5px;
+
+    margin: 14px 0;
+
+    background: var(--bg);
+
+    border-radius: 10px;
+
+    border: 1px solid var(--border);
+}
+
+
+/* =========================================================
+   IMAGES INSIDE AI RESPONSE
+========================================================= */
+
+.ai-bot-msg img {
+    max-width: 100%;
+
+    height: auto;
+
+    border-radius: 10px;
+
+    margin: 10px 0;
+}
+
+
+/* =========================================================
+   MOBILE MARKDOWN
+========================================================= */
+
+@media (max-width: 600px) {
+
+    .ai-bot-msg h1 {
+        font-size: 21px;
+    }
+
+    .ai-bot-msg h2 {
+        font-size: 19px;
+    }
+
+    .ai-bot-msg h3 {
+        font-size: 17px;
+    }
+
+    .ai-markdown-table {
+        min-width: 450px;
+
+        font-size: 13px;
+    }
+
+    .ai-markdown-table th,
+    .ai-markdown-table td {
+        padding: 9px 10px;
+    }
+
+    .ai-bot-msg .katex-display {
+        font-size: .95em;
+    }
+
 }

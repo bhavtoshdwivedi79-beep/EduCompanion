@@ -14,6 +14,10 @@ import "../components/AIChat/AIChat.css";
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
+import "katex/dist/katex.min.css";
 
 import {
     Prism as SyntaxHighlighter
@@ -882,6 +886,19 @@ function AIChat() {
 
     };
 
+    const formatAIText = (text = "") => {
+        return text
+            // Convert \[ ... \] to $$ ... $$
+            .replace(/\\\[([\s\S]*?)\\\]/g, (_, formula) => {
+                return `$$${formula}$$`;
+            })
+
+            // Convert \( ... \) to $ ... $
+            .replace(/\\\(([\s\S]*?)\\\)/g, (_, formula) => {
+                return `$${formula}$`;
+            });
+    };
+
 
     // ==================================================
     // UI
@@ -1210,64 +1227,95 @@ function AIChat() {
 
 
                                     <ReactMarkdown
-
                                         remarkPlugins={[
-                                            remarkGfm
+                                            remarkGfm,
+                                            remarkMath
                                         ]}
-
+                                        rehypePlugins={[
+                                            rehypeRaw,
+                                            rehypeKatex
+                                        ]}
                                         components={{
 
+                                            // ==========================================
+                                            // CODE BLOCKS
+                                            // ==========================================
+
                                             code({
+                                                inline,
                                                 children,
                                                 className
                                             }) {
 
                                                 const match =
                                                     /language-(\w+)/
-                                                        .exec(
-                                                            className || ""
-                                                        );
+                                                        .exec(className || "");
 
+                                                // Code block
+                                                if (!inline && match) {
 
-                                                return match ? (
-
-                                                    <SyntaxHighlighter
-                                                        language={match[1]}
-                                                        style={oneDark}
-                                                        wrapLongLines={true}
-                                                    >
-
-                                                        {
-                                                            String(
-                                                                children
-                                                            ).replace(
+                                                    return (
+                                                        <SyntaxHighlighter
+                                                            language={match[1]}
+                                                            style={oneDark}
+                                                            wrapLongLines={true}
+                                                        >
+                                                            {String(children).replace(
                                                                 /\n$/,
                                                                 ""
-                                                            )
-                                                        }
+                                                            )}
+                                                        </SyntaxHighlighter>
+                                                    );
 
-                                                    </SyntaxHighlighter>
+                                                }
 
-                                                ) : (
-
-                                                    <code
-                                                        className={
-                                                            className
-                                                        }
-                                                    >
+                                                // Inline code
+                                                return (
+                                                    <code className="ai-inline-code">
                                                         {children}
                                                     </code>
+                                                );
 
+                                            },
+
+                                            // ==========================================
+                                            // TABLE
+                                            // ==========================================
+
+                                            table({ children }) {
+
+                                                return (
+                                                    <div className="ai-table-wrapper">
+                                                        <table className="ai-markdown-table">
+                                                            {children}
+                                                        </table>
+                                                    </div>
+                                                );
+
+                                            },
+
+                                            // ==========================================
+                                            // LINKS
+                                            // ==========================================
+
+                                            a({ href, children }) {
+
+                                                return (
+                                                    <a
+                                                        href={href}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="ai-markdown-link"
+                                                    >
+                                                        {children}
+                                                    </a>
                                                 );
 
                                             },
 
                                         }}
-
                                     >
-
-                                        {msg.text}
-
+                                        {formatAIText(msg.text)}
                                     </ReactMarkdown>
 
                                 </>
