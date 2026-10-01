@@ -247,7 +247,7 @@ Rules:
                 0.7,
 
             max_completion_tokens:
-                1500,
+                2500,
 
         });
 
@@ -466,7 +466,7 @@ ${limitedText}
                         0.3,
 
                     max_completion_tokens:
-                        1200,
+                        2400,
 
                     // IMPORTANT:
                     // GPT-OSS supports low/medium/high.
@@ -844,7 +844,7 @@ Rules:
                     0.2,
 
                 max_completion_tokens:
-                    700,
+                    1400,
 
             });
 
@@ -966,7 +966,7 @@ If the requested information is not visible, say so.
                         0.2,
 
                     max_completion_tokens:
-                        500,
+                        1000,
 
                 });
 
@@ -1222,7 +1222,7 @@ Rules:
                         0.5,
 
                     max_completion_tokens:
-                        1000,
+                        2000,
 
                 });
 
@@ -1418,7 +1418,7 @@ Use this structure:
                     0.5,
 
                 max_completion_tokens:
-                    2500,
+                    4096,
 
                 reasoning_effort:
                     "low",
@@ -1651,7 +1651,7 @@ Rules:
                     0.3,
 
                 max_completion_tokens:
-                    4000,
+                    4096,
 
                 reasoning_effort:
                     "low",
@@ -1904,7 +1904,7 @@ Rules:
                     0.4,
 
                 max_completion_tokens:
-                    2500,
+                    4096,
 
                 reasoning_effort:
                     "low",
@@ -2758,7 +2758,7 @@ Extract the educational content from PDF page ${index + 1
                         0.1,
 
                     max_completion_tokens:
-                        1800,
+                        4096,
 
                 });
 
