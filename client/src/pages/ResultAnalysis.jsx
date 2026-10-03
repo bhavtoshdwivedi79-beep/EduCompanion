@@ -16,6 +16,7 @@ function ResultAnalysis() {
 
     const [assistance, setAssistance] = useState(null);
     const [assistanceLoading, setAssistanceLoading] = useState(false);
+    const [loadingAssistanceType, setLoadingAssistanceType] = useState(null);
     const [assistanceError, setAssistanceError] = useState("");
     const [selectedAssistanceType, setSelectedAssistanceType] = useState(null);
 
@@ -122,6 +123,7 @@ function ResultAnalysis() {
 
         try {
             setAssistanceLoading(true);
+            setLoadingAssistanceType("theory");
             setAssistanceError("");
             setAssistance(null);
             setSelectedAssistanceType("theory");
@@ -159,6 +161,7 @@ function ResultAnalysis() {
             );
         } finally {
             setAssistanceLoading(false);
+            setLoadingAssistanceType(null);
         }
     };
 
@@ -169,6 +172,7 @@ function ResultAnalysis() {
 
         try {
             setAssistanceLoading(true);
+            setLoadingAssistanceType("numerical");
             setAssistanceError("");
             setAssistance(null);
             setSelectedAssistanceType("numerical");
@@ -206,6 +210,7 @@ function ResultAnalysis() {
             );
         } finally {
             setAssistanceLoading(false);
+            setLoadingAssistanceType(null);
         }
     };
 
@@ -715,9 +720,13 @@ function ResultAnalysis() {
 
                                 <button
                                     className="close-assistance-btn"
-                                    onClick={() =>
-                                        setSelectedWeakSubject(null)
-                                    }
+                                    onClick={() => {
+                                        setSelectedWeakSubject(null);
+                                        setSelectedAssistanceType(null);
+                                        setAssistance(null);
+                                        setAssistanceError("");
+                                        setLoadingAssistanceType(null);
+                                    }}
                                 >
                                     ✕
                                 </button>
@@ -732,9 +741,9 @@ function ResultAnalysis() {
                                     onClick={handleTheoryQuestions}
                                     disabled={assistanceLoading}
                                 >
-                                    {assistanceLoading
-                                        ? "⏳ Generating..."
-                                        : "📖 Theory Questions"}
+                                    {loadingAssistanceType === "theory"
+                                        ? "Generating..."
+                                        : "Theory Questions"}
                                 </button>
 
                                 <button
@@ -742,9 +751,9 @@ function ResultAnalysis() {
                                     onClick={handleNumericalQuestions}
                                     disabled={assistanceLoading}
                                 >
-                                    {assistanceLoading
-                                        ? "⏳ Generating..."
-                                        : "🔢 Numerical Questions"}
+                                    {loadingAssistanceType === "numerical"
+                                        ? "Generating..."
+                                        : "Numerical Questions"}
                                 </button>
 
                                 <button className="assistance-option-btn">
@@ -869,7 +878,6 @@ NUMERICAL QUESTIONS
                                                 className="numerical-question-item"
                                                 key={index}
                                             >
-
                                                 <div className="question-number">
                                                     Q{index + 1}
                                                 </div>
