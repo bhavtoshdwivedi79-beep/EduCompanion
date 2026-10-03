@@ -2,7 +2,10 @@ import { generateWeakSubjectAssistance } from "../services/geminiService.js";
 
 export const getWeakSubjectAssistance = async (req, res) => {
     try {
-        const { subject } = req.body;
+        const {
+            subject,
+            previousQuestions = []
+        } = req.body;
 
         if (!subject || !subject.trim()) {
             return res.status(400).json({
@@ -15,7 +18,10 @@ export const getWeakSubjectAssistance = async (req, res) => {
         console.log(`📖 Subject: ${subject}`);
 
         const aiResponse =
-            await generateWeakSubjectAssistance(subject.trim());
+            await generateWeakSubjectAssistance(
+                subject.trim(),
+                previousQuestions
+            );
 
         let assistance;
 

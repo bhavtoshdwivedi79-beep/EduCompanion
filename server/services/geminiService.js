@@ -4630,7 +4630,14 @@ ${cleanText}`
 
 
 
-export async function generateWeakSubjectAssistance(subject) {
+
+// ======================================================
+// ASSISTANCE TO WEAK SUBJECTS
+// ======================================================
+export async function generateWeakSubjectAssistance(
+    subject,
+    previousQuestions = []
+) {
 
     if (!subject || !subject.trim()) {
         throw new Error("Subject is required.");
@@ -4641,7 +4648,8 @@ You are EduCompanion, an academic learning assistant.
 
 The student has identified a weak academic subject.
 
-Your task is to generate useful practice material for that subject.
+Your task is to generate a NEW and VARIED set of practice questions
+for that subject.
 
 Return ONLY valid JSON.
 Do not return Markdown.
@@ -4653,26 +4661,53 @@ IMPORTANT RULES
 
 1. Use the exact subject provided by the student.
 
-2. Generate beginner-to-intermediate level questions.
+2. Generate questions that are academically relevant to the subject.
 
-3. Questions should be academically relevant to the subject.
+3. Every generation should try to produce DIFFERENT questions.
 
-4. Do not invent a specific university syllabus.
+4. Avoid repeating common questions from previous generations.
 
-5. Cover important general concepts of the subject.
+5. Do NOT generate multiple questions that test exactly the same
+   concept using only slightly different wording.
 
-6. Theory questions should test conceptual understanding.
+6. Cover DIFFERENT important concepts, topics, formulas, applications,
+   or problem-solving approaches whenever possible.
 
-7. Numerical questions should be included only when
-   numerical/problem-solving questions are meaningful
-   for the subject.
+7. Prefer variety across the question set.
 
-8. If numerical questions are not naturally applicable
-   to the subject, return an empty numericalQuestions array.
+8. Mix conceptual and application-based questions when appropriate.
 
-9. DO NOT provide solutions yet.
+9. Questions should be suitable for a college student.
 
-10. Keep questions clear and suitable for a college student.
+10. Do not invent a specific university syllabus.
+
+11. Do not assume a specific university examination pattern.
+
+12. Theory questions should test conceptual understanding.
+
+13. Numerical/problem-solving questions should be included only when
+    numerical/problem-solving questions are meaningful for the subject.
+
+14. Numerical questions should use different values, situations,
+    formulas, or approaches instead of repeating the same problem.
+
+15. Theory questions should not repeatedly ask the same definition
+    or concept in slightly different wording.
+
+16. If a concept is especially important, occasional repetition is
+    acceptable, but prioritize variety.
+
+17. DO NOT provide solutions yet.
+
+18. Keep questions clear, useful, and practical for exam preparation.
+
+19. When previous questions are provided by the user request,
+do not repeat or closely rephrase those questions.
+
+20. Treat the previous question list as already-used questions.
+
+21. Generate genuinely new questions rather than changing only
+numbers, names, or wording of an existing question.
 
 ======================================================
 QUESTION COUNTS
@@ -4683,6 +4718,21 @@ Generate:
 5 theory questions
 
 5 numerical/problem-solving questions when applicable
+
+If numerical questions are not naturally applicable to the subject,
+return an empty numericalQuestions array.
+
+======================================================
+DIFFICULTY VARIETY
+======================================================
+
+Use a mixture of:
+
+Easy
+Medium
+Hard
+
+Do not make every question the same difficulty.
 
 ======================================================
 JSON FORMAT
@@ -4713,6 +4763,18 @@ Hard
 Return ONLY JSON.
 `.trim();
 
+
+    const previousQuestionsText =
+        Array.isArray(previousQuestions) &&
+            previousQuestions.length > 0
+            ? previousQuestions
+                .map(
+                    (question, index) =>
+                        `${index + 1}. ${question}`
+                )
+                .join("\n")
+            : "No previous questions have been generated yet.";
+
     console.log(
         `🤖 Generating assistance for: ${subject}`
     );
@@ -4731,7 +4793,18 @@ Return ONLY JSON.
                     content:
                         `Generate academic practice questions for this weak subject:
 
-${subject}`
+SUBJECT:
+${subject}
+
+PREVIOUSLY GENERATED QUESTIONS:
+${previousQuestionsText}
+
+IMPORTANT:
+Do not repeat or closely rephrase any question from the
+previously generated questions.
+
+Create a fresh set of questions covering different concepts
+or approaches whenever possible.`
                 }
             ],
 

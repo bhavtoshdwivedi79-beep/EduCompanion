@@ -19,6 +19,7 @@ function ResultAnalysis() {
     const [loadingAssistanceType, setLoadingAssistanceType] = useState(null);
     const [assistanceError, setAssistanceError] = useState("");
     const [selectedAssistanceType, setSelectedAssistanceType] = useState(null);
+    const [previousTheoryQuestions, setPreviousTheoryQuestions] = useState([]);
 
     const allowedTypes = [
         "application/pdf",
@@ -134,6 +135,7 @@ function ResultAnalysis() {
                 "http://localhost:5000/api/weak-subject/assist",
                 {
                     subject: selectedWeakSubject,
+                    previousQuestions: previousTheoryQuestions,
                 },
                 {
                     headers: {
@@ -146,6 +148,14 @@ function ResultAnalysis() {
                 "✅ Theory Questions Response:",
                 response.data
             );
+
+            const newTheoryQuestions =
+                response.data.data?.theoryQuestions || [];
+
+            setPreviousTheoryQuestions((previous) => [
+                ...previous,
+                ...newTheoryQuestions.map((item) => item.question)
+            ]);
 
             setAssistance(response.data.data);
 
@@ -726,6 +736,7 @@ function ResultAnalysis() {
                                         setAssistance(null);
                                         setAssistanceError("");
                                         setLoadingAssistanceType(null);
+                                        setPreviousTheoryQuestions([]);
                                     }}
                                 >
                                     ✕
