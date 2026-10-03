@@ -4628,8 +4628,340 @@ ${cleanText}`
     return cleanedResponse;
 }
 
+function normalizeMathText(text) {
+    if (!text || typeof text !== "string") {
+        return text;
+    }
+
+    let result = text;
+
+    // ======================================================
+    // 1. Safe [MATH] ... [/MATH] format
+    // ======================================================
+
+    result = result.replace(
+        /\[MATH\]([\s\S]*?)\[\/MATH\]/g,
+        (match, content) => {
+            return `\\(${convertMathExpression(content.trim())}\\)`;
+        }
+    );
+
+    // ======================================================
+    // 2. Convert LaTeX expressions already returned by AI
+    //
+    // Example:
+    // (\frac{dy}{dx} - 4y = 3e^{2x})
+    // ======================================================
+
+    result = result.replace(
+        /\((?=[^()\n]*(?:\\frac|\\int|\\sqrt|\\sum|\\begin|\\end|\\sin|\\cos|\\tan|\\ln|\\lambda|\\pi|\\partial|\\infty))([^()\n]*(?:\([^()\n]*\)[^()\n]*)*)\)/g,
+        (match, content) => {
+            return `\\(${repairLatex(content.trim())}\\)`;
+        }
+    );
+
+    // ======================================================
+    // 3. Convert simple math expressions in parentheses
+    //
+    // Example:
+    // (x^4)
+    // (f(x)=ln(1+2x))
+    // ======================================================
+
+    result = result.replace(
+        /\(([^()\n]*(?:\^|=|\/|dx|dy|dt|d\^2|_[0-9]+)[^()\n]*)\)/g,
+        (match, content) => {
+            return `\\(${convertBasicMath(content.trim())}\\)`;
+        }
+    );
+
+    return result;
+}
 
 
+// ==========================================================
+// Repair LaTeX returned by AI
+// ==========================================================
+
+function repairLatex(expression) {
+    let value = expression.trim();
+
+    // ------------------------------------------------------
+    // Repair common matrix row separator problem
+    // AI sometimes returns:
+    //
+    // 2 & -1 & 0 \ 4 & 3 & -2 \ 1 & 5 & 1
+    //
+    // Convert it to:
+    //
+    // 2 & -1 & 0 \\ 4 & 3 & -2 \\ 1 & 5 & 1
+    // ------------------------------------------------------
+
+    if (
+        value.includes("\\begin{pmatrix}") &&
+        value.includes("\\end{pmatrix}")
+    ) {
+        value = value.replace(
+            /\\(?!\\)/g,
+            "\\\\"
+        );
+    }
+
+    // ------------------------------------------------------
+    // Normal mathematical names
+    // ------------------------------------------------------
+
+    value = value
+        .replace(/\bln\b/g, "\\ln")
+        .replace(/\bsin\b/g, "\\sin")
+        .replace(/\bcos\b/g, "\\cos")
+        .replace(/\btan\b/g, "\\tan")
+        .replace(/\bpi\b/g, "\\pi")
+        .replace(/\binfty\b/g, "\\infty");
+
+    return value;
+}
+
+
+// ==========================================================
+// Convert safe AI notation
+// ==========================================================
+
+function convertMathExpression(expression) {
+    let math = expression.trim();
+
+    // ------------------------------------------------------
+    // INT(...)
+    // ------------------------------------------------------
+
+    if (/^INT\s*\(/i.test(math)) {
+        const match = math.match(/^INT\s*\(([\s\S]*)\)$/i);
+
+        if (match) {
+            const parts = splitMathArguments(match[1]);
+
+            if (parts.length >= 4) {
+                return `\\int_{${convertBasicMath(parts[0])}}^{${convertBasicMath(parts[1])}} ${convertBasicMath(parts[2])}\\,${convertBasicMath(parts[3])}`;
+            }
+        }
+    }
+
+    // ------------------------------------------------------
+    // DINT(...)
+    // ------------------------------------------------------
+
+    if (/^DINT\s*\(/i.test(math)) {
+        const match = math.match(/^DINT\s*\(([\s\S]*)\)$/i);
+
+        if (match) {
+            const parts = splitMathArguments(match[1]);
+
+            if (parts.length >= 7) {
+                return `\\int_{${parts[0]}}^{${parts[1]}} \\int_{${parts[2]}}^{${parts[3]}} ${convertBasicMath(parts[4])}\\,${parts[5]}\\,${parts[6]}`;
+            }
+        }
+    }
+
+    // ------------------------------------------------------
+    // INT_C(...)
+    // ------------------------------------------------------
+
+    if (/^INT_C\s*\(/i.test(math)) {
+        const match = math.match(/^INT_C\s*\(([\s\S]*)\)$/i);
+
+        if (match) {
+            return `\\int_C ${convertBasicMath(match[1])}`;
+        }
+    }
+
+    // ------------------------------------------------------
+    // FRAC(...)
+    // ------------------------------------------------------
+
+    if (/^FRAC\s*\(/i.test(math)) {
+        const match = math.match(/^FRAC\s*\(([\s\S]*)\)$/i);
+
+        if (match) {
+            const parts = splitMathArguments(match[1]);
+
+            if (parts.length >= 2) {
+                return `\\frac{${convertBasicMath(parts[0])}}{${convertBasicMath(parts[1])}}`;
+            }
+        }
+    }
+
+    // ------------------------------------------------------
+    // SQRT(...)
+    // ------------------------------------------------------
+
+    if (/^SQRT\s*\(/i.test(math)) {
+        const match = math.match(/^SQRT\s*\(([\s\S]*)\)$/i);
+
+        if (match) {
+            return `\\sqrt{${convertBasicMath(match[1])}}`;
+        }
+    }
+
+    // ------------------------------------------------------
+    // SUM(...)
+    // ------------------------------------------------------
+
+    if (/^SUM\s*\(/i.test(math)) {
+        const match = math.match(/^SUM\s*\(([\s\S]*)\)$/i);
+
+        if (match) {
+            const parts = splitMathArguments(match[1]);
+
+            if (parts.length >= 3) {
+                return `\\sum_{${parts[0]}}^{${parts[1]}} ${convertBasicMath(parts[2])}`;
+            }
+        }
+    }
+
+    // ------------------------------------------------------
+    // MATRIX(...)
+    // ------------------------------------------------------
+
+    if (/^MATRIX\s*\(/i.test(math)) {
+        const match = math.match(
+            /^MATRIX\s*\(\s*\[\[(.*?)\]\]\s*\)$/i
+        );
+
+        if (match) {
+            const rows = match[1].split(/\]\s*,\s*\[/);
+
+            const latexRows = rows.map((row) =>
+                row
+                    .replace(/^\[/, "")
+                    .replace(/\]$/, "")
+                    .split(",")
+                    .map((value) => convertBasicMath(value.trim()))
+                    .join(" & ")
+            );
+
+            return `\\begin{pmatrix}${latexRows.join(" \\\\ ")}\\end{pmatrix}`;
+        }
+    }
+
+    // ------------------------------------------------------
+    // DERIVATIVE(...)
+    // ------------------------------------------------------
+
+    if (/^DERIVATIVE\s*\(/i.test(math)) {
+        const match = math.match(
+            /^DERIVATIVE\s*\(([\s\S]*)\)$/i
+        );
+
+        if (match) {
+            return `\\frac{d${match[1]}}{dx}`;
+        }
+    }
+
+    // ------------------------------------------------------
+    // SECOND_DERIVATIVE(...)
+    // ------------------------------------------------------
+
+    if (/^SECOND_DERIVATIVE\s*\(/i.test(math)) {
+        const match = math.match(
+            /^SECOND_DERIVATIVE\s*\(([\s\S]*)\)$/i
+        );
+
+        if (match) {
+            return `\\frac{d^2${match[1]}}{dx^2}`;
+        }
+    }
+
+    return convertBasicMath(math);
+}
+
+
+// ==========================================================
+// Split arguments safely
+// ==========================================================
+
+function splitMathArguments(content) {
+    const parts = [];
+    let current = "";
+    let depth = 0;
+
+    for (const char of content) {
+        if (
+            char === "(" ||
+            char === "[" ||
+            char === "{"
+        ) {
+            depth++;
+        }
+
+        if (
+            char === ")" ||
+            char === "]" ||
+            char === "}"
+        ) {
+            depth--;
+        }
+
+        if (char === "," && depth === 0) {
+            parts.push(current.trim());
+            current = "";
+        } else {
+            current += char;
+        }
+    }
+
+    if (current.trim()) {
+        parts.push(current.trim());
+    }
+
+    return parts;
+}
+
+
+// ==========================================================
+// Basic math conversion
+// ==========================================================
+
+function convertBasicMath(expression) {
+    return String(expression || "")
+        .trim()
+        .replace(/\bpi\b/g, "\\pi")
+        .replace(/\binfty\b/g, "\\infty")
+        .replace(/\bln\b/g, "\\ln")
+        .replace(/\bsin\b/g, "\\sin")
+        .replace(/\bcos\b/g, "\\cos")
+        .replace(/\btan\b/g, "\\tan")
+        .replace(/\blog\b/g, "\\log");
+}
+
+function forceMathMarkers(text) {
+    if (!text || typeof text !== "string") {
+        return text;
+    }
+
+    let result = text;
+
+    // ------------------------------------------------------
+    // Convert existing LaTeX delimiters
+    // \( ... \) -> [MATH] ... [/MATH]
+    // ------------------------------------------------------
+
+    result = result.replace(
+        /\\\(([\s\S]*?)\\\)/g,
+        "[MATH]$1[/MATH]"
+    );
+
+    // ------------------------------------------------------
+    // Convert LaTeX display delimiters
+    // \[ ... \] -> [MATH] ... [/MATH]
+    // ------------------------------------------------------
+
+    result = result.replace(
+        /\\\[([\s\S]*?)\\\]/g,
+        "[MATH]$1[/MATH]"
+    );
+
+    return result;
+}
 
 // ======================================================
 // ASSISTANCE TO WEAK SUBJECTS
@@ -4708,6 +5040,131 @@ do not repeat or closely rephrase those questions.
 
 21. Generate genuinely new questions rather than changing only
 numbers, names, or wording of an existing question.
+
+======================================================
+MATHEMATICAL FORMATTING
+======================================================
+
+22. IMPORTANT: Mathematical expressions MUST use the exact
+    [MATH]...[/MATH] format.
+
+23. NEVER use normal LaTeX delimiters such as:
+    \( ... \)
+    \[ ... \]
+    $$ ... $$
+    or parentheses around mathematical expressions.
+
+24. NEVER write LaTeX commands directly outside [MATH] markers.
+
+25. Inside [MATH]...[/MATH], use ONLY the following safe notation.
+
+    Derivative:
+    [MATH]dy/dx[/MATH]
+
+    Second derivative:
+    [MATH]d^2y/dx^2[/MATH]
+
+    Integral:
+    [MATH]INT(0,1,x^2,dx)[/MATH]
+
+    Line integral:
+    [MATH]INT_C(y dx + x dy)[/MATH]
+
+    Double integral:
+    [MATH]DINT(0,1,0,2,x^2*y,dx,dy)[/MATH]
+
+    Fraction:
+    [MATH]FRAC(3s+5,s^2+4s+13)[/MATH]
+
+    Square root:
+    [MATH]SQRT(x^2+1)[/MATH]
+
+    Summation:
+    [MATH]SUM(n=1,infty,1/n^2)[/MATH]
+
+    Matrix:
+    [MATH]MATRIX([[4,1,2],[-2,3,0],[1,-1,5]])[/MATH]
+
+26. Standard mathematical functions may be written normally
+    inside [MATH] markers:
+
+    [MATH]sin(x)[/MATH]
+    [MATH]cos(x)[/MATH]
+    [MATH]tan(x)[/MATH]
+    [MATH]ln(1+2x)[/MATH]
+    [MATH]e^(2x)[/MATH]
+
+27. Every mathematical expression MUST be completely enclosed
+    between [MATH] and [/MATH].
+
+28. NEVER use \frac, \int, \begin, \end, \sqrt, \sum,
+    \sin, \cos, \ln or other LaTeX commands.
+
+29. NEVER use LaTeX matrix syntax such as:
+    \begin{pmatrix}
+    \end{pmatrix}
+
+30. NEVER use LaTeX commands even if they appear inside
+    parentheses.
+
+31. Use normal English outside [MATH] markers.
+
+32. The [MATH] notation is an internal format used by the
+    application and will be converted to LaTeX later.
+
+33. Every [MATH] must have exactly one matching [/MATH].
+
+34. Keep each question as ONE SINGLE-LINE JSON STRING.
+
+35. NEVER insert an actual newline inside a question string.
+
+36. NEVER insert a tab inside a question string.
+
+37. Return ONLY valid JSON.
+
+38. FINAL VALIDATION:
+    Before returning the JSON, scan every question.
+
+    If ANY mathematical expression is present, it MUST be
+    enclosed in [MATH] and [/MATH].
+
+39. ABSOLUTELY FORBIDDEN:
+    Do NOT output:
+    \( ... \)
+    \[ ... \]
+    $$ ... $$
+    \frac
+    \int
+    \begin{pmatrix}
+    \end{pmatrix}
+    \sqrt
+    \sum
+
+40. ABSOLUTELY FORBIDDEN:
+    Do NOT put mathematical expressions inside ordinary
+    parentheses such as:
+
+    (dy/dx + 3y = 6e^(2x))
+    (\ln(1.3))
+    (MATRIX(...))
+    (DINT(...))
+
+41. CORRECT:
+    [MATH]dy/dx + 3y = 6e^(2x)[/MATH]
+
+42. CORRECT:
+    [MATH]ln(1.3)[/MATH]
+
+43. CORRECT:
+    [MATH]MATRIX([[2,1,0],[1,2,1],[0,1,2]])[/MATH]
+
+44. CORRECT:
+    [MATH]DINT(0,2,0,3,x^2*y,dx,dy)[/MATH]
+
+45. The ONLY acceptable mathematical format is:
+    [MATH]mathematical expression[/MATH]
+
+46. Never output mathematical notation in any other format.
 
 ======================================================
 QUESTION COUNTS
@@ -4827,8 +5284,396 @@ or approaches whenever possible.`
     const cleanedResponse =
         cleanAIJsonResponse(rawResponse);
 
+    let parsedResponse;
+
+    try {
+        parsedResponse = JSON.parse(cleanedResponse);
+
+    } catch (error) {
+
+        console.error(
+            "❌ First JSON parse failed:",
+            error.message
+        );
+
+        // ======================================================
+        // Repair raw control characters inside JSON strings
+        // ======================================================
+
+        const repairedResponse =
+            cleanedResponse
+                .replace(/\r/g, "")
+                .replace(/\t/g, " ");
+
+        let insideString = false;
+        let escaped = false;
+        let safeJson = "";
+
+        for (let i = 0; i < repairedResponse.length; i++) {
+
+            const char = repairedResponse[i];
+
+            if (char === '"' && !escaped) {
+                insideString = !insideString;
+            }
+
+            if (
+                insideString &&
+                (char === "\n" || char === "\r")
+            ) {
+                safeJson += " ";
+            } else {
+                safeJson += char;
+            }
+
+            escaped =
+                char === "\\" && !escaped;
+        }
+
+        try {
+
+            parsedResponse = JSON.parse(safeJson);
+
+            console.log(
+                "✅ JSON repaired successfully."
+            );
+
+        } catch (repairError) {
+
+            console.error(
+                "❌ Failed to parse assistance response after repair:",
+                repairError.message
+            );
+
+            console.error(
+                "❌ Raw AI response:",
+                cleanedResponse
+            );
+
+            return cleanedResponse;
+        }
+    }
+
+    if (Array.isArray(parsedResponse.theoryQuestions)) {
+        parsedResponse.theoryQuestions =
+            parsedResponse.theoryQuestions.map((item) => ({
+                ...item,
+                question: normalizeMathText(item.question)
+            }));
+    }
+
+    if (Array.isArray(parsedResponse.numericalQuestions)) {
+        parsedResponse.numericalQuestions =
+            parsedResponse.numericalQuestions.map((item) => ({
+                ...item,
+                question: normalizeMathText(item.question)
+            }));
+    }
+
     console.log(
         "✅ Weak subject assistance generated."
+    );
+
+    return JSON.stringify(parsedResponse);
+}
+
+
+export async function generateTheorySolutions(questions = []) {
+    if (!Array.isArray(questions) || questions.length === 0) {
+        throw new Error("Theory questions are required.");
+    }
+
+    const questionsText = questions
+        .map(
+            (item, index) =>
+                `${index + 1}. ${item.question}`
+        )
+        .join("\n");
+
+    const systemPrompt = `
+You are EduCompanion, an academic learning assistant.
+
+Your task is to provide detailed and clear solutions
+for the given theory questions.
+
+Return ONLY valid JSON.
+Do not return Markdown outside JSON.
+
+======================================================
+IMPORTANT RULES
+======================================================
+
+1. Answer every question.
+
+2. Give a clear and academically correct explanation.
+
+3. Explain concepts in a way suitable for a college student.
+
+4. Use simple and understandable language.
+
+5. Provide enough detail for exam preparation.
+
+6. Do not give extremely short answers.
+
+7. If an example helps explain the concept, include one.
+
+8. Keep each answer detailed but reasonably concise.
+   Aim for approximately 150-250 words per answer.
+
+9. Do not invent information.
+
+10. Keep the answer directly related to the question.
+
+11. Do not include unnecessary information.
+
+12. Preserve the original question exactly.
+
+======================================================
+MATHEMATICAL FORMATTING
+======================================================
+
+1. Use valid LaTeX for all mathematical expressions,
+   formulas, equations, integrals, derivatives, matrices,
+   limits, and mathematical symbols.
+
+2. Inline mathematical expressions must use:
+   \( ... \)
+
+3. Complex or important equations should use:
+   $$ ... $$
+
+4. NEVER use plain parentheses such as:
+   (x^2 + y^2 = 4)
+   as a replacement for LaTeX math delimiters.
+
+5. For integrals, use proper LaTeX, for example:
+   \(\int_0^{\pi/2} x\sin x\,dx\)
+
+6. For matrices, use proper LaTeX, for example:
+   \(\begin{pmatrix}4 & 1\\1 & 3\end{pmatrix}\)
+
+7. For fractions, derivatives, limits, powers, and
+   mathematical symbols, use proper LaTeX syntax.
+
+8. Preserve mathematical expressions accurately.
+
+9. Do not write mathematical expressions as plain text
+   when LaTeX can represent them properly.
+
+======================================================
+JSON FORMAT
+======================================================
+
+{
+    "solutions": [
+        {
+            "question": "",
+            "answer": ""
+        }
+    ]
+}
+
+Return exactly one solution for every question.
+
+Return ONLY valid JSON.
+`.trim();
+
+    const completion =
+        await groq.chat.completions.create({
+            model: "openai/gpt-oss-120b",
+
+            messages: [
+                {
+                    role: "system",
+                    content: systemPrompt
+                },
+                {
+                    role: "user",
+                    content:
+                        `Provide detailed solutions for these theory questions:
+
+${questionsText}`
+                }
+            ],
+
+            temperature: 0.3,
+
+            max_completion_tokens: 8000,
+
+            reasoning_effort: "low"
+        });
+
+    const rawResponse =
+        completion?.choices?.[0]?.message?.content?.trim();
+
+    if (!rawResponse) {
+        throw new Error(
+            "AI returned an empty theory solution response."
+        );
+    }
+
+    const cleanedResponse =
+        cleanAIJsonResponse(rawResponse);
+
+    console.log(
+        "✅ Theory solutions generated."
+    );
+
+    return cleanedResponse;
+}
+
+export async function generateNumericalSolutions(questions = []) {
+    if (!Array.isArray(questions) || questions.length === 0) {
+        throw new Error("Numerical questions are required.");
+    }
+
+    const questionsText = questions
+        .map(
+            (item, index) =>
+                `${index + 1}. ${item.question}`
+        )
+        .join("\n");
+
+    const systemPrompt = `
+You are EduCompanion, an academic learning assistant.
+
+Your task is to solve the given numerical/problem-solving
+questions with proper step-by-step calculations.
+
+Return ONLY valid JSON.
+Do not return Markdown outside JSON.
+
+======================================================
+IMPORTANT RULES
+======================================================
+
+1. Solve every question.
+
+2. Preserve the original question exactly.
+
+3. Show the solution step by step.
+
+4. Clearly identify the formula used whenever applicable.
+
+5. Show substitution of values into the formula.
+
+6. Show the calculation process clearly.
+
+7. Clearly state the final answer.
+
+8. Use correct units whenever applicable.
+
+9. If multiple calculation steps are required, show all
+   important steps.
+
+10. Do not skip important mathematical steps.
+
+11. Keep each solution detailed but reasonably concise.
+    Use only the steps necessary to solve the problem clearly.
+
+12. Do not invent missing values.
+
+13. If a question is theoretical rather than numerical,
+    provide the appropriate problem-solving explanation.
+
+14. Keep the solution suitable for a college student.
+
+15. Use simple and understandable language.
+
+16. Do not provide unnecessary information.
+
+======================================================
+MATHEMATICAL FORMATTING
+======================================================
+
+1. Use valid LaTeX for all mathematical expressions,
+   formulas, equations, integrals, derivatives, matrices,
+   limits, and mathematical symbols.
+
+2. Inline mathematical expressions must use:
+   \( ... \)
+
+3. Complex or important equations should use:
+   $$ ... $$
+
+4. NEVER use plain parentheses such as:
+   (x^2 + y^2 = 4)
+   as a replacement for LaTeX math delimiters.
+
+5. For integrals, use proper LaTeX, for example:
+   \(\int_0^{\pi/2} x\sin x\,dx\)
+
+6. For matrices, use proper LaTeX, for example:
+   \(\begin{pmatrix}4 & 1\\1 & 3\end{pmatrix}\)
+
+7. For fractions, derivatives, limits, powers, and
+   mathematical symbols, use proper LaTeX syntax.
+
+8. Preserve mathematical expressions accurately.
+
+9. Do not write mathematical expressions as plain text
+   when LaTeX can represent them properly.
+
+======================================================
+JSON FORMAT
+======================================================
+
+{
+    "solutions": [
+        {
+            "question": "",
+            "steps": [
+                ""
+            ],
+            "finalAnswer": ""
+        }
+    ]
+}
+
+Return exactly one solution for every question.
+
+Return ONLY valid JSON.
+`.trim();
+
+    const completion =
+        await groq.chat.completions.create({
+            model: "openai/gpt-oss-120b",
+
+            messages: [
+                {
+                    role: "system",
+                    content: systemPrompt
+                },
+                {
+                    role: "user",
+                    content:
+                        `Solve these numerical questions step by step:
+
+${questionsText}`
+                }
+            ],
+
+            temperature: 0.2,
+
+            max_completion_tokens: 8000,
+
+            reasoning_effort: "low"
+        });
+
+    const rawResponse =
+        completion?.choices?.[0]?.message?.content?.trim();
+
+    if (!rawResponse) {
+        throw new Error(
+            "AI returned an empty numerical solution response."
+        );
+    }
+
+    const cleanedResponse =
+        cleanAIJsonResponse(rawResponse);
+
+    console.log(
+        "✅ Numerical solutions generated."
     );
 
     return cleanedResponse;

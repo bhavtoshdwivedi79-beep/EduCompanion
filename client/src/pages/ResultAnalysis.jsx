@@ -1,6 +1,26 @@
 import { useRef, useState } from "react";
 import axios from "axios";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
+import "katex/dist/katex.min.css";
 import "./ResultAnalysis.css";
+
+const MathContent = ({ content }) => {
+    const normalizedContent =
+        String(content || "").replace(/\\\\/g, "\\");
+
+    return (
+        <ReactMarkdown
+            remarkPlugins={[remarkGfm, remarkMath]}
+            rehypePlugins={[rehypeRaw, rehypeKatex]}
+        >
+            {normalizedContent}
+        </ReactMarkdown>
+    );
+};
 
 function ResultAnalysis() {
 
@@ -19,7 +39,13 @@ function ResultAnalysis() {
     const [loadingAssistanceType, setLoadingAssistanceType] = useState(null);
     const [assistanceError, setAssistanceError] = useState("");
     const [selectedAssistanceType, setSelectedAssistanceType] = useState(null);
+
+    const [solutionLoading, setSolutionLoading] = useState(false);
+    const [solutionError, setSolutionError] = useState("");
+    const [solutions, setSolutions] = useState(null);
+
     const [previousTheoryQuestions, setPreviousTheoryQuestions] = useState([]);
+    const [previousNumericalQuestions, setPreviousNumericalQuestions] = useState([]);
 
     const allowedTypes = [
         "application/pdf",
@@ -193,6 +219,7 @@ function ResultAnalysis() {
                 "http://localhost:5000/api/weak-subject/assist",
                 {
                     subject: selectedWeakSubject,
+                    previousQuestions: previousNumericalQuestions,
                 },
                 {
                     headers: {
@@ -205,6 +232,16 @@ function ResultAnalysis() {
                 "✅ Numerical Questions Response:",
                 response.data
             );
+
+            const newNumericalQuestions =
+                response.data.data?.numericalQuestions || [];
+
+            setPreviousNumericalQuestions((previous) => [
+                ...previous,
+                ...newNumericalQuestions.map(
+                    (item) => item.question
+                )
+            ]);
 
             setAssistance(response.data.data);
 
@@ -221,6 +258,67 @@ function ResultAnalysis() {
         } finally {
             setAssistanceLoading(false);
             setLoadingAssistanceType(null);
+        }
+    };
+
+    const handleDownloadSolution = async () => {
+        if (
+            !assistance ||
+            !selectedAssistanceType
+        ) {
+            return;
+        }
+
+        const questions =
+            selectedAssistanceType === "theory"
+                ? assistance.theoryQuestions
+                : assistance.numericalQuestions;
+
+        if (!Array.isArray(questions) || questions.length === 0) {
+            return;
+        }
+
+        try {
+            setSolutionLoading(true);
+            setSolutionError("");
+            setSolutions(null);
+
+            const token = localStorage.getItem("token");
+
+            const response = await axios.post(
+                "http://localhost:5000/api/weak-subject/solutions",
+                {
+                    type: selectedAssistanceType,
+                    questions: questions,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            console.log(
+                "✅ Solution Response:",
+                response.data
+            );
+
+            setSolutions(
+                response.data.data
+            );
+
+        } catch (error) {
+            console.error(
+                "❌ Solution Generation Error:",
+                error
+            );
+
+            setSolutionError(
+                error.response?.data?.message ||
+                "Failed to generate solutions."
+            );
+        } finally {
+            setSolutionLoading(false);
         }
     };
 
@@ -737,6 +835,7 @@ function ResultAnalysis() {
                                         setAssistanceError("");
                                         setLoadingAssistanceType(null);
                                         setPreviousTheoryQuestions([]);
+                                        setPreviousNumericalQuestions([]);
                                     }}
                                 >
                                     ✕
@@ -829,9 +928,9 @@ THEORY QUESTIONS
 
                                                 <div className="question-content">
 
-                                                    <p className="question-text">
-                                                        {item.question}
-                                                    </p>
+                                                    <div className="question-text">
+                                                        <MathContent content={item.question} />
+                                                    </div>
 
                                                     <span
                                                         className={`question-difficulty ${item.difficulty?.toLowerCase()}`}
@@ -846,6 +945,18 @@ THEORY QUESTIONS
                                         )
                                     )}
 
+                                </div>
+
+                                <div className="solution-download-section">
+                                    <button
+                                        className="download-solution-btn"
+                                        onClick={handleDownloadSolution}
+                                        disabled={solutionLoading}
+                                    >
+                                        {solutionLoading
+                                            ? "Generating Solutions..."
+                                            : "📥 Download Solution"}
+                                    </button>
                                 </div>
 
                             </div>
@@ -895,9 +1006,9 @@ NUMERICAL QUESTIONS
 
                                                 <div className="question-content">
 
-                                                    <p className="question-text">
-                                                        {item.question}
-                                                    </p>
+                                                    <div className="question-text">
+                                                        <MathContent content={item.question} />
+                                                    </div>
 
                                                     <span
                                                         className={`question-difficulty ${item.difficulty?.toLowerCase()}`}
@@ -914,9 +1025,27 @@ NUMERICAL QUESTIONS
 
                                 </div>
 
+                                <div className="solution-download-section">
+                                    <button
+                                        className="download-solution-btn"
+                                        onClick={handleDownloadSolution}
+                                        disabled={solutionLoading}
+                                    >
+                                        {solutionLoading
+                                            ? "Generating Solutions..."
+                                            : "📥 Download Solution"}
+                                    </button>
+                                </div>
+
                             </div>
 
                         )}
+
+                    {solutionError && (
+                        <p className="result-upload-error">
+                            ⚠️ {solutionError}
+                        </p>
+                    )}
 
 
                     {/* =========================================

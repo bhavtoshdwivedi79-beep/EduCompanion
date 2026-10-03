@@ -1607,3 +1607,110 @@ body:not([data-theme="light"]) .numerical-questions-card {
         padding: 14px;
     }
 }
+
+/* =========================================
+   SOLUTION DOWNLOAD
+========================================= */
+
+.solution-download-section {
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    margin-top: 22px;
+    padding-top: 4px;
+}
+
+
+.download-solution-btn {
+    border: none;
+    outline: none;
+
+    padding: 12px 24px;
+
+    border-radius: 10px;
+
+    background: var(--primary);
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 44px;
+
+    transition:
+        background-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        opacity 0.2s ease;
+}
+
+
+.download-solution-btn:hover:not(:disabled) {
+    background: #1d4ed8;
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
+}
+
+
+.download-solution-btn:active:not(:disabled) {
+    transform: translateY(0);
+
+    box-shadow: 0 3px 10px rgba(37, 99, 235, 0.18);
+}
+
+
+.download-solution-btn:disabled {
+    opacity: 0.65;
+
+    cursor: not-allowed;
+
+    transform: none;
+
+    box-shadow: none;
+}
+
+
+/* =========================================
+   SOLUTION ERROR
+========================================= */
+
+.solution-error {
+    margin-top: 12px;
+
+    text-align: center;
+
+    font-size: 13px;
+    font-weight: 500;
+
+    color: #ef4444;
+}
+
+
+/* =========================================
+   SOLUTION DOWNLOAD MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+
+    .solution-download-section {
+        margin-top: 18px;
+    }
+
+    .download-solution-btn {
+        width: 100%;
+
+        padding: 12px 18px;
+
+        font-size: 14px;
+    }
+}
