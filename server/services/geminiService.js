@@ -7,6 +7,20 @@ const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY,
 });
 
+const cleanAIJsonResponse = (response) => {
+    if (!response) {
+        return "";
+    }
+
+    let cleaned = String(response).trim();
+
+    // Remove Markdown code fences
+    cleaned = cleaned.replace(/^```json\s*/i, "");
+    cleaned = cleaned.replace(/^```\s*/i, "");
+    cleaned = cleaned.replace(/\s*```$/i, "");
+
+    return cleaned.trim();
+};
 
 // ======================================================
 // NORMAL AI CHAT
@@ -466,7 +480,7 @@ ${limitedText}
                         0.3,
 
                     max_completion_tokens:
-                        2400,
+                        1200,
 
                     // IMPORTANT:
                     // GPT-OSS supports low/medium/high.
@@ -844,7 +858,7 @@ Rules:
                     0.2,
 
                 max_completion_tokens:
-                    1400,
+                    900,
 
             });
 
@@ -1222,7 +1236,7 @@ Rules:
                         0.5,
 
                     max_completion_tokens:
-                        2000,
+                        950,
 
                 });
 
@@ -3618,7 +3632,7 @@ Return concise but information-rich text.
             Math.floor(
                 (quizContent.length -
                     chunkSize) /
-                    2
+                2
             );
 
         const middle =
@@ -3671,11 +3685,11 @@ Create genuinely different questions.
 
 PREVIOUS QUESTIONS:
 ${previous
-    .map(
-        (q, i) =>
-            `${i + 1}. ${q}`
-    )
-    .join("\n")}
+                .map(
+                    (q, i) =>
+                        `${i + 1}. ${q}`
+                )
+                .join("\n")}
 `
             : "";
 
@@ -3971,4 +3985,778 @@ ${quizContent}
             "Failed to generate quiz from scanned PDF."
         );
     }
+}
+
+// ======================================================
+// ANALYZE STUDENT RESULT
+// ======================================================
+
+export async function analyzeStudentResult(
+    resultText = "",
+    resultImage = null,
+    mimeType = ""
+) {
+
+    const cleanText = String(resultText || "").trim();
+
+    // ======================================================
+    // VALIDATION
+    // ======================================================
+
+    if (!cleanText && !resultImage) {
+        throw new Error("No result data provided for analysis.");
+    }
+
+    // ======================================================
+    // COMMON SYSTEM PROMPT
+    // ======================================================
+
+    const systemPrompt = `
+You are EduCompanion, an academic result analysis assistant.
+
+Your job is to carefully analyze a student's academic result
+document and extract ONLY information that is actually present
+in the document.
+
+Return ONLY valid JSON.
+Do not return Markdown.
+Do not add explanations outside the JSON.
+
+IMPORTANT EXTRACTION RULES:
+
+1. Extract the student's name if clearly available.
+
+2. Extract every subject for which marks can be reliably identified.
+
+3. For every subject return:
+   - subject
+   - semester
+   - marks
+   - maxMarks
+   - percentage
+
+4. If the semester is clearly visible for a subject, include it.
+
+5. If the semester cannot be determined reliably, use null.
+
+6. NEVER invent semester numbers.
+
+7. NEVER invent marks.
+
+8. NEVER treat:
+   - roll numbers
+   - registration numbers
+   - subject codes
+   - semester numbers
+   - credit values
+   - grade points
+   as marks.
+
+9. Lab, practical, workshop, project and theory subjects
+   should be treated as separate subjects when they are listed
+   separately in the result.
+
+10. If the same subject appears in multiple semesters,
+    KEEP EACH RECORD if the document indicates they are separate
+    attempts/semesters.
+
+11. Do NOT remove duplicate subject names automatically.
+    A duplicate can represent the same subject in different
+    semesters or different result sections.
+
+12. If the same subject appears twice and there is NO reliable
+    evidence that they are separate records, keep the records
+    separately rather than guessing.
+
+13. If marks are missing or unclear, use null.
+
+14. Calculate percentage only when obtained marks and maximum
+    marks are both clearly available.
+
+15. Do NOT convert CGPA into percentage unless the document
+    explicitly provides that conversion.
+
+16. Keep CGPA separate from overall percentage.
+
+17. If the document contains an overall percentage, use that
+    value when clearly identifiable.
+
+18. If an overall percentage is not explicitly provided,
+    calculate it from reliable marks only when the denominator
+    is known.
+
+19. Do not include subjects where marks cannot be identified
+    at all.
+
+20. Ignore unrelated information.
+
+======================================================
+SUBJECT CLASSIFICATION
+======================================================
+
+Classify each subject using its percentage:
+
+Strong:
+75% or above
+
+Improvement:
+50% to 74.99%
+
+Weak:
+Below 50%
+
+If percentage is null, do not put that subject into any
+classification.
+
+Use the EXACT subject name from the subjects array when
+creating strongSubjects, improvementSubjects and weakSubjects.
+
+======================================================
+OVERALL PERFORMANCE
+======================================================
+
+Calculate overallPercentage using:
+
+total obtained marks
+-------------------- × 100
+total maximum marks
+
+ONLY when reliable marks and maximum marks are available.
+
+Do not include subjects with null marks in this calculation.
+
+If the document itself provides a reliable overall percentage,
+prefer the document's value.
+
+======================================================
+SGPA AND CGPA
+======================================================
+
+If SGPA is present in the document, extract it separately.
+
+If CGPA is present in the document, extract it separately.
+
+IMPORTANT:
+- SGPA and CGPA are different values.
+- NEVER treat SGPA as CGPA.
+- NEVER calculate CGPA from a single semester result.
+- NEVER calculate SGPA unless the document explicitly provides
+  enough information to calculate it reliably.
+- If SGPA is not present, use null.
+- If CGPA is not present, use null.
+
+======================================================
+SUMMARY
+======================================================
+
+Provide a short factual summary.
+
+Mention:
+- student name if available
+- overall percentage if available
+- CGPA if available
+- general performance pattern
+- important strong/improvement/weak areas
+
+Do not make personal judgments about the student.
+
+======================================================
+JSON FORMAT
+======================================================
+
+Return exactly this structure:
+
+{
+  "studentName": null,
+  "semester": null,
+  "sgpa": null,
+  "cgpa": null,
+  "overallPercentage": null,
+
+  "subjects": [
+    {
+      "subject": "",
+      "semester": null,
+      "marks": null,
+      "maxMarks": null,
+      "percentage": null
+    }
+  ],
+
+  "strongSubjects": [],
+  "improvementSubjects": [],
+  "weakSubjects": [],
+
+  "summary": ""
+}
+
+Return ONLY JSON.
+`.trim();
+
+
+
+    const visionPrompt = `
+Extract academic result data from this image.
+
+Return ONLY valid JSON.
+
+{
+  "studentName": null,
+  "semester": null,
+  "sgpa": null,
+  "cgpa": null,
+  "subjects": [
+    {
+      "subject": "",
+      "marks": null,
+      "maxMarks": null
+    }
+  ]
+}
+
+Rules:
+
+- Extract only information that is clearly visible.
+- Do not guess any information.
+- Extract the student name if clearly visible.
+- Extract the semester if clearly visible.
+- Extract SGPA if clearly visible.
+- Extract CGPA only if clearly visible.
+- NEVER treat SGPA as CGPA.
+- NEVER calculate CGPA.
+- Extract every subject with identifiable marks.
+- Extract maximum marks if clearly visible.
+- If maximum marks are not clearly visible, use null.
+- Keep duplicate subjects if present.
+- Do not calculate percentage.
+- Do not include classifications.
+- No explanation.
+- No Markdown.
+- Return complete valid JSON.
+`.trim();
+
+    // ======================================================
+    // IMAGE / VISION RESULT
+    // ======================================================
+
+    if (resultImage) {
+
+        if (!Buffer.isBuffer(resultImage)) {
+            throw new Error("Invalid result image buffer.");
+        }
+
+        const base64Image =
+            resultImage.toString("base64");
+
+        console.log("🖼️ Sending result image to AI vision model...");
+
+        const completion =
+            await groq.chat.completions.create({
+                model: "qwen/qwen3.8-27b",
+
+                messages: [
+                    {
+                        role: "system",
+                        content: visionPrompt
+                    },
+                    {
+                        role: "user",
+                        content: [
+                            {
+                                type: "text",
+                                text: "Extract the academic result information from this image."
+                            },
+                            {
+                                type: "image_url",
+                                image_url: {
+                                    url:
+                                        `data:${mimeType};base64,${base64Image}`
+                                }
+                            }
+                        ]
+                    }
+                ],
+
+                temperature: 0.1,
+
+                max_completion_tokens: 800
+            });
+
+        const rawResponse =
+            completion?.choices?.[0]?.message?.content?.trim();
+
+        if (!rawResponse) {
+            throw new Error(
+                "AI returned an empty result analysis."
+            );
+        }
+
+        console.log("🤖 RAW AI RESPONSE:");
+        console.log(rawResponse);
+
+        const cleanedResponse =
+            cleanAIJsonResponse(rawResponse);
+
+        let extractedResult;
+
+        try {
+            extractedResult = JSON.parse(cleanedResponse);
+        } catch (parseError) {
+            console.error(
+                "❌ Failed to parse vision result:",
+                parseError.message
+            );
+
+            console.error(
+                "🤖 RAW VISION RESPONSE:",
+                rawResponse
+            );
+
+            throw new Error(
+                "AI returned an invalid result format."
+            );
+        }
+
+
+        /* ===============================
+           EXTRACT SUBJECTS
+        ================================ */
+
+        const subjects =
+            Array.isArray(extractedResult.subjects)
+                ? extractedResult.subjects
+                : [];
+
+
+        /* ===============================
+           PROCESS SUBJECTS
+        ================================ */
+
+        const processedSubjects = subjects.map((item) => {
+
+            const marks =
+                typeof item.marks === "number"
+                    ? item.marks
+                    : Number(item.marks);
+
+            let maxMarks =
+                typeof item.maxMarks === "number"
+                    ? item.maxMarks
+                    : Number(item.maxMarks);
+
+            /*
+             * This semester result uses marks out of 100.
+             * If AI cannot extract maxMarks, use 100.
+             */
+
+            if (
+                !Number.isFinite(maxMarks) ||
+                maxMarks <= 0
+            ) {
+                maxMarks = 100;
+            }
+
+            let percentage = null;
+
+            if (
+                Number.isFinite(marks) &&
+                Number.isFinite(maxMarks) &&
+                maxMarks > 0
+            ) {
+                percentage =
+                    Number(
+                        ((marks / maxMarks) * 100).toFixed(2)
+                    );
+            }
+
+            return {
+                subject: item.subject || "",
+
+                semester:
+                    extractedResult.semester !== null &&
+                        extractedResult.semester !== undefined
+                        ? extractedResult.semester
+                        : null,
+
+                marks:
+                    Number.isFinite(marks)
+                        ? marks
+                        : null,
+
+                maxMarks,
+
+                percentage
+            };
+        });
+
+
+        /* ===============================
+           STRONG / IMPROVEMENT / WEAK
+        ================================ */
+
+        const strongSubjects = [];
+        const improvementSubjects = [];
+        const weakSubjects = [];
+
+
+        processedSubjects.forEach((item) => {
+
+            if (item.percentage === null) {
+                return;
+            }
+
+
+            if (item.percentage >= 75) {
+
+                strongSubjects.push(item.subject);
+
+            } else if (item.percentage >= 50) {
+
+                improvementSubjects.push(item.subject);
+
+            } else {
+
+                weakSubjects.push(item.subject);
+            }
+        });
+
+
+        /* ===============================
+           OVERALL PERCENTAGE
+        ================================ */
+
+        const reliableSubjects =
+            processedSubjects.filter(
+                (item) =>
+                    item.marks !== null &&
+                    item.maxMarks !== null &&
+                    item.maxMarks > 0
+            );
+
+
+        let overallPercentage = null;
+
+
+        if (reliableSubjects.length > 0) {
+
+            const totalMarks =
+                reliableSubjects.reduce(
+                    (total, item) =>
+                        total + item.marks,
+                    0
+                );
+
+
+            const totalMaxMarks =
+                reliableSubjects.reduce(
+                    (total, item) =>
+                        total + item.maxMarks,
+                    0
+                );
+
+
+            if (totalMaxMarks > 0) {
+
+                overallPercentage =
+                    Number(
+                        (
+                            (totalMarks / totalMaxMarks) * 100
+                        ).toFixed(2)
+                    );
+            }
+        }
+
+
+        /* ===============================
+           AI SUMMARY
+        ================================ */
+
+        let summary = "No summary available.";
+
+
+        if (overallPercentage !== null) {
+
+            summary =
+                `${extractedResult.studentName || "The student"} `
+                + `has an overall percentage of ${overallPercentage}%. `
+                + `${strongSubjects.length} subject(s) are in the strong category, `
+                + `${improvementSubjects.length} subject(s) need improvement, `
+                + `and ${weakSubjects.length} subject(s) are in the weak category.`;
+        }
+
+
+        /* ===============================
+           LOGS
+        ================================ */
+
+        console.log(
+            "📊 Processed Subjects:",
+            processedSubjects.length
+        );
+
+        console.log(
+            "📈 Overall Percentage:",
+            overallPercentage
+        );
+
+        console.log(
+            "💪 Strong Subjects:",
+            strongSubjects.length
+        );
+
+        console.log(
+            "📚 Improvement Subjects:",
+            improvementSubjects.length
+        );
+
+        console.log(
+            "⚠️ Weak Subjects:",
+            weakSubjects.length
+        );
+
+        console.log(
+            "📊 Semester:",
+            extractedResult.semester
+        );
+
+        console.log(
+            "📈 SGPA:",
+            extractedResult.sgpa
+        );
+
+        console.log(
+            "📚 CGPA:",
+            extractedResult.cgpa
+        );
+
+        console.log(
+            "✅ Result image analysis completed."
+        );
+
+
+        /* ===============================
+           FINAL RESULT
+        ================================ */
+
+        return {
+            studentName:
+                extractedResult.studentName || null,
+
+            semester:
+                extractedResult.semester !== null &&
+                    extractedResult.semester !== undefined
+                    ? extractedResult.semester
+                    : null,
+
+            sgpa:
+                extractedResult.sgpa !== null &&
+                    extractedResult.sgpa !== undefined
+                    ? extractedResult.sgpa
+                    : null,
+
+            cgpa:
+                extractedResult.cgpa !== null &&
+                    extractedResult.cgpa !== undefined
+                    ? extractedResult.cgpa
+                    : null,
+
+            overallPercentage,
+
+            subjects: processedSubjects,
+
+            strongSubjects,
+
+            improvementSubjects,
+
+            weakSubjects,
+
+            summary
+        };
+    }
+
+    // ======================================================
+    // TEXT RESULT
+    // ======================================================
+
+    console.log(
+        "📄 Sending extracted result text to AI..."
+    );
+
+    const completion =
+        await groq.chat.completions.create({
+            model: "openai/gpt-oss-120b",
+
+            messages: [
+                {
+                    role: "system",
+                    content: systemPrompt
+                },
+                {
+                    role: "user",
+                    content:
+                        `Analyze the following academic result document carefully.
+
+RESULT DOCUMENT:
+
+${cleanText}`
+                }
+            ],
+
+            temperature: 0.1,
+
+            max_completion_tokens: 4000,
+
+            reasoning_effort: "low"
+        });
+
+    const rawResponse =
+        completion?.choices?.[0]?.message?.content?.trim();
+
+    if (!rawResponse) {
+        throw new Error(
+            "AI returned an empty result analysis."
+        );
+    }
+
+    console.log("🤖 RAW AI RESPONSE:");
+    console.log(rawResponse);
+
+    const cleanedResponse =
+        cleanAIJsonResponse(rawResponse);
+    console.log("✅ Result text analysis completed.");
+
+    return cleanedResponse;
+}
+
+
+
+export async function generateWeakSubjectAssistance(subject) {
+
+    if (!subject || !subject.trim()) {
+        throw new Error("Subject is required.");
+    }
+
+    const systemPrompt = `
+You are EduCompanion, an academic learning assistant.
+
+The student has identified a weak academic subject.
+
+Your task is to generate useful practice material for that subject.
+
+Return ONLY valid JSON.
+Do not return Markdown.
+Do not return explanations outside JSON.
+
+======================================================
+IMPORTANT RULES
+======================================================
+
+1. Use the exact subject provided by the student.
+
+2. Generate beginner-to-intermediate level questions.
+
+3. Questions should be academically relevant to the subject.
+
+4. Do not invent a specific university syllabus.
+
+5. Cover important general concepts of the subject.
+
+6. Theory questions should test conceptual understanding.
+
+7. Numerical questions should be included only when
+   numerical/problem-solving questions are meaningful
+   for the subject.
+
+8. If numerical questions are not naturally applicable
+   to the subject, return an empty numericalQuestions array.
+
+9. DO NOT provide solutions yet.
+
+10. Keep questions clear and suitable for a college student.
+
+======================================================
+QUESTION COUNTS
+======================================================
+
+Generate:
+
+5 theory questions
+
+5 numerical/problem-solving questions when applicable
+
+======================================================
+JSON FORMAT
+======================================================
+
+{
+    "subject": "",
+    "theoryQuestions": [
+        {
+            "question": "",
+            "difficulty": "Easy"
+        }
+    ],
+    "numericalQuestions": [
+        {
+            "question": "",
+            "difficulty": "Easy"
+        }
+    ]
+}
+
+Difficulty must be one of:
+
+Easy
+Medium
+Hard
+
+Return ONLY JSON.
+`.trim();
+
+    console.log(
+        `🤖 Generating assistance for: ${subject}`
+    );
+
+    const completion =
+        await groq.chat.completions.create({
+            model: "openai/gpt-oss-120b",
+
+            messages: [
+                {
+                    role: "system",
+                    content: systemPrompt
+                },
+                {
+                    role: "user",
+                    content:
+                        `Generate academic practice questions for this weak subject:
+
+${subject}`
+                }
+            ],
+
+            temperature: 0.3,
+
+            max_completion_tokens: 3000,
+
+            reasoning_effort: "low"
+        });
+
+    const rawResponse =
+        completion?.choices?.[0]?.message?.content?.trim();
+
+    if (!rawResponse) {
+        throw new Error(
+            "AI returned an empty assistance response."
+        );
+    }
+
+    const cleanedResponse =
+        cleanAIJsonResponse(rawResponse);
+
+    console.log(
+        "✅ Weak subject assistance generated."
+    );
+
+    return cleanedResponse;
 }

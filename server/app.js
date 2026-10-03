@@ -13,6 +13,8 @@ import conversationRoutes from "./routes/conversationRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import recycleBinRoutes from "./routes/recycleBinRoutes.js";
 import pdfRoutes from "./routes/pdfRoutes.js";
+import resultAnalysisRoutes from "./routes/resultAnalysisRoutes.js";
+import weakSubjectRoutes from "./routes/weakSubjectRoutes.js";
 
 const app = express();
 
@@ -54,6 +56,10 @@ app.use(
     "/api/pdf",
     pdfRoutes
 );
+
+app.use("/api/result-analysis", resultAnalysisRoutes);
+
+app.use("/api/weak-subject", weakSubjectRoutes);
 
 // Home
 app.get("/", (req, res) => {

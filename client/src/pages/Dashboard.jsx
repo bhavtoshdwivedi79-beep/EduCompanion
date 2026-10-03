@@ -233,10 +233,10 @@ function Dashboard() {
 
                         <div
                             className="action-card"
-                            onClick={() => navigate("/study-planner")}
+                            onClick={() => navigate("/result-analysis")}
                         >
-                            📅
-                            <h3>Study Planner</h3>
+                            📊
+                            <h3>Result Analysis</h3>
                         </div>
 
                     </div>

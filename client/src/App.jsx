@@ -17,6 +17,7 @@ import Flashcards from "./pages/Flashcards";
 import FlashcardHistory from "./pages/FlashcardHistory";
 import RecycleBin from "./pages/RecycleBin";
 import PDFStudyAssistant from "./pages/PDFStudyAssistant";
+import ResultAnalysis from "./pages/ResultAnalysis";
 
 function App() {
 
@@ -68,6 +69,11 @@ function App() {
           <Route
             path="/pdf-study-assistant"
             element={<PDFStudyAssistant />}
+          />
+
+          <Route
+            path="/result-analysis"
+            element={<ResultAnalysis />}
           />
 
         </Route>

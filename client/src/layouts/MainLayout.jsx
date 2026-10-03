@@ -19,6 +19,7 @@ function MainLayout() {
         "/flashcard-history",
         "/profile",
         "/recycle-bin",
+        "/result-analysis",
     ];
 
     const hideNavbar = dashboardRoutes.includes(location.pathname);
