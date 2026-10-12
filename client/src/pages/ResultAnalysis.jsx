@@ -7,20 +7,27 @@ import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
 import "katex/dist/katex.min.css";
 import "./ResultAnalysis.css";
+import { jsPDF } from "jspdf";
+
+
 
 const MathContent = ({ content }) => {
-    const normalizedContent =
-        String(content || "").replace(/\\\\/g, "\\");
+    let normalizedContent = String(content || "");
+
+    // Normalize extra backslashes before LaTeX commands.
+    normalizedContent = normalizedContent
+        .replace(/\\{2,}(?=[a-zA-Z])/g, "\\");
 
     return (
         <ReactMarkdown
             remarkPlugins={[remarkGfm, remarkMath]}
-            rehypePlugins={[rehypeRaw, rehypeKatex]}
+            rehypePlugins={[rehypeKatex]}
         >
             {normalizedContent}
         </ReactMarkdown>
     );
 };
+
 
 function ResultAnalysis() {
 
@@ -51,7 +58,7 @@ function ResultAnalysis() {
         "application/pdf",
         "image/jpeg",
         "image/png"
-    ];
+    ]
 
     const handleChooseFile = () => {
 
@@ -321,6 +328,153 @@ function ResultAnalysis() {
             setSolutionLoading(false);
         }
     };
+
+
+    const handleDownloadSolutionsPDF = () => {
+        if (!solutions?.solutions?.length) return;
+
+        const pdf = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4",
+        });
+
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 18;
+        const maxWidth = pageWidth - margin * 2;
+        let y = 20;
+
+        // Convert common LaTeX expressions into readable text.
+        const formatText = (value) => {
+            let text = String(value || "");
+
+            text = text
+                .replace(/\\\\/g, "\\")
+                .replace(/\\\(/g, "")
+                .replace(/\\\)/g, "")
+                .replace(/\$\$/g, "")
+                .replace(/\$/g, "")
+                .replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, "($1)/($2)")
+                .replace(/\\sqrt\s*\{([^{}]*)\}/g, "sqrt($1)")
+                .replace(/\\times\b/g, " x ")
+                .replace(/\\cdot\b/g, " * ")
+                .replace(/\\pi\b/g, "pi")
+                .replace(/\\theta\b/g, "theta")
+                .replace(/\\alpha\b/g, "alpha")
+                .replace(/\\beta\b/g, "beta")
+                .replace(/\\leq?\b/g, "<=")
+                .replace(/\\geq?\b/g, ">=")
+                .replace(/\\neq\b/g, "!=")
+                .replace(/\\infty\b/g, "infinity")
+                .replace(/\\rightarrow\b/g, "->")
+                .replace(/\\left\b|\\right\b/g, "")
+                .replace(/\\(?:mathrm|text|mathbf)\s*\{([^{}]*)\}/g, "$1")
+                .replace(/\\(?:,|;|!|quad|qquad)/g, " ")
+                .replace(/\\[a-zA-Z]+/g, "")
+                .replace(/[{}]/g, "")
+                .replace(/\*\*/g, "")
+                .replace(/^\s*[-*]\s+/, "")
+                .replace(/\s+/g, " ")
+                .trim();
+
+            return text;
+        };
+
+        const addText = (value, options = {}) => {
+            const {
+                size = 11,
+                bold = false,
+                gap = 6,
+                indent = 0,
+            } = options;
+
+            const text = formatText(value);
+            if (!text) return;
+
+            pdf.setFont("helvetica", bold ? "bold" : "normal");
+            pdf.setFontSize(size);
+
+            const lines = pdf.splitTextToSize(text, maxWidth - indent);
+            const lineHeight = size * 0.45;
+
+            if (y + lines.length * lineHeight + gap > pageHeight - margin) {
+                pdf.addPage();
+                y = margin;
+            }
+
+            pdf.text(lines, margin + indent, y);
+            y += lines.length * lineHeight + gap;
+        };
+
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(18);
+        pdf.text("EduCompanion", margin, y);
+        y += 9;
+
+        pdf.setFontSize(14);
+        pdf.text("Step-by-Step Solutions", margin, y);
+        y += 10;
+
+        pdf.setDrawColor(180);
+        pdf.line(margin, y, pageWidth - margin, y);
+        y += 8;
+
+        solutions.solutions.forEach((item, index) => {
+            addText(`Question ${index + 1}`, {
+                size: 13,
+                bold: true,
+                gap: 4,
+            });
+
+            addText(item.question, {
+                size: 11,
+                gap: 6,
+            });
+
+            if (item.steps?.length) {
+                addText("Solution Steps", {
+                    size: 11,
+                    bold: true,
+                    gap: 4,
+                });
+
+                item.steps.forEach((step, stepIndex) => {
+                    addText(`${stepIndex + 1}. ${step}`, {
+                        size: 10,
+                        indent: 3,
+                        gap: 5,
+                    });
+                });
+            }
+
+            if (item.finalAnswer) {
+                addText("Final Answer", {
+                    size: 11,
+                    bold: true,
+                    gap: 4,
+                });
+
+                addText(item.finalAnswer, {
+                    size: 11,
+                    bold: true,
+                    gap: 7,
+                });
+            }
+
+            if (item.answer) {
+                addText(item.answer, {
+                    size: 10,
+                    gap: 7,
+                });
+            }
+
+            y += 4;
+        });
+
+        pdf.save("EduCompanion_Solutions.pdf");
+    };
+
 
     return (
         <div className="result-analysis-page">
@@ -1046,6 +1200,73 @@ NUMERICAL QUESTIONS
                             ⚠️ {solutionError}
                         </p>
                     )}
+
+
+                    {/* =========================================
+    GENERATED SOLUTIONS
+========================================= */}
+
+                    {solutions &&
+                        Array.isArray(solutions.solutions) &&
+                        solutions.solutions.length > 0 && (
+
+
+                            <div className="solutions-container">
+                                <div className="solutions-header">
+                                    <h2>📘 Step-by-Step Solutions</h2>
+
+                                    <button
+                                        type="button"
+                                        className="download-solutions-btn"
+                                        onClick={() => window.print()}
+                                    >
+                                        📄 Download Solutions PDF
+                                    </button>
+                                </div>
+
+                                <div className="solutions-pdf-content">
+                                    {/* Yahan apna existing solutions.solutions.map()
+            wala code bilkul same rakho */}
+
+                                    {solutions.solutions.map((item, index) => (
+                                        <div className="solution-card" key={index}>
+                                            <h3>Question {index + 1}</h3>
+
+                                            <div className="solution-question">
+                                                <MathContent content={item.question} />
+                                            </div>
+
+                                            {Array.isArray(item.steps) && item.steps.length > 0 && (
+                                                <div className="solution-steps">
+                                                    <h4>Solution Steps</h4>
+                                                    <ol>
+                                                        {item.steps.map((step, stepIndex) => (
+                                                            <li key={stepIndex}>
+                                                                <MathContent content={step} />
+                                                            </li>
+                                                        ))}
+                                                    </ol>
+                                                </div>
+                                            )}
+
+                                            {item.finalAnswer && (
+                                                <div className="solution-final-answer">
+                                                    <h4>Final Answer</h4>
+                                                    <MathContent content={item.finalAnswer} />
+                                                </div>
+                                            )}
+
+                                            {item.answer && (
+                                                <div className="solution-steps">
+                                                    <MathContent content={item.answer} />
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                        )}
 
 
                     {/* =========================================
