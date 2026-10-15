@@ -12,18 +12,24 @@ import { jsPDF } from "jspdf";
 
 
 const MathContent = ({ content }) => {
-    let normalizedContent = String(content || "");
+    let text = String(content || "");
 
-    // Normalize extra backslashes before LaTeX commands.
-    normalizedContent = normalizedContent
-        .replace(/\\{2,}(?=[a-zA-Z])/g, "\\");
+    // Convert LaTeX inline delimiters: \( ... \) into $ ... $
+    text = text
+        .replace(/\\+\(/g, "$")
+        .replace(/\\+\)/g, "$");
+
+    // Convert LaTeX display delimiters: \[ ... \] into $$ ... $$
+    text = text
+        .replace(/\\+\[/g, "$$")
+        .replace(/\\+\]/g, "$$");
 
     return (
         <ReactMarkdown
             remarkPlugins={[remarkGfm, remarkMath]}
             rehypePlugins={[rehypeKatex]}
         >
-            {normalizedContent}
+            {text}
         </ReactMarkdown>
     );
 };

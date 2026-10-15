@@ -1922,6 +1922,7 @@ body:not([data-theme="light"]) .numerical-questions-card {
 .download-solutions-btn {
     display: inline-block;
     margin: 0 0 20px;
+    margin-top: 15px;
     padding: 10px 16px;
     background: var(--primary);
     color: #fff;

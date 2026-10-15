@@ -124,6 +124,16 @@ function Sidebar({
                 </NavLink>
 
                 <NavLink
+                    to="/result-analysis"
+                    className={({ isActive }) => isActive ? "active-link" : ""}
+                >
+                    <li>
+                        <span>📊</span>
+                        {!collapsed && <span>Result Analysis</span>}
+                    </li>
+                </NavLink>
+
+                <NavLink
                     to="/flashcards"
                     className={({ isActive }) => isActive ? "active-link" : ""}
                 >
